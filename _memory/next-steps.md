@@ -1,6 +1,6 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-15 (도메인 재정의 + Phase A~D 진입 시점)
+마지막 갱신: 2026-05-15 (도메인 재정의 + Phase A~D 완료 + 마이그 prod 적용)
 
 ---
 
@@ -19,45 +19,89 @@
 
 ---
 
-## 🥇 1순위 — Phase A~D 진행 중 (2026-05-15 시작)
+## 🥇 1순위 — 다음 세션 시작 시 즉시: dogfood 검증
 
-**완료된 v0 골격 (도메인 재정의 전):**
-- ✅ `src/app/(app)/orders/page.tsx` — 목록 (의뢰자 컬럼 — 재구성 필요)
-- ✅ `src/app/(app)/orders/new/page.tsx` — 수동 입력 폼 (재구성 필요)
-- ✅ `src/app/(app)/orders/[id]/page.tsx` — 주문 상세 (재구성 필요)
-- ✅ `src/app/api/orders/route.ts` — POST/GET (재구성 필요)
-- ✅ SellerShell NAV / Dashboard QuickAction 활성
-- ⚠️ PATCH `/api/orders/[id]/status` — `withdrawal_notice_*` select 컬럼 누락 버그 (Phase A 에서 fix)
+**Phase A~D 완료 (2026-05-15, commits `b9c52da` → `4394fef` → `d103bb7`).**
+prod DB 마이그도 직접 적용 완료. Vercel 자동 배포 완료 가정.
 
-**Phase A — 기반 정리:**
-1. 도메인 메모 정정 (CLAUDE.md, _memory/*) — 이 항목
-2. DB 마이그레이션 SQL: b2b_orders + b2b_order_items 컬럼 추가 (사용자 적용)
-3. PATCH status route 의 b2b_accounts.select 버그 fix
+**검증 시나리오 (다음 세션 첫 작업):**
+1. Chrome DevTools MCP 로 prod 접속 → Vercel SSO + Supabase 로그인 (사용자 직접) → `/orders/new`
+2. 마켓(예: 쿠팡) + 마켓주문번호 + 구매자 PII 5필드 + 통관코드 + 해외 매입(예: 아마존US, ASIN, 매입가, 판매가) + 배대지 dropdown 1개 선택 → 등록
+3. `/orders` 목록에서 새 컬럼들 정상 표시 확인 (마켓 chip · 마켓번호 · 구매자명 · 판매가)
+4. `/orders/[id]` 상세에서 "마켓 주문 + 배송 수신자" 카드 + "해외 매입" 카드 (supplier chip + 매입가·판매가) + 배대지 카드 (배대지 이름) 확인
+5. 상태 변경 dropdown — pending → confirmed → paid → ... 정상 흐름 (PATCH 버그 fix 검증)
 
-**Phase B — UI/API 재구성:**
-4. `/api/orders` POST 마켓/구매자/forwarder 수용, 의뢰자 자동 upsert 제거
-5. `/orders/new` 4 섹션 (마켓 / 구매자 / 해외 매입 라인 / 배대지)
-6. `/orders` 목록 컬럼 교체 (마켓·마켓번호·구매자·판매가)
-7. `/orders/[id]` 상세 재구성 (마켓+구매자 / 매입+판매+마진 / 배대지)
+**검증 후 발견될 가능성 높은 이슈 후보:**
+- 4섹션 폼이 길어서 UX 불편 (특히 모바일) — 가로 폭 / 섹션 접기 등 고려
+- 통관코드·우편번호 검증 (P 시작 13자리 등 client-side validation 보강)
+- 상태 변경 시 한국어 옵션 라벨 어색함 ("으)로 변경") — 더 자연스럽게
+- 마진 KRW 자동 계산 미구현 (환율 적용 필요 — `/api/exchange-rate` 사용)
+- 페이지 title 중복 "주문 X | 짐스캐너 B2B | 짐스캐너 B2B" — layout title.template
 
-**Phase C — 상태 라벨 정정:** enum 그대로, 라벨만 셀러 관점.
+---
 
-**Phase D — forwarders 시드·선택 UX**
+## 🥈 2순위 — P1: 33 배대지 양식 변환
 
-**P1+ (다음 phase):**
-- 33 배대지 양식 spec + XLSX 변환
-- SKU 마스터 (b2b_products + 마켓/매입처 매핑)
-- 다상품 입력 (라인 add/remove)
-- 마켓 API 자동 import
-- 매입처 가격 비교
-- 재고 관리
+가장 큰 가치 — 셀러 가입 이유 그 자체. v0 가 자리 잡으면 즉시 진행.
 
-**디자인:** v2.1 패턴 — dashboard 와 같은 톤 (shadow-sm 카드, gradient banner, accent border, p-8 max-w-{4,5,6}xl).
+**준비물 (사용자 협업 필요):**
+- 33 배대지 양식 spec 수집 — 각 배대지 별 신청서 컬럼/포맷/필수값
+- 어느 배대지 우선? main repo 10개 시드(짐패스/몰테일/이하넥스/유니옥션 외) 기준 우선 3~5개로 시작 추천
 
-**구현 메모 (다음 세션 컨텍스트):**
-- 쿼터 트리거 `tg_b2b_order_quota_increment` 는 b2b_schema.sql L907 에 이미 있음 — POST 가 명시적 increment 안 함, DB 가 알아서 처리
-- `b2b_clients` 테이블은 의미 변경(마켓 구매자 단골 추적용)으로 보존, v0 에서 적극 사용 X — buyer_* 는 b2b_orders 에 직접 저장
-- forwarders 테이블은 main repo 또는 이전 마이그레이션에 정의 (이 repo schema 엔 외부 참조만)
+**구현 단위:**
+- `supabase/b2b_forwarder_form_specs.sql` — 양식 컬럼 정의 (forwarder_id, column_name, column_label, source_field, transform 등)
+- `src/app/api/orders/export/route.ts` — 주문 1건 또는 N건 → XLSX 변환·반환
+- `src/components/b2b/ForwarderExportModal.tsx` — 배대지 선택 + XLSX 다운로드 (Web Worker 사용 권장)
+- `/orders/[id]` 사이드바의 "배대지 양식으로 변환" 버튼 활성
+
+---
+
+## 🥉 3순위 — v0.5: SKU 마스터 (상품 카탈로그)
+
+**왜:** 반복 주문이 들어오는 SKU 는 셀러가 한 번 등록해 두면 다음 주문부터 매입처·매입가·배대지·옵션이 자동 추천 → 30초 처리.
+
+**범위:**
+- `supabase/b2b_products.sql` — `b2b_products` 테이블 (account_id, seller_sku, display_name, category, default_supplier_site, default_forwarder_id, image_url, notes...)
+- `b2b_product_market_links` — 마켓별 상품번호 매핑 (1:N: 같은 SKU 가 여러 마켓에 등록될 수 있음)
+- `b2b_product_supplier_links` — 해외 매입처 매핑 (1:N: 가격 비교 대비)
+- `/products` 페이지 (목록·생성·상세·편집)
+- `/orders/new` 의 ③ 해외 매입 섹션에 SKU autocomplete 추가 (선택 시 supplier·가격 자동 채움)
+- 기존 주문에 소급 적용 (선택)
+
+**선결정:** 마켓상품번호로 자동 매칭하는 import 흐름은 v1+ (마켓 API).
+
+---
+
+## 🔵 4순위 — v0.5 자잘한 보강
+
+- 다상품 라인 입력 (`/orders/new` 의 ③ 섹션에서 add/remove 버튼)
+- 환율 적용 → 마진 KRW 자동 계산 (`/api/exchange-rate` 호출)
+- 통관코드 client-side validation
+- `b2b_clients` 의미 변경 — 마켓 구매자 단골 추적용 (예: 같은 phone+marketplace 2회 이상 등장 시 자동 묶음)
+- `b2b_subscriptions.monthly_order_used` reset 동작 점검 (월 초 cron)
+
+---
+
+## 🌳 v1+ (먼 미래)
+
+- 마켓 API 자동 import (쿠팡·스마트스토어 OpenAPI)
+- 매입처 가격 비교 — 1 SKU → N supplier 중 최저가 자동 선택
+- 재고 관리 — 한국에 도착한 재고 vs 매번 매입
+- 운송장 자동 트래킹 (T1/T2)
+- 마켓 송장 자동 입력 (역방향, 쿠팡·스마트스토어 OpenAPI)
+- 카카오 알림톡 (마켓 구매자에게)
+- 마진 시뮬레이터 / 부가세 자료 export
+
+---
+
+## 🛠️ 디자인·코드 메모 (다음 세션용)
+
+- v2.1 디자인 패턴 유지: shadow-sm 카드, accent border-l-[3px], gradient banner, p-8 max-w-{4,5,6}xl
+- 쿼터 트리거 `tg_b2b_order_quota_increment` 가 DB 에 있음 (b2b_schema.sql L907) — API 명시 증가 X
+- `b2b_clients` 테이블 보존 (의미 변경, v0 미사용). buyer_* PII 는 b2b_orders 에 직접
+- forwarders 테이블 + 시드는 main repo schema 에 있음 (10개) — 신규 시드 마이그 불필요
+- DB 마이그·DDL 은 **Supabase MCP `apply_migration` 으로 직접 적용** (`feedback_db_migrations_apply_directly.md` 메모리 참조). 사용자에게 떠넘기지 않음
+- `triggerWithdrawalNotice` 함수는 git history `b9c52da` 의 이전 버전에서 회복 가능 — v0.5+ 옵션 토글 재활성용
 
 ---
 

@@ -47,26 +47,64 @@
 
 ---
 
-## 2026-05-15 (도메인 재정의 + Phase A~D 시작)
+## 2026-05-15 (도메인 재정의 + Phase A~D 완료 + 마이그 직접 적용)
 
-세션 5 — dogfood 직후 도메인 재정의:
+세션 5 — dogfood → 도메인 재정의 → Phase A~D 일괄 + 메모리 학습:
 
-dogfood 결과 도메인 전제 자체가 잘못됐음을 확인 (사용자 정정).
-- 기존: 구매대행 사업자 ← 의뢰자 직접
-- 실제: 국내 마켓 셀러 ← 쿠팡/스마트스토어/옥션/지마켓 등 마켓 ← 마켓 구매자.
-  셀러가 해외(미국아마존/일본아마존/라쿠텐 등)에서 매입 → 본인이 정한 배대지 → 마켓 구매자에게 배송
+### 1) Dogfood 시도·발견 (Chrome DevTools MCP)
+- Vercel SSO + Supabase 로그인 2단계 가드를 사용자가 직접 통과, /orders/new → POST → /orders 흐름 정상 확인
+- /orders/[id] 상세 페이지가 404 라서 즉시 작성 (커밋 `d4c3a63`)
+- 상태 변경 PATCH 호출 → "사업자 계정이 없습니다" 에러 발견. 원인: `b2b_accounts.select` 에서 schema 에 없는 `withdrawal_notice_*` 컬럼 요청 → single() 실패
 
-추가 정리:
-- SKU 매칭: 선택사항 (선등록/즉석/없음 모두 가능, 소급도 가능)
-- v0: 수동 입력만 / v1: 마켓 API 자동 수집 / 가격비교·재고는 추후
+### 2) 도메인 전제 정정 (사용자 정정, 결정적 순간)
+- **기존 (잘못된 가정)**: 구매대행 사업자 ← 의뢰자(C) 직접 카카오 등으로 주문 받음 → 해외 매입 → 의뢰자에게 배송
+- **실제**:
+  ```
+  국내 마켓 (쿠팡·스마트스토어·옥션·지마켓·자사몰) ← 마켓 구매자(C)
+      ↓ 셀러가 주문 처리
+  해외 매입 (미국아마존·일본아마존·라쿠텐·타오바오 등)
+      ↓ 셀러가 매입
+  국내 배대지 (33개 중 1개 선택) — 셀러 본인 명의
+      ↓ 양식 변환 (수신자 = 마켓 구매자)
+  마켓 구매자 ← 직배송
+  ```
+- 핵심 차이:
+  - "의뢰자(b2b_clients)" 폐기 → "마켓 구매자(buyer_*)" 1회성 PII 가 주문에 직접
+  - 마켓·마켓주문번호가 1차 식별자 (셀러 내부 order_number 보다 중요)
+  - 한 마켓 주문 = N 해외 매입 라인 (라인마다 supplier_site)
+  - 배대지 양식 변환의 입력값: 구매자 PII + 라인 아이템 + 매입 사이트
+- SKU 매칭: **선택사항** (선등록/즉석/없음 모두 가능, 소급도 가능)
+- v0 범위: 수동 입력 / v1: 마켓 API 자동 수집 / 가격비교·재고: 추후
 
-Phase A~D 진입:
-- A: 도메인 메모 정정, DB 마이그 SQL, PATCH 버그 fix
-- B: /api/orders + /orders/* 재구성
-- C: 상태 라벨 셀러 관점 정정
-- D: forwarders 시드·선택 UX
+### 3) Phase A~D 일괄 (commits `b9c52da`, `4394fef`, `d103bb7`)
 
-dogfood 발견 이슈:
-- ✅ /orders/new → POST → /orders 정상 (도메인 정정 전 데이터로 검증)
-- ✅ /orders/[id] 상세 정상 (도메인 정정 전)
-- ❌ PATCH /api/orders/[id]/status — b2b_accounts.select 에 schema 에 없는 `withdrawal_notice_*` 컬럼 요청 → "사업자 계정이 없습니다" 반환. Phase A 에서 fix.
+**Phase A (`b9c52da`)**:
+- CLAUDE.md / _memory/*.md 도메인 문장 정정
+- DB 마이그 `supabase/b2b_orders_market_fields.sql` 작성
+- PATCH route 의 `withdrawal_notice_*` select 제거 + triggerWithdrawalNotice 함수 본체 제거 (v0 비활성, v0.5+ 마켓 정책 정합 후 재활성. git history 보존)
+
+**Phase B (`4394fef`)**:
+- `/api/orders` POST: 마켓 13종·해외 사이트 24종 화이트리스트, buyer_* 8필드, forwarder_id, line item 의 supplier/sale/option/product_id 처리. 의뢰자 자동 upsert 폐기
+- `/api/orders` GET: marketplace 필터 + (셀러/마켓) 주문번호 OR 검색
+- `/orders/new` 4 섹션 (마켓 / 구매자 / 해외 매입 / 배대지+메모) — 매입 합계 외화 자동 계산
+- `/orders` 목록: 마켓·마켓번호·구매자·상품·상태·판매가·주문일. 상태 필터 8종 + 마켓 dropdown
+- `/orders/[id]` 상세: 헤더 H1=마켓번호(fallback 셀러번호), 마켓+구매자 카드 (emerald accent), 해외 매입 카드 (sky accent, supplier chip + 매입가·판매가 분리), 사이드바 (상태 변경 / 배대지 / 양식 변환 placeholder / 비용 / 메타)
+
+**Phase C (B 와 같이)**:
+- enum 그대로, 라벨만 셀러 관점: pending=마켓 주문 접수, confirmed=매입 발주 완료, paid=해외 매입 완료, forwarder_submitted=배대지 입고, in_transit=한국행 운송 중, arrived_korea=한국 통관, delivered=구매자 수령, completed=구매 확정
+- OrderStatusSelector + 상세/목록 STATUS_META 모두 정렬
+
+**Phase D (`d103bb7`)**:
+- main repo schema (`/c/Web/jimscanner/jimpass-agent-platform/supabase/schema.sql`) 에 forwarders 테이블 + 10개 시드 (짐패스/몰테일/이하넥스/유니옥션 등) 이미 존재 — 신규 시드 마이그 불필요
+- `/orders/new` 를 server wrapper + client form(NewOrderForm.tsx) 으로 분리, forwarders.is_active 조회 후 props 전달
+- ④ 섹션에 배대지 dropdown 추가 + forwarder_country 병행
+- `/orders/[id]` 에 forwarders(name, slug) join, 배대지 이름 표시
+
+### 4) DB 마이그레이션 **직접 적용** (Supabase MCP)
+- `mcp__plugin_supabase_supabase__apply_migration` 으로 17개 컬럼 + 2 check + 3 index 모두 prod (`obxvucyhzlakensopalf`) 에 적용 완료
+- 검증 쿼리로 17개 컬럼 모두 present 확인
+- **메모리 학습**: 사용자 명시 — "이 프로젝트의 SQL 적용은 직접 한다는걸 잘 기억해놔". MEMORY.md 에 `feedback_db_migrations_apply_directly.md` 저장. 다음 세션부터 자동 반영. idempotent · non-destructive 는 사전 승인 불요, DROP/TRUNCATE 등은 사전 확인.
+
+### 5) 미해결·다음 세션 대기
+- Phase A~D 코드 + DB 모두 prod 반영. 다음 세션에서 dogfood 검증 (사용자 직접 마켓 주문 1건 등록 후 4 섹션 폼 / 목록 / 상세 / 상태 변경 확인)
+- v0.5+ 큐: 33 양식 변환 (P1), SKU 마스터 (b2b_products + 매핑 테이블), 다상품 라인 add/remove, 마진 자동 계산 (환율 곱), 마켓 API 자동 import, 가격 비교, 재고 관리
