@@ -2,14 +2,14 @@
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
 @plugin "@tailwindcss/typography";
+@import url('https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.css');
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: 'Pretendard Variable', Pretendard, -apple-system, BlinkMacSystemFont, system-ui, Roboto, 'Helvetica Neue', 'Segoe UI', 'Apple SD Gothic Neo', 'Noto Sans KR', 'Malgun Gothic', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -43,20 +43,55 @@
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
-  --radius-2xl: calc(var(--radius) + 8px);
-  --radius-3xl: calc(var(--radius) + 12px);
-  --radius-4xl: calc(var(--radius) + 16px);
 }
 
 :root {
-  --radius: 0.625rem;
+  /* 짐스캐너 B2B 디자인 토큰 v2 — 한국 SaaS 톤 (라이트 메인 + 다크 사이드바) */
+  --jim-bg-canvas: #f8fafc;         /* slate-50 — 메인 컨텐츠 배경 */
+  --jim-bg-surface: #ffffff;         /* 카드·테이블·모달 */
+  --jim-bg-sidebar: #1e293b;         /* slate-800 — 다크 사이드바 */
+  --jim-bg-sidebar-hover: #334155;   /* slate-700 */
+  --jim-bg-sidebar-active: rgba(99, 102, 241, 0.18); /* indigo-500/18 */
+  --jim-bg-header: #ffffff;
+
+  --jim-fg-primary: #0f172a;         /* slate-900 — 중요 텍스트, H1 */
+  --jim-fg-secondary: #475569;       /* slate-600 — 본문 */
+  --jim-fg-muted: #94a3b8;           /* slate-400 — placeholder, hint */
+  --jim-fg-sidebar: #f1f5f9;         /* slate-100 */
+  --jim-fg-sidebar-muted: #94a3b8;   /* slate-400 */
+  --jim-fg-sidebar-active: #c7d2fe;  /* indigo-200 */
+
+  --jim-border: #e2e8f0;             /* slate-200 — 기본 보더 */
+  --jim-border-strong: #cbd5e1;      /* slate-300 — 활성 input */
+  --jim-border-sidebar: #334155;     /* slate-700 */
+
+  --jim-accent: #4f46e5;             /* indigo-600 — primary action */
+  --jim-accent-hover: #4338ca;       /* indigo-700 */
+  --jim-accent-fg: #ffffff;
+  --jim-accent-soft-bg: #eef2ff;     /* indigo-50 — soft badge */
+  --jim-accent-soft-fg: #4338ca;     /* indigo-700 */
+
+  --jim-success: #16a34a;            /* emerald-600 */
+  --jim-success-soft-bg: #f0fdf4;
+  --jim-success-soft-fg: #15803d;
+
+  --jim-warning: #d97706;
+  --jim-warning-soft-bg: #fffbeb;
+  --jim-warning-soft-fg: #b45309;
+
+  --jim-danger: #dc2626;
+  --jim-danger-soft-bg: #fef2f2;
+  --jim-danger-soft-fg: #b91c1c;
+
+  /* shadcn tokens — light theme (white bg, slate text) */
+  --radius: 0.5rem;                  /* 8px */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
   --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
+  --primary: oklch(0.45 0.16 268);   /* indigo-600 근사 */
   --primary-foreground: oklch(0.985 0 0);
   --secondary: oklch(0.97 0 0);
   --secondary-foreground: oklch(0.205 0 0);
@@ -65,9 +100,9 @@
   --accent: oklch(0.97 0 0);
   --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
+  --border: oklch(0.922 0 0);        /* slate-200 근사 */
   --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
+  --ring: oklch(0.45 0.16 268);      /* indigo-600 ring */
   --chart-1: oklch(0.646 0.222 41.116);
   --chart-2: oklch(0.6 0.118 184.704);
   --chart-3: oklch(0.398 0.07 227.392);
@@ -83,45 +118,17 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.488 0.243 264.376);
-  --chart-2: oklch(0.696 0.17 162.48);
-  --chart-3: oklch(0.769 0.188 70.08);
-  --chart-4: oklch(0.627 0.265 303.9);
-  --chart-5: oklch(0.645 0.246 16.439);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
-}
-
 @layer base {
   * {
     @apply border-border outline-ring/50;
   }
+  html {
+    font-family: var(--font-sans);
+  }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--jim-bg-canvas);
+    color: var(--jim-fg-primary);
+    font-feature-settings: 'ss01', 'tnum';
+    -webkit-font-smoothing: antialiased;
   }
 }
