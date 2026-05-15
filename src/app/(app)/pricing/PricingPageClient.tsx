@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import PricingCard, { type PlanData } from '@/components/b2b/PricingCard'
 
 const COMMON_FEATURES = [
@@ -25,8 +26,8 @@ export default function PricingPageClient({
     <div className="p-6 space-y-8 max-w-5xl">
       {/* 헤더 */}
       <div>
-        <h1 className="text-2xl font-bold text-white">플랜 선택</h1>
-        <p className="text-sm text-slate-400 mt-1">
+        <h1 className="text-xl font-bold text-white">플랜 선택</h1>
+        <p className="text-sm text-slate-400 mt-0.5">
           사업 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.
         </p>
       </div>
@@ -102,12 +103,12 @@ export default function PricingPageClient({
       {/* 하단 안내 */}
       <p className="text-xs text-slate-500 text-center pb-2">
         플랜에 대해 궁금한 점이 있으신가요?{' '}
-        <a
+        <Link
           href="/support?type=plan_inquiry"
           className="text-indigo-400 hover:text-indigo-300 underline underline-offset-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
         >
           1:1 문의하기
-        </a>
+        </Link>
       </p>
     </div>
   )

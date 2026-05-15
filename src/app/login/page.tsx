@@ -16,7 +16,7 @@ function ResetSuccessToast({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
       role="status"
-      className="fixed top-4 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-green-900/90 border border-green-700 text-green-200 text-sm shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-green-900/90 border border-green-700 text-green-200 text-sm shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300"
     >
       <svg className="w-4 h-4 text-green-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
