@@ -101,8 +101,8 @@ export default function SignupStep5Page() {
         <SignupProgress currentStep={4} />
 
         <div className="w-full max-w-lg">
-          <h1 className="text-2xl font-bold mb-1">사업자등록번호 진위 확인</h1>
-          <p className="text-slate-400 text-sm mb-8">
+          <h1 className="text-2xl font-bold tracking-tight mb-1">사업자등록번호 진위 확인</h1>
+          <p className="text-slate-600 text-sm mb-8">
             국세청 데이터베이스에서 입력하신 사업자등록번호의 영업 상태를 자동으로 확인합니다.
           </p>
 

@@ -23,11 +23,11 @@ export default function PricingPageClient({
   const [billing, setBilling] = useState<'monthly' | 'yearly'>('monthly')
 
   return (
-    <div className="p-6 space-y-8 max-w-5xl">
+    <div className="p-8 space-y-8 max-w-6xl">
       {/* 헤더 */}
       <div>
-        <h1 className="text-xl font-bold text-slate-900">플랜 선택</h1>
-        <p className="text-sm text-slate-400 mt-0.5">
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">플랜 선택</h1>
+        <p className="text-sm text-slate-600 mt-1">
           사업 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.
         </p>
       </div>
@@ -84,13 +84,13 @@ export default function PricingPageClient({
       </div>
 
       {/* 공통 기능 */}
-      <div className="rounded-xl border border-slate-200 bg-white p-5">
-        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
+        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
           모든 플랜에 포함
         </p>
         <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
           {COMMON_FEATURES.map((f) => (
-            <li key={f} className="flex items-center gap-2 text-xs text-slate-500">
+            <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
               <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M2 7l3.5 3.5 6.5-7" />
               </svg>

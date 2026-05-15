@@ -105,7 +105,7 @@ function SellerLoginContent() {
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
           <div className="mb-8">
-            <h1 className="text-2xl font-bold mb-1">로그인</h1>
+            <h1 className="text-2xl font-bold tracking-tight mb-1">로그인</h1>
             <p className="text-slate-400 text-sm">
               짐스캐너 B2B 사업자 포털에 오신 것을 환영합니다.
             </p>

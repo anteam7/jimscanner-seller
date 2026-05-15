@@ -215,8 +215,8 @@ export default function SignupStep4Page() {
         <SignupProgress currentStep={3} />
 
         <div className="w-full max-w-lg">
-          <h1 className="text-2xl font-bold mb-1">사업자 정보 입력</h1>
-          <p className="text-slate-400 text-sm mb-8">
+          <h1 className="text-2xl font-bold tracking-tight mb-1">사업자 정보 입력</h1>
+          <p className="text-slate-600 text-sm mb-8">
             사업자등록증에 기재된 정보를 정확히 입력해 주세요.
           </p>
 

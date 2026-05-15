@@ -106,7 +106,7 @@ function VerificationProgress({ level }: { level: number }) {
   ]
 
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
       <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
         인증 진행 현황
       </p>
@@ -170,7 +170,7 @@ function QuickActionCard({
   if (!available) {
     return (
       <div
-        className="group rounded-xl border border-slate-200 bg-white p-5 cursor-not-allowed opacity-60"
+        className="group rounded-xl border border-slate-200 bg-white shadow-sm p-5 cursor-not-allowed opacity-60"
         aria-disabled="true"
       >
         <div className="flex items-start gap-3">
@@ -189,7 +189,7 @@ function QuickActionCard({
   return (
     <Link
       href={href}
-      className="group rounded-xl border border-slate-200 bg-white p-5 shadow-sm hover:shadow-md hover:border-indigo-200 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+      className="group rounded-xl border border-slate-200 bg-white shadow-sm p-5 hover:shadow-md hover:border-indigo-200 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
     >
       <div className="flex items-start gap-3">
         <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center text-indigo-600 flex-shrink-0 group-hover:bg-indigo-100 transition-colors">

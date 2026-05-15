@@ -56,7 +56,7 @@ export default function AccountSuspendedPage() {
           </div>
         )}
 
-        <p className="text-slate-400 text-sm mb-8">
+        <p className="text-slate-600 text-sm mb-8">
           정지 해제를 요청하시거나 이의가 있으시면{' '}
           <a href="mailto:support@jimscanner.co.kr" className="text-indigo-600 hover:text-indigo-700 underline">
             support@jimscanner.co.kr

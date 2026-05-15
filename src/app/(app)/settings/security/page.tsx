@@ -124,7 +124,7 @@ export default function SecuritySettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-6">
+    <div className="p-8 max-w-3xl space-y-6">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Link
@@ -137,7 +137,7 @@ export default function SecuritySettingsPage() {
           </svg>
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-slate-900">보안 설정</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">보안 설정</h1>
           <p className="text-xs text-slate-400 mt-0.5">2단계 인증(TOTP)으로 계정을 보호하세요.</p>
         </div>
       </div>
@@ -164,7 +164,7 @@ export default function SecuritySettingsPage() {
 
       {/* No MFA enrolled */}
       {view === 'no_mfa' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -302,7 +302,7 @@ export default function SecuritySettingsPage() {
 
       {/* MFA Active */}
       {view === 'mfa_active' && (
-        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-5">
           <div className="flex items-start gap-4">
             <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">

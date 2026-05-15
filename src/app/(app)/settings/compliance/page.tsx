@@ -77,14 +77,14 @@ export default function CompliancePage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-8">
+    <div className="p-8 max-w-3xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">법규 컴플라이언스</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">법규 컴플라이언스</h1>
         <p className="text-sm text-slate-400 mt-0.5">전자상거래법 의무 고지 및 법정 문서 설정을 관리합니다.</p>
       </div>
 
       {/* 청약철회 고지 섹션 */}
-      <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-5">
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div>
             <h2 className="text-base font-semibold text-slate-900">청약철회 권리 자동 고지</h2>
@@ -203,7 +203,7 @@ export default function CompliancePage() {
 
 function StatCard({ label, value, cls }: { label: string; value: string; cls?: string }) {
   return (
-    <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+    <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 text-center">
       <p className="text-xs text-slate-400 mb-1">{label}</p>
       <p className={`text-2xl font-bold ${cls ?? 'text-slate-900'}`}>{value}</p>
     </div>

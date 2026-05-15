@@ -129,8 +129,8 @@ export default function SignupStep1Page() {
         <SignupProgress currentStep={0} />
 
         <div className="w-full max-w-md">
-          <h1 className="text-2xl font-bold mb-1">계정 만들기</h1>
-          <p className="text-slate-400 text-sm mb-8">이메일과 비밀번호를 설정하세요.</p>
+          <h1 className="text-2xl font-bold tracking-tight mb-1">계정 만들기</h1>
+          <p className="text-slate-600 text-sm mb-8">이메일과 비밀번호를 설정하세요.</p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* 이메일 */}

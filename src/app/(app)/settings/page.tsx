@@ -162,34 +162,34 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
 
 export default function SettingsPage() {
   return (
-    <div className="p-6 max-w-3xl space-y-8">
+    <div className="p-8 max-w-4xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">설정</h1>
-        <p className="text-sm text-slate-400 mt-0.5">계정·보안·연동 설정을 관리합니다.</p>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">설정</h1>
+        <p className="text-sm text-slate-600 mt-1">계정·보안·연동 설정을 관리합니다.</p>
       </div>
 
       {SETTING_SECTIONS.map((section) => (
         <section key={section.heading}>
-          <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
+          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
             {section.heading}
           </h2>
-          <div className="space-y-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {section.cards.map((card) =>
               card.available ? (
                 <Link
                   key={card.href}
                   href={card.href}
-                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="group flex items-start gap-3 p-5 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center flex-shrink-0 text-indigo-600 group-hover:bg-indigo-50 transition-colors">
+                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-900">{card.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{card.description}</p>
+                    <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{card.title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{card.description}</p>
                   </div>
                   <svg
-                    className="w-4 h-4 text-slate-400 group-hover:text-slate-400 flex-shrink-0 transition-colors"
+                    className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 flex-shrink-0 mt-1 transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
@@ -202,18 +202,18 @@ export default function SettingsPage() {
               ) : (
                 <div
                   key={card.href}
-                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-200 bg-slate-50 cursor-not-allowed"
+                  className="flex items-start gap-3 p-5 rounded-xl border border-slate-200 bg-white shadow-sm cursor-not-allowed opacity-60"
                   aria-disabled="true"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-400">{card.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 truncate">{card.description}</p>
+                    <p className="text-sm font-semibold text-slate-500">{card.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{card.description}</p>
                   </div>
                   {card.badge && (
-                    <span className="flex-shrink-0 text-xs text-slate-400 bg-slate-100 rounded-full px-2.5 py-0.5 border border-slate-200">
+                    <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
                       {card.badge}
                     </span>
                   )}

@@ -172,7 +172,7 @@ export default function AccountSettingsPage() {
 
   if (loadError) {
     return (
-      <div className="p-6 max-w-2xl">
+      <div className="p-8 max-w-3xl">
         <p className="text-sm text-red-600">{loadError}</p>
         <button
           type="button"
@@ -187,7 +187,7 @@ export default function AccountSettingsPage() {
 
   if (!account) {
     return (
-      <div className="p-6 max-w-2xl">
+      <div className="p-8 max-w-3xl">
         <div className="flex items-center gap-2 text-slate-400 text-sm">
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
@@ -200,14 +200,14 @@ export default function AccountSettingsPage() {
   }
 
   return (
-    <div className="p-6 max-w-2xl space-y-8">
+    <div className="p-8 max-w-3xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-slate-900">계정 정보</h1>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">계정 정보</h1>
         <p className="text-sm text-slate-400 mt-0.5">연락처·주소·이메일·비밀번호를 수정합니다.</p>
       </div>
 
       {/* 기본 정보 */}
-      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <h2 className="text-sm font-semibold text-slate-900">기본 정보</h2>
         <div className="space-y-1">
           <p className="text-xs text-slate-400">상호</p>
@@ -285,7 +285,7 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 이메일 변경 */}
-      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">이메일 변경</h2>
           <p className="text-xs text-slate-400 mt-0.5">변경 후 새 이메일로 확인 링크가 발송됩니다.</p>
@@ -323,7 +323,7 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 비밀번호 변경 */}
-      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">비밀번호 변경</h2>
           <p className="text-xs text-slate-400 mt-0.5">현재 비밀번호를 확인한 후 변경합니다.</p>
