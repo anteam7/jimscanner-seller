@@ -3,21 +3,20 @@
 import { useState, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
 
-// b2b_orders.status enum 과 일치
+// b2b_orders.status enum 과 일치, 라벨은 마켓 셀러 관점
 export const STATUS_OPTIONS: { value: string; label: string }[] = [
-  { value: 'pending', label: '접수 대기' },
-  { value: 'confirmed', label: '주문 확정' },
-  { value: 'paid', label: '결제 완료' },
-  { value: 'forwarder_submitted', label: '배대지 신청' },
-  { value: 'in_transit', label: '운송 중' },
-  { value: 'arrived_korea', label: '국내 도착' },
-  { value: 'delivered', label: '배송 완료' },
-  { value: 'completed', label: '거래 종료' },
+  { value: 'pending', label: '마켓 주문 접수' },
+  { value: 'confirmed', label: '매입 발주 완료' },
+  { value: 'paid', label: '해외 매입 완료' },
+  { value: 'forwarder_submitted', label: '배대지 입고' },
+  { value: 'in_transit', label: '한국행 운송 중' },
+  { value: 'arrived_korea', label: '한국 통관' },
+  { value: 'delivered', label: '구매자 수령' },
+  { value: 'completed', label: '구매 확정' },
   { value: 'cancelled', label: '취소' },
   { value: 'refunded', label: '환불' },
 ]
 
-// 전이 가능한 다음 상태 (route.ts 와 일치 필요)
 const TRANSITIONS: Record<string, string[]> = {
   pending:             ['confirmed', 'cancelled'],
   confirmed:           ['paid', 'cancelled'],
@@ -69,7 +68,7 @@ export default function OrderStatusSelector({
     }
   }
 
-  if (disabled && allowedNext.length === 0) {
+  if (allowedNext.length === 0) {
     return (
       <p className="text-xs text-slate-500">
         이 상태에서는 더 이상 전환할 수 있는 단계가 없습니다.
@@ -96,17 +95,13 @@ export default function OrderStatusSelector({
           const meta = STATUS_OPTIONS.find((o) => o.value === s)
           return (
             <option key={s} value={s}>
-              {meta?.label ?? s} 으로 변경
+              {meta?.label ?? s} (으)로 변경
             </option>
           )
         })}
       </select>
-      {updating && (
-        <p className="text-xs text-slate-500">변경 중…</p>
-      )}
-      {error && (
-        <p className="text-xs text-rose-700">{error}</p>
-      )}
+      {updating && <p className="text-xs text-slate-500">변경 중…</p>}
+      {error && <p className="text-xs text-rose-700">{error}</p>}
     </div>
   )
 }

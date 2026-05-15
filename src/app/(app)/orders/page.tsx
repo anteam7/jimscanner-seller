@@ -14,54 +14,98 @@ type OrderRow = {
   order_number: string
   status: string
   order_date: string
-  estimated_cost_krw: number | null
+  marketplace: string | null
+  market_order_number: string | null
+  buyer_name: string | null
   request_notes: string | null
   created_at: string
-  b2b_clients: { display_name: string | null } | null
-  b2b_order_items: { product_name: string }[] | null
+  b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
 }
 
 const STATUS_META: Record<string, { label: string; cls: string }> = {
-  pending:              { label: '접수 대기', cls: 'bg-slate-100 text-slate-700 border-slate-200' },
-  confirmed:            { label: '주문 확정', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
-  paid:                 { label: '결제 완료', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
-  forwarder_submitted:  { label: '배대지 신청', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  pending:              { label: '마켓 주문 접수', cls: 'bg-slate-100 text-slate-700 border-slate-200' },
+  confirmed:            { label: '매입 발주 완료', cls: 'bg-blue-50 text-blue-700 border-blue-200' },
+  paid:                 { label: '해외 매입 완료', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
+  forwarder_submitted:  { label: '배대지 입고', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   in_transit:           { label: '운송 중', cls: 'bg-violet-50 text-violet-700 border-violet-200' },
-  arrived_korea:        { label: '국내 도착', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
-  delivered:            { label: '배송 완료', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
-  completed:            { label: '거래 종료', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  arrived_korea:        { label: '한국 통관', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  delivered:            { label: '구매자 수령', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+  completed:            { label: '구매 확정', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   cancelled:            { label: '취소', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
   refunded:             { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
+const MARKETPLACE_LABEL: Record<string, string> = {
+  coupang: '쿠팡',
+  smartstore: '스마트스토어',
+  auction: '옥션',
+  gmarket: '지마켓',
+  '11st': '11번가',
+  interpark: '인터파크',
+  wemakeprice: '위메프',
+  tmon: '티몬',
+  kakao_gift: '카카오선물',
+  own_mall: '자사몰',
+  kakao_channel: '카카오채널',
+  instagram: '인스타그램',
+  other: '기타',
+}
+
 const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },
-  { value: 'pending', label: '접수 대기' },
-  { value: 'confirmed', label: '주문 확정' },
-  { value: 'forwarder_submitted', label: '배대지 신청' },
+  { value: 'pending', label: '마켓 접수' },
+  { value: 'confirmed', label: '매입 발주' },
+  { value: 'paid', label: '매입 완료' },
+  { value: 'forwarder_submitted', label: '배대지 입고' },
   { value: 'in_transit', label: '운송 중' },
-  { value: 'completed', label: '거래 종료' },
+  { value: 'completed', label: '구매 확정' },
   { value: 'cancelled', label: '취소' },
 ]
 
 function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_META[status] ?? STATUS_META.pending
   return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium ${meta.cls}`}>
+    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${meta.cls}`}>
       {meta.label}
     </span>
   )
 }
 
-function formatKRW(value: number | null): string {
-  if (value == null) return '—'
-  return new Intl.NumberFormat('ko-KR').format(value) + '원'
+function MarketplaceTag({ value }: { value: string | null }) {
+  if (!value) return <span className="text-slate-400 text-xs">—</span>
+  return (
+    <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 whitespace-nowrap">
+      {MARKETPLACE_LABEL[value] ?? value}
+    </span>
+  )
+}
+
+function formatKRW(value: number | string | null): string {
+  if (value == null || value === '') return '—'
+  const n = typeof value === 'number' ? value : Number(value)
+  if (!Number.isFinite(n)) return '—'
+  return new Intl.NumberFormat('ko-KR').format(n) + '원'
 }
 
 function formatDate(value: string): string {
   const d = new Date(value)
   if (Number.isNaN(d.getTime())) return value
   return d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
+}
+
+function sumSale(items: { sale_price_krw: number | string | null }[]): number | null {
+  let total = 0
+  let any = false
+  for (const it of items) {
+    const v = it.sale_price_krw
+    if (v == null || v === '') continue
+    const n = typeof v === 'number' ? v : Number(v)
+    if (Number.isFinite(n)) {
+      total += n
+      any = true
+    }
+  }
+  return any ? total : null
 }
 
 function EmptyState() {
@@ -74,7 +118,7 @@ function EmptyState() {
       </div>
       <h2 className="text-base font-semibold text-slate-900">아직 등록된 주문이 없습니다</h2>
       <p className="text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
-        의뢰자 주문을 수동으로 입력해 33개 배대지 양식으로 변환할 수 있습니다.
+        쿠팡·스마트스토어 등 마켓에서 받은 주문을 등록하면 33 배대지 양식으로 자동 변환할 수 있습니다.
       </p>
       <Link
         href="/orders/new"
@@ -96,11 +140,12 @@ function OrderTable({ orders }: { orders: OrderRow[] }) {
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">주문번호</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">의뢰자</th>
+              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">마켓</th>
+              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">마켓 주문번호</th>
+              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">구매자</th>
               <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">상품</th>
               <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">상태</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap text-right">예상 금액</th>
+              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap text-right">판매가</th>
               <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">주문일</th>
             </tr>
           </thead>
@@ -109,18 +154,23 @@ function OrderTable({ orders }: { orders: OrderRow[] }) {
               const items = o.b2b_order_items ?? []
               const firstName = items[0]?.product_name ?? '—'
               const extra = items.length > 1 ? ` 외 ${items.length - 1}건` : ''
+              const totalSale = sumSale(items)
+              const detailHref = `/orders/${o.id}`
               return (
                 <tr key={o.id} className="hover:bg-slate-50/70 transition-colors">
                   <td className="px-4 py-3 whitespace-nowrap">
+                    <MarketplaceTag value={o.marketplace} />
+                  </td>
+                  <td className="px-4 py-3 whitespace-nowrap">
                     <Link
-                      href={`/orders/${o.id}`}
-                      className="font-semibold text-slate-900 hover:text-indigo-700 transition-colors"
+                      href={detailHref}
+                      className="font-mono text-xs font-semibold text-slate-900 hover:text-indigo-700 transition-colors"
                     >
-                      {o.order_number}
+                      {o.market_order_number ?? <span className="text-slate-400 font-sans font-normal">{o.order_number}</span>}
                     </Link>
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-slate-700">
-                    {o.b2b_clients?.display_name ?? <span className="text-slate-400">미지정</span>}
+                    {o.buyer_name ?? <span className="text-slate-400">미입력</span>}
                   </td>
                   <td className="px-4 py-3 text-slate-700 max-w-[260px] truncate">
                     {firstName}
@@ -130,7 +180,7 @@ function OrderTable({ orders }: { orders: OrderRow[] }) {
                     <StatusBadge status={o.status} />
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 tabular-nums">
-                    {formatKRW(o.estimated_cost_krw)}
+                    {formatKRW(totalSale)}
                   </td>
                   <td className="px-4 py-3 whitespace-nowrap text-slate-500 text-xs">
                     {formatDate(o.order_date)}
@@ -148,9 +198,9 @@ function OrderTable({ orders }: { orders: OrderRow[] }) {
 export default async function OrdersListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string }>
+  searchParams: Promise<{ status?: string; q?: string; marketplace?: string }>
 }) {
-  const { status: statusFilter = 'all', q: query = '' } = await searchParams
+  const { status: statusFilter = 'all', q: query = '', marketplace: marketFilter = '' } = await searchParams
 
   const supabase = await createClient()
   const {
@@ -173,7 +223,7 @@ export default async function OrdersListPage({
   let qb = db
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, estimated_cost_krw, request_notes, created_at, b2b_clients(display_name), b2b_order_items(product_name)',
+      'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
     )
     .eq('account_id', account.id)
     .is('deleted_at', null)
@@ -183,13 +233,29 @@ export default async function OrdersListPage({
   if (statusFilter !== 'all' && STATUS_META[statusFilter]) {
     qb = qb.eq('status', statusFilter)
   }
+  if (marketFilter && MARKETPLACE_LABEL[marketFilter]) {
+    qb = qb.eq('marketplace', marketFilter)
+  }
   if (query.trim()) {
     const q = query.trim().replace(/[%,]/g, '')
-    qb = qb.ilike('order_number', `%${q}%`)
+    qb = qb.or(`order_number.ilike.%${q}%,market_order_number.ilike.%${q}%`)
   }
 
   const { data: rows } = (await qb) as { data: OrderRow[] | null }
   const orders = rows ?? []
+
+  // 필터 링크 헬퍼
+  const buildHref = (overrides: Record<string, string | null>) => {
+    const sp = new URLSearchParams()
+    const status = overrides.status !== undefined ? overrides.status : (statusFilter !== 'all' ? statusFilter : null)
+    const mp = overrides.marketplace !== undefined ? overrides.marketplace : (marketFilter || null)
+    const qv = overrides.q !== undefined ? overrides.q : (query || null)
+    if (status) sp.set('status', status)
+    if (mp) sp.set('marketplace', mp)
+    if (qv) sp.set('q', qv)
+    const s = sp.toString()
+    return s ? `/orders?${s}` : '/orders'
+  }
 
   return (
     <div className="p-8 space-y-6 max-w-6xl">
@@ -198,7 +264,7 @@ export default async function OrdersListPage({
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">주문 관리</h1>
           <p className="text-sm text-slate-600 mt-1">
-            의뢰자 주문을 입력하고 배대지 양식으로 변환할 수 있습니다.
+            마켓 주문을 입력하고 33 배대지 양식으로 변환할 수 있습니다.
           </p>
         </div>
         <Link
@@ -212,42 +278,48 @@ export default async function OrdersListPage({
         </Link>
       </div>
 
-      {/* 필터 + 검색 — 빈 상태일 때도 항상 표시 (UI 일관성) */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4">
-        <form method="get" className="flex flex-wrap items-center gap-3">
-          {/* 상태 필터 — 핍 그룹 */}
-          <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="상태 필터">
-            {STATUS_FILTERS.map((f) => {
-              const isActive = statusFilter === f.value
-              const href = (() => {
-                const sp = new URLSearchParams()
-                if (f.value !== 'all') sp.set('status', f.value)
-                if (query) sp.set('q', query)
-                const s = sp.toString()
-                return s ? `/orders?${s}` : '/orders'
-              })()
-              return (
-                <Link
-                  key={f.value}
-                  href={href}
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors
-                    ${isActive
-                      ? 'bg-indigo-600 text-white shadow-sm'
-                      : 'text-slate-600 hover:bg-slate-100'
-                    }`}
-                >
-                  {f.label}
-                </Link>
-              )
-            })}
-          </div>
+      {/* 필터 + 검색 */}
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
+        {/* 상태 필터 */}
+        <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="상태 필터">
+          {STATUS_FILTERS.map((f) => {
+            const isActive = statusFilter === f.value
+            const href = buildHref({ status: f.value === 'all' ? null : f.value })
+            return (
+              <Link
+                key={f.value}
+                href={href}
+                role="tab"
+                aria-selected={isActive}
+                className={`px-2.5 py-1 rounded-md text-xs font-medium transition-colors
+                  ${isActive
+                    ? 'bg-indigo-600 text-white shadow-sm'
+                    : 'text-slate-600 hover:bg-slate-100'
+                  }`}
+              >
+                {f.label}
+              </Link>
+            )
+          })}
+        </div>
+
+        {/* 마켓 필터 + 검색 */}
+        <form method="get" className="flex items-center gap-2 flex-wrap">
+          {statusFilter !== 'all' && <input type="hidden" name="status" value={statusFilter} />}
+          <label htmlFor="marketplace_filter" className="text-xs text-slate-500">마켓</label>
+          <select
+            id="marketplace_filter"
+            name="marketplace"
+            defaultValue={marketFilter}
+            className="px-2.5 py-1 text-xs border border-slate-200 rounded-md bg-white text-slate-700 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+          >
+            <option value="">전체</option>
+            {Object.entries(MARKETPLACE_LABEL).map(([v, l]) => (
+              <option key={v} value={v}>{l}</option>
+            ))}
+          </select>
 
           <div className="ml-auto flex items-center gap-2">
-            {statusFilter !== 'all' && (
-              <input type="hidden" name="status" value={statusFilter} />
-            )}
             <label htmlFor="q" className="sr-only">주문번호 검색</label>
             <div className="relative">
               <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -258,15 +330,15 @@ export default async function OrdersListPage({
                 name="q"
                 type="search"
                 defaultValue={query}
-                placeholder="주문번호 검색"
-                className="pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-44"
+                placeholder="셀러/마켓 주문번호"
+                className="pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md bg-white text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 w-48"
               />
             </div>
             <button
               type="submit"
               className="px-3 py-1.5 text-xs font-semibold rounded-md text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
             >
-              검색
+              적용
             </button>
           </div>
         </form>
@@ -274,7 +346,7 @@ export default async function OrdersListPage({
 
       {/* 목록 또는 빈 상태 */}
       {orders.length === 0 ? (
-        statusFilter === 'all' && !query ? (
+        statusFilter === 'all' && !query && !marketFilter ? (
           <EmptyState />
         ) : (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-10 text-center">
