@@ -108,3 +108,40 @@
 ### 5) 미해결·다음 세션 대기
 - Phase A~D 코드 + DB 모두 prod 반영. 다음 세션에서 dogfood 검증 (사용자 직접 마켓 주문 1건 등록 후 4 섹션 폼 / 목록 / 상세 / 상태 변경 확인)
 - v0.5+ 큐: 33 양식 변환 (P1), SKU 마스터 (b2b_products + 매핑 테이블), 다상품 라인 add/remove, 마진 자동 계산 (환율 곱), 마켓 API 자동 import, 가격 비교, 재고 관리
+
+---
+
+## 2026-05-16 (일괄 입력 기능)
+
+세션 6 — 셀러의 핵심 일상 워크플로우 = 매일 N건 마켓 주문을 한 번에 등록.
+
+DB:
+- `b2b_orders.forwarder_warehouse text` 컬럼 추가 — 같은 배대지 내 창고/센터 식별 (예: 몰테일 NJ·DE·CA, 짐패스 OR). prod 직접 적용 + `supabase/b2b_orders_forwarder_warehouse.sql` 파일 보존.
+
+API:
+- `src/app/api/orders/bulk/route.ts` — POST 만. body: `{ rows: [...] }`. 행별 normalize + 검증(필수: product_name, enum 검증 marketplace/supplier_site/currency/forwarder_country, UUID 검증 forwarder_id), 쿼터 + grace 사전 체크 (validRows 합산 vs 한도), 행 단위 insert (Supabase 트랜잭션 미지원이라 행별 격리, 라인 실패 시 주문 롤백 시도). source='excel_upload'. 결과 `{ ok, success_count, fail_count, results: [{index, ok, error?, order_number?}] }` 형태로 207 또는 201.
+
+UI (`/orders/bulk`):
+- server wrapper(page.tsx, forwarders 조회) + client(BulkOrderClient.tsx, 그리드)
+- 27 컬럼 정의 (마켓 4·구매자 6·상품/매입 12·배대지 2·기타 3) — 사용자 요청 25 + 마켓옵션·매입주문번호 추가
+- 그룹 헤더 (5 그룹) 위에 컬럼 라벨 헤더, 그룹 별 accent 색 (indigo/emerald/sky/amber/slate)
+- 셀별 input 타입: text·number·date·select (select 는 dropdown — marketplace 13·supplier 24·currency 7·forwarder country 7·forwarders 동적)
+- 행 좌측 sticky 번호 + 우측 삭제 버튼
+- 컨트롤 바: +5행 / +1행 / 엑셀 붙여넣기 토글 / CSV 템플릿 다운 / 전체 비우기
+- paste 영역: TSV(탭) 자동 감지, CSV 폴백. 헤더 한국어 라벨↔key 매핑. 헤더 없으면 컬럼 순서로 매핑. 기존 빈 행 제거 후 추가.
+- CSV 템플릿: 27 헤더 + 샘플 1행 (BOM 포함 UTF-8 — 엑셀 한글 보호)
+- 행별 실시간 검증: 비빈 행에 필수값(★) 누락 시 빨강 셀 + 행 배경 amber + 통계 카운터
+- 통계 chip 3종: 입력 행 / 유효 / 누락
+- 등록 후 결과 배너: 전부 성공 → 1.5초 후 /orders 이동, 부분 성공 → 행별 배경색 변경 (성공 emerald, 실패 rose) + 실패 사유 리스트
+
+진입:
+- `/orders` 헤더에 "일괄 입력" 보조 버튼 + "새 주문 입력" 메인
+- 빈상태 카드에 둘 다 CTA
+
+빌드: 30 page (`/orders/bulk` + `/api/orders/bulk` 추가). 통과.
+
+설계 메모 (다음 세션 컨텍스트):
+- 그리드 셀 type=number 와 select 가 한 행에 섞여 있어 paste 시 dropdown enum 값 (예: "쿠팡") 이 라벨 형태로 들어오면 매칭 안 됨. 현재는 enum value (`coupang`) 만 허용. v0.5+ 에서 라벨→value reverse lookup 보강 가능.
+- 한 row = 1 주문 + 1 라인 아이템 가정. 한 마켓 주문에 여러 라인이 필요한 경우 별도 행을 같은 market_order_number 로 묶거나, 다상품 add/remove UI (v0.5) 추가 필요.
+- 쿼터 사전 체크는 normalize 후 valid 행 수 기준. 부분 등록은 안 함 (전체 등록 또는 전체 거부 — 안전).
+- supabase 의 from().insert([...]) batch 가 트랜잭션 보장 안 함. 50건 이상 처리 시 행별 순차 insert 의 latency 가 누적될 수 있음 — v0.5+ 에서 server function 또는 batched insert + 실패 retry 로 최적화 가능.

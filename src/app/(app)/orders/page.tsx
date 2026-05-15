@@ -120,15 +120,26 @@ function EmptyState() {
       <p className="text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
         쿠팡·스마트스토어 등 마켓에서 받은 주문을 등록하면 33 배대지 양식으로 자동 변환할 수 있습니다.
       </p>
-      <Link
-        href="/orders/new"
-        className="inline-flex items-center gap-1.5 mt-5 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-sm font-semibold text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-      >
-        <svg className="w-4 h-4" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
-        </svg>
-        새 주문 입력
-      </Link>
+      <div className="mt-5 flex items-center justify-center gap-2">
+        <Link
+          href="/orders/new"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-sm font-semibold text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
+          </svg>
+          새 주문 입력
+        </Link>
+        <Link
+          href="/orders/bulk"
+          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md text-sm font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 transition-colors"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+          </svg>
+          일괄 입력
+        </Link>
+      </div>
     </div>
   )
 }
@@ -267,15 +278,26 @@ export default async function OrdersListPage({
             마켓 주문을 입력하고 33 배대지 양식으로 변환할 수 있습니다.
           </p>
         </div>
-        <Link
-          href="/orders/new"
-          className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-sm font-semibold text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-        >
-          <svg className="w-4 h-4" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
-          </svg>
-          새 주문 입력
-        </Link>
+        <div className="flex items-center gap-2">
+          <Link
+            href="/orders/bulk"
+            className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+            일괄 입력
+          </Link>
+          <Link
+            href="/orders/new"
+            className="inline-flex items-center gap-1.5 px-4 py-2 rounded-md bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-sm font-semibold text-white shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+          >
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
+            </svg>
+            새 주문 입력
+          </Link>
+        </div>
       </div>
 
       {/* 필터 + 검색 */}
