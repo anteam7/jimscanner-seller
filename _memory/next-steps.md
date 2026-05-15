@@ -1,38 +1,63 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-15 (Stage 2b MVP P0 완료 시점)
+마지막 갱신: 2026-05-15 (도메인 재정의 + Phase A~D 진입 시점)
 
 ---
 
-## 🥇 1순위 — Stage 2b 계속: 주문 상세·양식 변환·실데이터 검증
+## ⚠️ 도메인 재정의 (2026-05-15, dogfood 직후)
 
-**왜:** P0 골격(목록·생성·NAV·API) 은 끝났지만, 정작 "왜 가입했는지" = 33 배대지 양식 변환이 아직 비어있음. 그리고 라이브 DB 로 실제 주문 등록·표시가 동작하는지 검증해야 함.
+기존 전제(구매대행 사업자 ← 의뢰자) 가 **잘못** 이었음. 실제는:
 
-**완료된 것 (2026-05-15):**
-- ✅ `src/app/(app)/orders/page.tsx` — 목록 (필터·검색·빈상태)
-- ✅ `src/app/(app)/orders/new/page.tsx` — 수동 입력 폼 (1상품 MVP)
-- ✅ `src/app/api/orders/route.ts` — POST(쿼터·의뢰자 upsert·라인) + GET
-- ✅ SellerShell NAV `/orders` 활성
-- ✅ Dashboard "새 주문 입력" QuickAction 활성
+**셀러는 국내 마켓(쿠팡·스마트스토어·옥션·지마켓·자사몰)에서 주문이 들어오면, 해외(미국아마존·일본아마존·라쿠텐·타오바오 등)에서 매입하고, 33 배대지 중 1개를 골라서 한국으로 받아 마켓 구매자에게 배송.**
 
-**다음 작업 단위:**
+핵심 변화:
+- "의뢰자" 폐기 → "마켓 구매자(buyer)" — 1회성 PII가 주문에 직접 포함 (배대지 양식의 수신자)
+- 마켓·마켓주문번호가 1차 식별자
+- 한 마켓 주문 = N개 해외 매입 (라인 아이템마다 supplier_site)
+- SKU 매칭은 선택사항 (선등록/즉석등록/없이 모두 가능)
+- 양식 변환의 입력값: 구매자 주소 + 매입 상품 정보 + 매입 사이트
 
-| 파일 | 내용 | 우선순위 |
-|---|---|---|
-| `src/app/(app)/orders/[id]/page.tsx` | 주문 상세 + 상태 변경 + 라인 아이템 표시 | 🔴 P0 |
-| 라이브 DB 등록·표시 dogfood | seller.jimscanner.co.kr or 로컬에서 실 주문 1건 등록·목록 확인 | 🔴 P0 |
-| `src/components/b2b/ForwarderExportModal.tsx` | 배대지 선택 + XLSX 다운로드 (Web Worker) | 🟡 P1 |
-| `src/app/api/orders/export/route.ts` | 양식별 XLSX 변환·반환 | 🟡 P1 |
-| `supabase/b2b_forwarder_form_specs.sql` | 33 배대지 양식 컬럼 정의 (사전 데이터 수집 필요) | 🟠 P2 |
-| 다상품 입력 지원 | new 페이지에서 라인 아이템 add/remove | 🟠 P2 |
+---
+
+## 🥇 1순위 — Phase A~D 진행 중 (2026-05-15 시작)
+
+**완료된 v0 골격 (도메인 재정의 전):**
+- ✅ `src/app/(app)/orders/page.tsx` — 목록 (의뢰자 컬럼 — 재구성 필요)
+- ✅ `src/app/(app)/orders/new/page.tsx` — 수동 입력 폼 (재구성 필요)
+- ✅ `src/app/(app)/orders/[id]/page.tsx` — 주문 상세 (재구성 필요)
+- ✅ `src/app/api/orders/route.ts` — POST/GET (재구성 필요)
+- ✅ SellerShell NAV / Dashboard QuickAction 활성
+- ⚠️ PATCH `/api/orders/[id]/status` — `withdrawal_notice_*` select 컬럼 누락 버그 (Phase A 에서 fix)
+
+**Phase A — 기반 정리:**
+1. 도메인 메모 정정 (CLAUDE.md, _memory/*) — 이 항목
+2. DB 마이그레이션 SQL: b2b_orders + b2b_order_items 컬럼 추가 (사용자 적용)
+3. PATCH status route 의 b2b_accounts.select 버그 fix
+
+**Phase B — UI/API 재구성:**
+4. `/api/orders` POST 마켓/구매자/forwarder 수용, 의뢰자 자동 upsert 제거
+5. `/orders/new` 4 섹션 (마켓 / 구매자 / 해외 매입 라인 / 배대지)
+6. `/orders` 목록 컬럼 교체 (마켓·마켓번호·구매자·판매가)
+7. `/orders/[id]` 상세 재구성 (마켓+구매자 / 매입+판매+마진 / 배대지)
+
+**Phase C — 상태 라벨 정정:** enum 그대로, 라벨만 셀러 관점.
+
+**Phase D — forwarders 시드·선택 UX**
+
+**P1+ (다음 phase):**
+- 33 배대지 양식 spec + XLSX 변환
+- SKU 마스터 (b2b_products + 마켓/매입처 매핑)
+- 다상품 입력 (라인 add/remove)
+- 마켓 API 자동 import
+- 매입처 가격 비교
+- 재고 관리
 
 **디자인:** v2.1 패턴 — dashboard 와 같은 톤 (shadow-sm 카드, gradient banner, accent border, p-8 max-w-{4,5,6}xl).
 
 **구현 메모 (다음 세션 컨텍스트):**
 - 쿼터 트리거 `tg_b2b_order_quota_increment` 는 b2b_schema.sql L907 에 이미 있음 — POST 가 명시적 increment 안 함, DB 가 알아서 처리
-- 의뢰자는 display_name 기준 자동 upsert. 동일 이름이면 첫 매칭 재사용 (의뢰자 관리 UI 완성 후 정교화)
-- status 전이 검증은 `/api/orders/[id]/status` (이미 존재) 가 담당, 단 status enum 이 b2b_schema 와 다름 — 정렬 필요
-- 상태 enum 정렬: pending/confirmed/paid/forwarder_submitted/in_transit/arrived_korea/delivered/completed/cancelled/refunded
+- `b2b_clients` 테이블은 의미 변경(마켓 구매자 단골 추적용)으로 보존, v0 에서 적극 사용 X — buyer_* 는 b2b_orders 에 직접 저장
+- forwarders 테이블은 main repo 또는 이전 마이그레이션에 정의 (이 repo schema 엔 외부 참조만)
 
 ---
 

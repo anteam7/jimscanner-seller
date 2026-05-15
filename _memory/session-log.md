@@ -44,3 +44,29 @@
 - `npm run build` 통과, 28 page
 
 남은 작업: orders/[id] 상세, ForwarderExportModal, 33 배대지 spec seed. next-steps 참조.
+
+---
+
+## 2026-05-15 (도메인 재정의 + Phase A~D 시작)
+
+세션 5 — dogfood 직후 도메인 재정의:
+
+dogfood 결과 도메인 전제 자체가 잘못됐음을 확인 (사용자 정정).
+- 기존: 구매대행 사업자 ← 의뢰자 직접
+- 실제: 국내 마켓 셀러 ← 쿠팡/스마트스토어/옥션/지마켓 등 마켓 ← 마켓 구매자.
+  셀러가 해외(미국아마존/일본아마존/라쿠텐 등)에서 매입 → 본인이 정한 배대지 → 마켓 구매자에게 배송
+
+추가 정리:
+- SKU 매칭: 선택사항 (선등록/즉석/없음 모두 가능, 소급도 가능)
+- v0: 수동 입력만 / v1: 마켓 API 자동 수집 / 가격비교·재고는 추후
+
+Phase A~D 진입:
+- A: 도메인 메모 정정, DB 마이그 SQL, PATCH 버그 fix
+- B: /api/orders + /orders/* 재구성
+- C: 상태 라벨 셀러 관점 정정
+- D: forwarders 시드·선택 UX
+
+dogfood 발견 이슈:
+- ✅ /orders/new → POST → /orders 정상 (도메인 정정 전 데이터로 검증)
+- ✅ /orders/[id] 상세 정상 (도메인 정정 전)
+- ❌ PATCH /api/orders/[id]/status — b2b_accounts.select 에 schema 에 없는 `withdrawal_notice_*` 컬럼 요청 → "사업자 계정이 없습니다" 반환. Phase A 에서 fix.
