@@ -2,6 +2,7 @@
 
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { createClient } from '@/lib/auth/client'
 import AnnouncementBanner from '@/components/b2b/AnnouncementBanner'
 
@@ -125,19 +126,23 @@ export default function SellerShell({
     <div className="h-screen flex bg-slate-50 text-slate-900 overflow-hidden">
       {/* 사이드바 — 다크 톤 */}
       <aside className="w-[220px] flex-shrink-0 flex flex-col bg-slate-800 text-slate-100">
-        {/* 로고 — A: 짐스캐너 시그니처 (B2C 운송 메타포 차용) */}
+        {/* 로고 — B2C 짐스캐너 로고 + SELLER 표기 */}
         <div className="px-5 py-4 border-b border-slate-700">
           <Link
             href="/dashboard"
+            aria-label="짐스캐너 SELLER 대시보드"
             className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
           >
-            <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 shadow-sm">
-              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.75 12 4l8.25 5.75M5.25 9.75v9.5h13.5v-9.5M9.75 19.25v-5h4.5v5" />
-              </svg>
-            </span>
-            <span className="text-sm font-bold tracking-tight text-white group-hover:text-indigo-200 transition-colors">
-              짐스캐너 <span className="text-indigo-300 font-semibold">SELLER</span>
+            <Image
+              src="/jimscanner-logo.png"
+              alt="짐스캐너"
+              width={345}
+              height={80}
+              priority
+              className="h-7 w-auto brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
+            />
+            <span className="text-[11px] font-semibold tracking-widest text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 rounded px-1.5 py-0.5">
+              SELLER
             </span>
           </Link>
         </div>
