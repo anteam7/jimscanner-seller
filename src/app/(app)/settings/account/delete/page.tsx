@@ -78,12 +78,12 @@ export default function AccountDeletePage() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center space-y-4">
-          <div className="w-16 h-16 mx-auto rounded-full bg-slate-800 flex items-center justify-center">
-            <svg className="w-8 h-8 text-slate-300" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
+          <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center">
+            <svg className="w-8 h-8 text-slate-500" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
             </svg>
           </div>
-          <h2 className="text-xl font-semibold text-slate-100">탈퇴 처리가 완료되었습니다</h2>
+          <h2 className="text-xl font-semibold text-slate-900">탈퇴 처리가 완료되었습니다</h2>
           <p className="text-slate-400 text-sm">탈퇴 확인 이메일이 발송되었습니다.<br/>3초 후 로그인 페이지로 이동합니다.</p>
         </div>
       </div>
@@ -95,12 +95,12 @@ export default function AccountDeletePage() {
       {/* 헤더 */}
       <div className="space-y-1">
         <div className="flex items-center gap-2">
-          <Link href="/settings/account" className="text-slate-400 hover:text-slate-300 transition-colors">
+          <Link href="/settings/account" className="text-slate-400 hover:text-slate-500 transition-colors">
             <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" />
             </svg>
           </Link>
-          <h1 className="text-xl font-semibold text-slate-100">계정 탈퇴</h1>
+          <h1 className="text-xl font-semibold text-slate-900">계정 탈퇴</h1>
         </div>
         <p className="text-sm text-slate-400 pl-6">개인정보보호법 §21에 따라 탈퇴 자유를 보장합니다</p>
       </div>
@@ -108,14 +108,14 @@ export default function AccountDeletePage() {
       {step === 'warning' && (
         <div className="space-y-4">
           {/* 탈퇴 안내 */}
-          <div className="rounded-xl border border-red-800/60 bg-red-950/30 p-5 space-y-3">
+          <div className="rounded-xl border border-red-200/60 bg-red-50 p-5 space-y-3">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z" />
               </svg>
-              <h2 className="text-base font-semibold text-red-300">탈퇴 전 반드시 확인해 주세요</h2>
+              <h2 className="text-base font-semibold text-red-700">탈퇴 전 반드시 확인해 주세요</h2>
             </div>
-            <ul className="space-y-2 text-sm text-red-200/80 list-disc list-inside pl-1">
+            <ul className="space-y-2 text-sm text-red-700/80 list-disc list-inside pl-1">
               <li>모든 주문·의뢰자·설정 데이터가 영구 삭제됩니다</li>
               <li>동일 사업자등록번호로 재가입은 <strong>30일 후</strong>부터 가능합니다</li>
               <li>탈퇴 후에는 계정 복구가 불가능합니다</li>
@@ -124,19 +124,19 @@ export default function AccountDeletePage() {
 
           {/* 활성 구독 경고 */}
           {!loadingSub && subscription && (
-            <div className="rounded-xl border border-amber-700/50 bg-amber-950/30 p-4 space-y-2">
+            <div className="rounded-xl border border-amber-700/50 bg-amber-50 p-4 space-y-2">
               <div className="flex items-center gap-2">
-                <svg className="w-4 h-4 text-amber-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <svg className="w-4 h-4 text-amber-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
                 </svg>
-                <p className="text-sm font-medium text-amber-300">
+                <p className="text-sm font-medium text-amber-700">
                   현재 <strong>{subscription.plan_name}</strong> 구독이 활성화되어 있습니다
                 </p>
               </div>
-              <p className="text-sm text-amber-200/70 pl-6">
+              <p className="text-sm text-amber-800/70 pl-6">
                 탈퇴 즉시 구독이 취소됩니다.
                 {subscription.current_period_end && (
-                  <> 환불은 제공되지 않으며, <a href="/support?type=refund_inquiry" className="underline hover:text-amber-200 transition-colors">환불 정책</a>을 참조해 주세요.</>
+                  <> 환불은 제공되지 않으며, <a href="/support?type=refund_inquiry" className="underline hover:text-amber-800 transition-colors">환불 정책</a>을 참조해 주세요.</>
                 )}
               </p>
             </div>
@@ -144,7 +144,7 @@ export default function AccountDeletePage() {
 
           <div className="flex gap-3 pt-2">
             <Link href="/settings/account"
-              className="flex-1 inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors">
+              className="flex-1 inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors">
               취소
             </Link>
             <Button
@@ -160,14 +160,14 @@ export default function AccountDeletePage() {
 
       {step === 'confirm' && (
         <div className="space-y-4">
-          <div className="rounded-xl border border-slate-700/60 bg-slate-800/40 p-5 space-y-4">
+          <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
             <div>
-              <h2 className="text-base font-semibold text-slate-200 mb-1">비밀번호로 신원 확인</h2>
+              <h2 className="text-base font-semibold text-slate-800 mb-1">비밀번호로 신원 확인</h2>
               <p className="text-sm text-slate-400">탈퇴를 완료하려면 현재 비밀번호를 입력해 주세요.</p>
             </div>
 
             <div className="space-y-1.5">
-              <label htmlFor="delete-password" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="delete-password" className="block text-sm font-medium text-slate-500">
                 현재 비밀번호
               </label>
               <div className="relative">
@@ -180,14 +180,14 @@ export default function AccountDeletePage() {
                   placeholder="현재 비밀번호 입력"
                   aria-invalid={error ? true : undefined}
                   aria-describedby={error ? 'delete-error' : undefined}
-                  className="bg-slate-900/60 border-slate-700 text-slate-100 placeholder:text-slate-500 pr-10"
+                  className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 pr-10"
                   autoComplete="current-password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
                   aria-label={showPassword ? '비밀번호 숨기기' : '비밀번호 표시'}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 transition-colors"
                 >
                   {showPassword ? (
                     <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -202,7 +202,7 @@ export default function AccountDeletePage() {
                 </button>
               </div>
               {error && (
-                <p id="delete-error" role="alert" className="text-xs text-red-400">
+                <p id="delete-error" role="alert" className="text-xs text-red-600">
                   {error}
                 </p>
               )}
@@ -213,7 +213,7 @@ export default function AccountDeletePage() {
             <button
               type="button"
               onClick={() => setStep('warning')}
-              className="flex-1 inline-flex items-center justify-center rounded-lg border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-300 hover:bg-slate-800 transition-colors"
+              className="flex-1 inline-flex items-center justify-center rounded-lg border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-500 hover:bg-slate-100 transition-colors"
             >
               이전
             </button>
@@ -237,7 +237,7 @@ export default function AccountDeletePage() {
             </Button>
           </div>
 
-          <p className="text-xs text-slate-500 text-center">
+          <p className="text-xs text-slate-400 text-center">
             탈퇴 후에는 복구가 불가능합니다. 신중히 결정해 주세요.
           </p>
         </div>

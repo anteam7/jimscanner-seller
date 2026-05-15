@@ -31,8 +31,8 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
       aria-live="polite"
       className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium shadow-lg transition-all ${
         toast.type === 'success'
-          ? 'bg-green-950/90 border-green-700 text-green-200'
-          : 'bg-red-950/90 border-red-700 text-red-200'
+          ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
+          : 'bg-red-50 border-red-200 text-red-700'
       }`}
     >
       {toast.type === 'success' ? (
@@ -173,11 +173,11 @@ export default function AccountSettingsPage() {
   if (loadError) {
     return (
       <div className="p-6 max-w-2xl">
-        <p className="text-sm text-red-400">{loadError}</p>
+        <p className="text-sm text-red-600">{loadError}</p>
         <button
           type="button"
           onClick={loadAccount}
-          className="mt-2 text-sm text-indigo-400 hover:text-indigo-300 underline"
+          className="mt-2 text-sm text-indigo-600 hover:text-indigo-700 underline"
         >
           다시 시도
         </button>
@@ -188,7 +188,7 @@ export default function AccountSettingsPage() {
   if (!account) {
     return (
       <div className="p-6 max-w-2xl">
-        <div className="flex items-center gap-2 text-slate-500 text-sm">
+        <div className="flex items-center gap-2 text-slate-400 text-sm">
           <svg className="w-4 h-4 animate-spin" viewBox="0 0 24 24" fill="none" aria-hidden="true">
             <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
             <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v4l3-3-3-3v4a8 8 0 00-8 8h4z" />
@@ -202,20 +202,20 @@ export default function AccountSettingsPage() {
   return (
     <div className="p-6 max-w-2xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-white">계정 정보</h1>
+        <h1 className="text-xl font-bold text-slate-900">계정 정보</h1>
         <p className="text-sm text-slate-400 mt-0.5">연락처·주소·이메일·비밀번호를 수정합니다.</p>
       </div>
 
       {/* 기본 정보 */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
-        <h2 className="text-sm font-semibold text-white">기본 정보</h2>
+      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
+        <h2 className="text-sm font-semibold text-slate-900">기본 정보</h2>
         <div className="space-y-1">
-          <p className="text-xs text-slate-500">상호</p>
-          <p className="text-sm text-slate-300">{account.business_name || '—'}</p>
+          <p className="text-xs text-slate-400">상호</p>
+          <p className="text-sm text-slate-500">{account.business_name || '—'}</p>
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-slate-500">대표자</p>
-          <p className="text-sm text-slate-300">{account.ceo_name || '—'}</p>
+          <p className="text-xs text-slate-400">대표자</p>
+          <p className="text-sm text-slate-500">{account.ceo_name || '—'}</p>
         </div>
         <form onSubmit={handleInfoSave} className="space-y-4">
           <div className="space-y-1.5">
@@ -228,7 +228,7 @@ export default function AccountSettingsPage() {
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
               placeholder="010-0000-0000"
-              className="bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20"
+              className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20"
               aria-describedby={infoError ? 'info-error' : undefined}
             />
           </div>
@@ -242,7 +242,7 @@ export default function AccountSettingsPage() {
               onChange={(e) => setPostalCode(e.target.value)}
               placeholder="12345"
               maxLength={5}
-              className="bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20 max-w-[140px]"
+              className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20 max-w-[140px]"
             />
           </div>
           <div className="space-y-1.5">
@@ -254,7 +254,7 @@ export default function AccountSettingsPage() {
               value={address}
               onChange={(e) => setAddress(e.target.value)}
               placeholder="도로명 또는 지번 주소"
-              className="bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20"
+              className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20"
             />
           </div>
           <div className="space-y-1.5">
@@ -266,11 +266,11 @@ export default function AccountSettingsPage() {
               value={detailAddress}
               onChange={(e) => setDetailAddress(e.target.value)}
               placeholder="동·호수 등 상세 주소"
-              className="bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20"
+              className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20"
             />
           </div>
           {infoError && (
-            <p id="info-error" role="alert" className="text-xs text-red-400">{infoError}</p>
+            <p id="info-error" role="alert" className="text-xs text-red-600">{infoError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -285,10 +285,10 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 이메일 변경 */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
+      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-white">이메일 변경</h2>
-          <p className="text-xs text-slate-500 mt-0.5">변경 후 새 이메일로 확인 링크가 발송됩니다.</p>
+          <h2 className="text-sm font-semibold text-slate-900">이메일 변경</h2>
+          <p className="text-xs text-slate-400 mt-0.5">변경 후 새 이메일로 확인 링크가 발송됩니다.</p>
         </div>
         <form onSubmit={handleEmailChange} className="space-y-4">
           <div className="space-y-1.5">
@@ -302,13 +302,13 @@ export default function AccountSettingsPage() {
               onChange={(e) => { setNewEmail(e.target.value); setEmailError(null) }}
               placeholder="new@example.com"
               autoComplete="email"
-              className="bg-slate-800/60 border-slate-700 text-white placeholder:text-slate-600 focus:border-indigo-500 focus:ring-indigo-500/20"
+              className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus:border-indigo-500 focus:ring-indigo-500/20"
               aria-describedby={emailError ? 'email-error' : undefined}
               aria-invalid={emailError ? true : undefined}
             />
           </div>
           {emailError && (
-            <p id="email-error" role="alert" className="text-xs text-red-400">{emailError}</p>
+            <p id="email-error" role="alert" className="text-xs text-red-600">{emailError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -323,10 +323,10 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 비밀번호 변경 */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-4">
+      <section className="rounded-xl border border-slate-200 bg-white p-6 space-y-4">
         <div>
-          <h2 className="text-sm font-semibold text-white">비밀번호 변경</h2>
-          <p className="text-xs text-slate-500 mt-0.5">현재 비밀번호를 확인한 후 변경합니다.</p>
+          <h2 className="text-sm font-semibold text-slate-900">비밀번호 변경</h2>
+          <p className="text-xs text-slate-400 mt-0.5">현재 비밀번호를 확인한 후 변경합니다.</p>
         </div>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div className="space-y-1.5">
@@ -340,13 +340,13 @@ export default function AccountSettingsPage() {
                 value={currentPw}
                 onChange={(e) => { setCurrentPw(e.target.value); setPwError(null) }}
                 autoComplete="current-password"
-                className="bg-slate-800/60 border-slate-700 text-white pr-10 focus:border-indigo-500 focus:ring-indigo-500/20"
+                className="bg-slate-100 border-slate-300 text-slate-900 pr-10 focus:border-indigo-500 focus:ring-indigo-500/20"
                 aria-describedby={pwError ? 'pw-error' : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowCurrentPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 rounded"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 rounded"
                 aria-label={showCurrentPw ? '비밀번호 숨기기' : '비밀번호 표시'}
               >
                 {showCurrentPw ? (
@@ -363,7 +363,7 @@ export default function AccountSettingsPage() {
           </div>
           <div className="space-y-1.5">
             <label htmlFor="new-pw" className="block text-xs font-medium text-slate-400">
-              새 비밀번호 <span className="text-slate-600">(8자 이상)</span>
+              새 비밀번호 <span className="text-slate-400">(8자 이상)</span>
             </label>
             <div className="relative">
               <Input
@@ -372,13 +372,13 @@ export default function AccountSettingsPage() {
                 value={newPw}
                 onChange={(e) => { setNewPw(e.target.value); setPwError(null) }}
                 autoComplete="new-password"
-                className="bg-slate-800/60 border-slate-700 text-white pr-10 focus:border-indigo-500 focus:ring-indigo-500/20"
+                className="bg-slate-100 border-slate-300 text-slate-900 pr-10 focus:border-indigo-500 focus:ring-indigo-500/20"
                 aria-invalid={pwError && newPw.length > 0 && newPw.length < 8 ? true : undefined}
               />
               <button
                 type="button"
                 onClick={() => setShowNewPw((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-500 hover:text-slate-300 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 rounded"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-500 focus:outline-none focus-visible:ring-1 focus-visible:ring-indigo-500 rounded"
                 aria-label={showNewPw ? '비밀번호 숨기기' : '비밀번호 표시'}
               >
                 {showNewPw ? (
@@ -403,18 +403,18 @@ export default function AccountSettingsPage() {
               value={confirmPw}
               onChange={(e) => { setConfirmPw(e.target.value); setPwError(null) }}
               autoComplete="new-password"
-              className={`bg-slate-800/60 border-slate-700 text-white focus:border-indigo-500 focus:ring-indigo-500/20 ${
+              className={`bg-slate-100 border-slate-300 text-slate-900 focus:border-indigo-500 focus:ring-indigo-500/20 ${
                 confirmPw.length > 0 && newPw !== confirmPw ? 'border-red-500 focus:border-red-500' : ''
               }`}
               aria-invalid={confirmPw.length > 0 && newPw !== confirmPw ? true : undefined}
               aria-describedby={confirmPw.length > 0 && newPw !== confirmPw ? 'confirm-pw-error' : undefined}
             />
             {confirmPw.length > 0 && newPw !== confirmPw && (
-              <p id="confirm-pw-error" role="alert" className="text-xs text-red-400">비밀번호가 일치하지 않습니다.</p>
+              <p id="confirm-pw-error" role="alert" className="text-xs text-red-600">비밀번호가 일치하지 않습니다.</p>
             )}
           </div>
           {pwError && (
-            <p id="pw-error" role="alert" className="text-xs text-red-400">{pwError}</p>
+            <p id="pw-error" role="alert" className="text-xs text-red-600">{pwError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -429,14 +429,14 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 계정 탈퇴 */}
-      <section className="rounded-xl border border-red-900/40 bg-red-950/10 p-6 space-y-3">
+      <section className="rounded-xl border border-red-900/40 bg-red-50 p-6 space-y-3">
         <div>
-          <h2 className="text-sm font-semibold text-red-300">계정 탈퇴</h2>
-          <p className="text-xs text-slate-500 mt-0.5">탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
+          <h2 className="text-sm font-semibold text-red-700">계정 탈퇴</h2>
+          <p className="text-xs text-slate-400 mt-0.5">탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
         </div>
         <a
           href="/settings/account/delete"
-          className="inline-flex items-center gap-2 text-sm text-red-400 hover:text-red-300 transition-colors border border-red-800/50 hover:border-red-700 rounded-lg px-4 py-2"
+          className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors border border-red-200/50 hover:border-red-200 rounded-lg px-4 py-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />

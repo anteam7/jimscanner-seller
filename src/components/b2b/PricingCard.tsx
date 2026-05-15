@@ -51,10 +51,10 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
     <div
       className={`relative flex flex-col rounded-2xl border p-6 transition-all duration-200
         ${isCurrentPlan
-          ? 'border-indigo-600 bg-indigo-950/30 shadow-[0_0_0_1px_theme(colors.indigo.600)]'
+          ? 'border-indigo-600 bg-indigo-50 shadow-[0_0_0_1px_theme(colors.indigo.600)]'
           : isPro && !isCurrentPlan
-          ? 'border-indigo-800/60 bg-slate-900/60'
-          : 'border-slate-800 bg-slate-900/40'
+          ? 'border-indigo-200 bg-slate-100'
+          : 'border-slate-200 bg-white'
         }
         ${isLocked && !isCurrentPlan ? 'opacity-60' : ''}
       `}
@@ -74,7 +74,7 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
       {/* 인증 필요 잠금 배지 */}
       {isLocked && !isCurrentPlan && !isEnterprise && (
         <div className="absolute -top-3.5 left-1/2 -translate-x-1/2">
-          <span className="inline-flex items-center gap-1 bg-slate-700 text-slate-300 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">
+          <span className="inline-flex items-center gap-1 bg-slate-300 text-slate-500 text-xs font-medium px-3 py-1 rounded-full whitespace-nowrap">
             <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" strokeWidth={2} stroke="currentColor" aria-hidden="true">
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 5.25V4.5a2.25 2.25 0 1 1 4.5 0v.75M3 5.25h6a.75.75 0 0 1 .75.75v3.75A.75.75 0 0 1 9 10.5H3a.75.75 0 0 1-.75-.75V6a.75.75 0 0 1 .75-.75Z" />
             </svg>
@@ -85,7 +85,7 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
 
       {/* 플랜 이름 + 설명 */}
       <div className="mb-5 mt-1">
-        <h3 className="text-lg font-bold text-white">{plan.name_ko}</h3>
+        <h3 className="text-lg font-bold text-slate-900">{plan.name_ko}</h3>
         {plan.description && (
           <p className="text-xs text-slate-400 mt-1 leading-relaxed">{plan.description}</p>
         )}
@@ -94,36 +94,36 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
       {/* 가격 */}
       <div className="mb-5">
         {isEnterprise ? (
-          <p className="text-2xl font-bold text-white">협의</p>
+          <p className="text-2xl font-bold text-slate-900">협의</p>
         ) : isFree ? (
           <div>
-            <p className="text-2xl font-bold text-white">무료</p>
-            <p className="text-xs text-slate-500 mt-0.5">베타 기간 한정</p>
+            <p className="text-2xl font-bold text-slate-900">무료</p>
+            <p className="text-xs text-slate-400 mt-0.5">베타 기간 한정</p>
           </div>
         ) : (
           <div>
             <div className="flex items-end gap-1.5">
-              <span className="text-2xl font-bold text-white tabular-nums transition-all duration-300">
+              <span className="text-2xl font-bold text-slate-900 tabular-nums transition-all duration-300">
                 {monthlyEquivalent.toLocaleString()}
               </span>
               <span className="text-sm text-slate-400 mb-0.5">원/월</span>
             </div>
             {billingPeriod === 'yearly' && yearlyDiscount > 0 ? (
-              <p className="text-xs text-green-400 mt-0.5">
+              <p className="text-xs text-emerald-600 mt-0.5">
                 연 {plan.price_krw_yearly.toLocaleString()}원 결제 (약 {yearlyDiscount}% 할인)
               </p>
             ) : (
-              <p className="text-xs text-slate-500 mt-0.5">부가세 별도</p>
+              <p className="text-xs text-slate-400 mt-0.5">부가세 별도</p>
             )}
           </div>
         )}
       </div>
 
       {/* 할당량 */}
-      <div className="mb-5 py-2.5 px-3 rounded-lg bg-slate-800/60 border border-slate-700/50">
+      <div className="mb-5 py-2.5 px-3 rounded-lg bg-slate-100 border border-slate-200">
         <p className="text-xs text-slate-400">
           월 주문{' '}
-          <span className="text-white font-semibold">
+          <span className="text-slate-900 font-semibold">
             {plan.monthly_order_quota === null
               ? '무제한'
               : `${plan.monthly_order_quota.toLocaleString()}건`}
@@ -139,14 +139,14 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
           return (
             <li
               key={key}
-              className={`flex items-center gap-2 text-xs ${enabled ? 'text-slate-300' : 'text-slate-600'}`}
+              className={`flex items-center gap-2 text-xs ${enabled ? 'text-slate-500' : 'text-slate-400'}`}
             >
               {enabled ? (
-                <svg className="w-3.5 h-3.5 text-green-500 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M2 7l3.5 3.5 6.5-7" />
                 </svg>
               ) : (
-                <svg className="w-3.5 h-3.5 text-slate-700 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                <svg className="w-3.5 h-3.5 text-slate-500 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2} stroke="currentColor" aria-hidden="true">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M4 7h6" />
                 </svg>
               )}
@@ -158,20 +158,20 @@ export default function PricingCard({ plan, isCurrentPlan, isLocked, billingPeri
 
       {/* CTA */}
       {isCurrentPlan ? (
-        <div className="w-full text-center text-xs font-medium text-indigo-400 py-2.5 rounded-lg border border-indigo-800/50 bg-indigo-950/20">
+        <div className="w-full text-center text-xs font-medium text-indigo-600 py-2.5 rounded-lg border border-indigo-200 bg-indigo-50">
           현재 사용 중
         </div>
       ) : isEnterprise ? (
         <Link
           href="/support?type=enterprise_inquiry"
-          className="w-full text-center block text-sm font-semibold text-white bg-slate-700 hover:bg-slate-600 active:bg-slate-800 transition-colors px-4 py-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="w-full text-center block text-sm font-semibold text-slate-900 bg-slate-300 hover:bg-slate-600 active:bg-slate-100 transition-colors px-4 py-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
         >
           문의하기
         </Link>
       ) : isLocked ? (
         <Link
           href="/signup/step-4"
-          className="w-full text-center block text-sm font-medium text-slate-400 border border-slate-700 hover:border-slate-600 hover:text-slate-300 transition-colors px-4 py-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
+          className="w-full text-center block text-sm font-medium text-slate-400 border border-slate-300 hover:border-slate-600 hover:text-slate-500 transition-colors px-4 py-2.5 rounded-lg focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500"
         >
           인증 완료 후 선택 →
         </Link>

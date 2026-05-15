@@ -29,7 +29,7 @@ function TermRow({
   const [expanded, setExpanded] = useState(false)
 
   return (
-    <div className="rounded-lg border border-slate-700 bg-slate-900/40">
+    <div className="rounded-lg border border-slate-300 bg-white">
       <div className="flex items-start gap-3 px-4 py-3">
         <button
           type="button"
@@ -40,17 +40,17 @@ function TermRow({
             ${checked ? 'bg-indigo-600 border-indigo-600' : 'bg-transparent border-slate-600 hover:border-slate-400'}`}
         >
           {checked && (
-            <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+            <svg className="w-3 h-3 text-slate-900" viewBox="0 0 12 12" fill="none">
               <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             </svg>
           )}
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
-            <span className="text-sm font-medium text-white">{term.title}</span>
+            <span className="text-sm font-medium text-slate-900">{term.title}</span>
             <span
               className={`text-xs px-1.5 py-0.5 rounded font-semibold
-                ${term.is_required ? 'bg-indigo-900/60 text-indigo-300' : 'bg-slate-800 text-slate-400'}`}
+                ${term.is_required ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'}`}
             >
               {term.is_required ? '필수' : '선택'}
             </span>
@@ -58,7 +58,7 @@ function TermRow({
           <button
             type="button"
             onClick={() => setExpanded((v) => !v)}
-            className="mt-1 text-xs text-slate-500 hover:text-slate-300 transition-colors"
+            className="mt-1 text-xs text-slate-400 hover:text-slate-500 transition-colors"
           >
             {expanded ? '내용 접기 ▲' : '내용 보기 ▼'}
           </button>
@@ -67,7 +67,7 @@ function TermRow({
 
       {expanded && (
         <div className="px-4 pb-4">
-          <div className="max-h-48 overflow-y-auto rounded bg-slate-950 border border-slate-800 p-3">
+          <div className="max-h-48 overflow-y-auto rounded bg-slate-50 border border-slate-200 p-3">
             <pre className="text-xs text-slate-400 whitespace-pre-wrap font-sans leading-relaxed">
               {term.body}
             </pre>
@@ -155,7 +155,7 @@ export default function SignupStep2Page() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <SignupHeader />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
@@ -168,7 +168,7 @@ export default function SignupStep2Page() {
           {loading ? (
             <div className="space-y-3">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="h-14 rounded-lg bg-slate-800 animate-pulse" />
+                <div key={i} className="h-14 rounded-lg bg-slate-100 animate-pulse" />
               ))}
             </div>
           ) : (
@@ -177,22 +177,22 @@ export default function SignupStep2Page() {
               <button
                 type="button"
                 onClick={toggleAll}
-                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-slate-700 bg-slate-900 hover:border-indigo-700 transition-colors"
+                className="w-full flex items-center gap-3 px-4 py-3 rounded-lg border-2 border-slate-300 bg-white hover:border-indigo-700 transition-colors"
               >
                 <div
                   className={`w-5 h-5 rounded border-2 flex items-center justify-center transition-colors
                     ${allChecked ? 'bg-indigo-600 border-indigo-600' : 'bg-transparent border-slate-600'}`}
                 >
                   {allChecked && (
-                    <svg className="w-3 h-3 text-white" viewBox="0 0 12 12" fill="none">
+                    <svg className="w-3 h-3 text-slate-900" viewBox="0 0 12 12" fill="none">
                       <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
                     </svg>
                   )}
                 </div>
-                <span className="font-semibold text-white">전체 동의 (필수·선택 포함)</span>
+                <span className="font-semibold text-slate-900">전체 동의 (필수·선택 포함)</span>
               </button>
 
-              <div className="border-t border-slate-800" />
+              <div className="border-t border-slate-200" />
 
               {/* 개별 약관 */}
               <div className="space-y-2">
@@ -207,7 +207,7 @@ export default function SignupStep2Page() {
               </div>
 
               {error && (
-                <div className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300">
+                <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                   {error}
                 </div>
               )}
@@ -224,7 +224,7 @@ export default function SignupStep2Page() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>

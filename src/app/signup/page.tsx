@@ -28,29 +28,29 @@ const BENEFITS = [
 
 export default function SellerSignupPage() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {/* 헤더 */}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-        <Link href="/signup" className="text-lg font-bold text-indigo-400 tracking-tight">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <Link href="/signup" className="text-lg font-bold text-indigo-600 tracking-tight">
           짐스캐너 B2B
         </Link>
         <Link
           href="/login"
-          className="text-sm text-slate-400 hover:text-white transition-colors"
+          className="text-sm text-slate-400 hover:text-slate-900 transition-colors"
         >
-          이미 계정이 있으신가요? <span className="text-indigo-400 font-medium">로그인</span>
+          이미 계정이 있으신가요? <span className="text-indigo-600 font-medium">로그인</span>
         </Link>
       </header>
 
       {/* 히어로 */}
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-16 text-center">
-        <span className="inline-block mb-4 rounded-full bg-indigo-900/60 px-4 py-1 text-xs font-semibold text-indigo-300 uppercase tracking-widest">
+        <span className="inline-block mb-4 rounded-full bg-indigo-50 px-4 py-1 text-xs font-semibold text-indigo-700 uppercase tracking-widest">
           직구 사업자 전용 도구
         </span>
         <h1 className="text-4xl md:text-5xl font-extrabold leading-tight mb-4 max-w-2xl">
           구매대행, 더 빠르게
           <br />
-          <span className="text-indigo-400">스마트하게</span> 운영하세요
+          <span className="text-indigo-600">스마트하게</span> 운영하세요
         </h1>
         <p className="text-slate-400 text-lg max-w-xl mb-10">
           주문 통합부터 배대지 양식 자동화까지. 월 100건 이상 처리하는 사업자라면
@@ -65,7 +65,7 @@ export default function SellerSignupPage() {
             asChild
             variant="outline"
             size="lg"
-            className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white"
+            className="border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900"
           >
             <Link href="/login">기존 계정으로 로그인</Link>
           </Button>
@@ -76,10 +76,10 @@ export default function SellerSignupPage() {
           {BENEFITS.map((b) => (
             <div
               key={b.title}
-              className="rounded-xl border border-slate-800 bg-slate-900/60 p-6 text-left"
+              className="rounded-xl border border-slate-200 bg-slate-100 p-6 text-left"
             >
               <div className="text-3xl mb-3">{b.icon}</div>
-              <h3 className="font-semibold text-white mb-1">{b.title}</h3>
+              <h3 className="font-semibold text-slate-900 mb-1">{b.title}</h3>
               <p className="text-sm text-slate-400 leading-relaxed">{b.desc}</p>
             </div>
           ))}
@@ -87,7 +87,7 @@ export default function SellerSignupPage() {
 
         {/* 가입 단계 안내 */}
         <div className="mt-14 max-w-xl w-full">
-          <p className="text-xs text-slate-500 mb-4 uppercase tracking-wider">가입 절차 (약 5분)</p>
+          <p className="text-xs text-slate-400 mb-4 uppercase tracking-wider">가입 절차 (약 5분)</p>
           <ol className="flex flex-col gap-2 text-sm text-slate-400">
             {[
               '이메일·비밀번호 설정',
@@ -98,7 +98,7 @@ export default function SellerSignupPage() {
               '사업자등록증 사진 업로드 (선택)',
             ].map((step, i) => (
               <li key={step} className="flex items-center gap-3">
-                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-900 text-indigo-300 text-xs flex items-center justify-center font-bold">
+                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-indigo-900 text-indigo-700 text-xs flex items-center justify-center font-bold">
                   {i + 1}
                 </span>
                 <span>{step}</span>
@@ -109,7 +109,7 @@ export default function SellerSignupPage() {
       </main>
 
       {/* 푸터 */}
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>

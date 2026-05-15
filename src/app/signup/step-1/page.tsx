@@ -21,7 +21,7 @@ function PasswordStrength({ password }: { password: string }) {
   const checks = PW_CHECKS.map((c) => ({ label: c.label, ok: c.test(password) }))
   const score = checks.filter((c) => c.ok).length
   const barColor =
-    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-yellow-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
+    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
 
   if (!password) return null
 
@@ -29,12 +29,12 @@ function PasswordStrength({ password }: { password: string }) {
     <div className="mt-2 space-y-1" aria-live="polite">
       <div className="flex gap-1" role="presentation">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < score ? barColor : 'bg-slate-700'}`} />
+          <div key={i} className={`h-1 flex-1 rounded-full transition-colors ${i < score ? barColor : 'bg-slate-300'}`} />
         ))}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5">
         {checks.map((c) => (
-          <span key={c.label} className={`text-xs transition-colors ${c.ok ? 'text-green-400' : 'text-slate-500'}`}>
+          <span key={c.label} className={`text-xs transition-colors ${c.ok ? 'text-emerald-600' : 'text-slate-400'}`}>
             {c.ok ? '✓' : '○'} {c.label}
           </span>
         ))}
@@ -58,7 +58,7 @@ function validateEmail(email: string): string | null {
 
 function FieldError({ message }: { message: string | undefined }) {
   if (!message) return null
-  return <p className="mt-1 text-xs text-red-400" role="alert">{message}</p>
+  return <p className="mt-1 text-xs text-red-600" role="alert">{message}</p>
 }
 
 export default function SignupStep1Page() {
@@ -122,7 +122,7 @@ export default function SignupStep1Page() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <SignupHeader />
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
@@ -135,8 +135,8 @@ export default function SignupStep1Page() {
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* 이메일 */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
-                이메일 <span className="text-red-400">*</span>
+              <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1.5">
+                이메일 <span className="text-red-600">*</span>
               </label>
               <Input
                 id="email"
@@ -149,7 +149,7 @@ export default function SignupStep1Page() {
                 onBlur={() => setEmailTouched(true)}
                 aria-invalid={!!emailError}
                 aria-describedby={emailError ? 'email-error' : undefined}
-                className={`bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500
+                className={`bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
                   ${emailError ? 'border-red-600 focus-visible:ring-red-500' : emailTouched && !emailError ? 'border-green-600' : ''}`}
               />
               <FieldError message={emailError ?? undefined} />
@@ -158,8 +158,8 @@ export default function SignupStep1Page() {
 
             {/* 비밀번호 */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
-                비밀번호 <span className="text-red-400">*</span>
+              <label htmlFor="password" className="block text-sm font-medium text-slate-500 mb-1.5">
+                비밀번호 <span className="text-red-600">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -173,14 +173,14 @@ export default function SignupStep1Page() {
                   onBlur={() => setPwTouched(true)}
                   aria-invalid={!!pwError}
                   aria-describedby={pwError ? 'pw-error' : undefined}
-                  className={`pr-10 bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500
+                  className={`pr-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
                     ${pwError ? 'border-red-600 focus-visible:ring-red-500' : pwTouched && !pwError ? 'border-green-600' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowPw((v) => !v)}
                   aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 보기'}
-                  className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-500 transition-colors"
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -192,8 +192,8 @@ export default function SignupStep1Page() {
 
             {/* 비밀번호 확인 */}
             <div>
-              <label htmlFor="confirm" className="block text-sm font-medium text-slate-300 mb-1.5">
-                비밀번호 확인 <span className="text-red-400">*</span>
+              <label htmlFor="confirm" className="block text-sm font-medium text-slate-500 mb-1.5">
+                비밀번호 확인 <span className="text-red-600">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -207,40 +207,40 @@ export default function SignupStep1Page() {
                   onBlur={() => setConfirmTouched(true)}
                   aria-invalid={!!confirmError}
                   aria-describedby={confirmError ? 'confirm-error' : undefined}
-                  className={`pr-10 bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500
+                  className={`pr-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
                     ${confirmMismatch ? 'border-red-600 focus-visible:ring-red-500' : confirmTouched && confirm && !confirmMismatch ? 'border-green-600' : ''}`}
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirm((v) => !v)}
                   aria-label={showConfirm ? '비밀번호 확인 숨기기' : '비밀번호 확인 보기'}
-                  className="absolute inset-y-0 right-3 flex items-center text-slate-500 hover:text-slate-300 transition-colors"
+                  className="absolute inset-y-0 right-3 flex items-center text-slate-400 hover:text-slate-500 transition-colors"
                 >
                   {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
               {confirmMismatch && (
-                <p id="confirm-error" className="mt-1 text-xs text-red-400" role="alert">
+                <p id="confirm-error" className="mt-1 text-xs text-red-600" role="alert">
                   비밀번호가 일치하지 않습니다.
                 </p>
               )}
             </div>
 
             {alreadyRegistered && (
-              <div className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300" role="alert">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
                 이미 가입된 이메일입니다.{' '}
-                <Link href="/login" className="underline text-indigo-400 hover:text-indigo-300">
+                <Link href="/login" className="underline text-indigo-600 hover:text-indigo-700">
                   로그인
                 </Link>
                 {' '}또는{' '}
-                <Link href="/auth/forgot-password" className="underline text-indigo-400 hover:text-indigo-300">
+                <Link href="/auth/forgot-password" className="underline text-indigo-600 hover:text-indigo-700">
                   비밀번호 재설정
                 </Link>
                 을 이용하세요.
               </div>
             )}
             {submitError && (
-              <div className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300" role="alert">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
                 {submitError}
               </div>
             )}
@@ -254,13 +254,13 @@ export default function SignupStep1Page() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
+          <p className="mt-6 text-center text-xs text-slate-400">
             가입하면 이용약관·개인정보처리방침에 동의하는 것으로 간주됩니다. (2단계에서 명시적 동의 진행)
           </p>
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>

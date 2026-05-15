@@ -102,7 +102,7 @@ function MfaChallengeContent() {
 
   if (initError) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center px-4">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center px-4">
         <div className="w-full max-w-sm text-center space-y-4">
           <p className="text-slate-400 text-sm">
             2단계 인증 정보를 불러오지 못했습니다.
@@ -110,7 +110,7 @@ function MfaChallengeContent() {
           <button
             onClick={handleSignOut}
             disabled={signingOut}
-            className="inline-block text-indigo-400 hover:text-indigo-300 text-sm transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
+            className="inline-block text-indigo-600 hover:text-indigo-700 text-sm transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
           >
             {signingOut ? '로그아웃 중…' : '로그인 페이지로 돌아가기'}
           </button>
@@ -120,16 +120,16 @@ function MfaChallengeContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      <header className="flex items-center px-6 py-4 border-b border-slate-800">
-        <span className="text-lg font-bold text-indigo-400 tracking-tight">짐스캐너 B2B</span>
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <header className="flex items-center px-6 py-4 border-b border-slate-200">
+        <span className="text-lg font-bold text-indigo-600 tracking-tight">짐스캐너 B2B</span>
       </header>
 
       <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
         <div className="w-full max-w-sm space-y-6">
           <div className="text-center space-y-1">
             <div className="flex justify-center mb-4">
-              <div className="w-12 h-12 rounded-xl bg-indigo-900/40 border border-indigo-800/60 flex items-center justify-center text-indigo-400">
+              <div className="w-12 h-12 rounded-xl bg-indigo-50 border border-indigo-200 flex items-center justify-center text-indigo-600">
                 <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
                 </svg>
@@ -142,7 +142,7 @@ function MfaChallengeContent() {
           </div>
 
           {cooldownUntil && (
-            <div role="alert" className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-950/40 border border-amber-800/60 text-amber-300 text-sm">
+            <div role="alert" className="flex items-center gap-2 px-4 py-3 rounded-xl bg-amber-50 border border-amber-200 text-amber-700 text-sm">
               <svg className="w-4 h-4 shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
               </svg>
@@ -152,7 +152,7 @@ function MfaChallengeContent() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="mfa-code" className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label htmlFor="mfa-code" className="block text-sm font-medium text-slate-500 mb-1.5">
                 인증 코드
               </label>
               <div aria-live="polite" className="space-y-2">
@@ -171,12 +171,12 @@ function MfaChallengeContent() {
                   autoComplete="one-time-code"
                   autoFocus
                   disabled={!!cooldownUntil}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500 tracking-widest text-center text-2xl font-mono h-14 disabled:opacity-50"
+                  className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 tracking-widest text-center text-2xl font-mono h-14 disabled:opacity-50"
                   aria-describedby={error ? 'mfa-error' : undefined}
                   aria-invalid={!!error}
                 />
                 {error && (
-                  <p id="mfa-error" role="alert" className="text-sm text-red-400 text-center">
+                  <p id="mfa-error" role="alert" className="text-sm text-red-600 text-center">
                     {error}
                   </p>
                 )}
@@ -195,13 +195,13 @@ function MfaChallengeContent() {
           <div className="text-center space-y-2">
             <Link
               href="/login"
-              className="block text-sm text-slate-500 hover:text-slate-300 transition-colors"
+              className="block text-sm text-slate-400 hover:text-slate-500 transition-colors"
             >
               다른 계정으로 로그인
             </Link>
             <Link
               href="/support?type=mfa_recovery"
-              className="block text-xs text-slate-600 hover:text-slate-400 transition-colors"
+              className="block text-xs text-slate-400 hover:text-slate-400 transition-colors"
             >
               OTP 앱에 접근할 수 없나요?
             </Link>
@@ -209,7 +209,7 @@ function MfaChallengeContent() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -219,7 +219,7 @@ function MfaChallengeContent() {
 export default function MfaChallengePage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center">
         <div className="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" role="status" aria-label="로딩 중" />
       </div>
     }>

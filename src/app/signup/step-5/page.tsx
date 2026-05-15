@@ -87,14 +87,14 @@ export default function SignupStep5Page() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <SignupHeader />
 
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-10">
@@ -137,7 +137,7 @@ export default function SignupStep5Page() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -147,15 +147,15 @@ export default function SignupStep5Page() {
 function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-6 space-y-4">
+      <div className="rounded-xl border border-slate-300 bg-white p-6 space-y-4">
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-900/60 border border-indigo-700/50 flex items-center justify-center">
-            <svg className="w-4 h-4 text-indigo-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center">
+            <svg className="w-4 h-4 text-indigo-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-200">국세청 공식 API 연동</p>
+            <p className="text-sm font-medium text-slate-800">국세청 공식 API 연동</p>
             <p className="text-xs text-slate-400 mt-1">
               국세청 사업자등록정보 조회 서비스를 통해 실시간으로 영업 상태를 확인합니다. 입력하신 정보는 확인 목적 외 사용되지 않습니다.
             </p>
@@ -163,13 +163,13 @@ function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
         </div>
 
         <div className="flex items-start gap-3">
-          <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+          <div className="mt-0.5 flex-shrink-0 w-8 h-8 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center">
             <svg className="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
             </svg>
           </div>
           <div>
-            <p className="text-sm font-medium text-slate-200">자동 확인 (약 5초 소요)</p>
+            <p className="text-sm font-medium text-slate-800">자동 확인 (약 5초 소요)</p>
             <p className="text-xs text-slate-400 mt-1">
               확인 완료 시 인증 레벨이 L1으로 상승하며 Lite 플랜 이용이 가능해집니다.
             </p>
@@ -184,9 +184,9 @@ function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
         사업자등록번호 진위 확인하기
       </Button>
 
-      <p className="text-center text-xs text-slate-500">
+      <p className="text-center text-xs text-slate-400">
         4단계 정보를 수정하려면{' '}
-        <Link href="/signup/step-4" className="text-indigo-400 hover:underline">
+        <Link href="/signup/step-4" className="text-indigo-600 hover:underline">
           이전 단계로 돌아가기
         </Link>
       </p>
@@ -196,11 +196,11 @@ function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
 
 function VerifyLoading() {
   return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-8 flex flex-col items-center gap-4">
+    <div className="rounded-xl border border-slate-300 bg-white p-8 flex flex-col items-center gap-4">
       <div className="w-12 h-12 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       <div className="text-center space-y-1">
-        <p className="text-sm font-medium text-slate-200">국세청 조회 중…</p>
-        <p className="text-xs text-slate-500">잠시만 기다려 주세요.</p>
+        <p className="text-sm font-medium text-slate-800">국세청 조회 중…</p>
+        <p className="text-xs text-slate-400">잠시만 기다려 주세요.</p>
       </div>
     </div>
   )
@@ -209,23 +209,23 @@ function VerifyLoading() {
 function VerifySuccess({ alreadyVerified, onNext }: { alreadyVerified: boolean; onNext: () => void }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-green-800 bg-green-950/40 p-6 flex flex-col items-center gap-3 text-center">
-        <div className="w-14 h-14 rounded-full bg-green-900/60 border border-green-700/50 flex items-center justify-center">
-          <svg className="w-7 h-7 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <div className="rounded-xl border border-emerald-200 bg-emerald-50 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="w-14 h-14 rounded-full bg-emerald-50 border border-emerald-200/50 flex items-center justify-center">
+          <svg className="w-7 h-7 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
           </svg>
         </div>
         <div>
-          <p className="text-lg font-bold text-green-300">진위 확인 완료</p>
+          <p className="text-lg font-bold text-emerald-700">진위 확인 완료</p>
           <p className="text-sm text-slate-400 mt-1">
             {alreadyVerified
               ? '이미 인증된 사업자입니다.'
               : '계속사업자로 확인되었습니다. 인증 레벨이 L1로 상승했습니다.'}
           </p>
         </div>
-        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-green-900/40 border border-green-800/60">
-          <span className="text-xs font-medium text-green-400">✓ 인증 레벨 L1</span>
-          <span className="text-xs text-slate-500">Lite 플랜 이용 가능</span>
+        <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
+          <span className="text-xs font-medium text-emerald-600">✓ 인증 레벨 L1</span>
+          <span className="text-xs text-slate-400">Lite 플랜 이용 가능</span>
         </div>
       </div>
 
@@ -247,22 +247,22 @@ function VerifyFailed({ reason, message }: { reason: FailReason; message: string
   }
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-red-800 bg-red-950/40 p-6 flex flex-col items-center gap-3 text-center">
-        <div className="w-14 h-14 rounded-full bg-red-900/60 border border-red-700/50 flex items-center justify-center">
-          <svg className="w-7 h-7 text-red-400" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="w-14 h-14 rounded-full bg-red-900/60 border border-red-200/50 flex items-center justify-center">
+          <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
         </div>
         <div>
-          <p className="text-base font-bold text-red-300">
+          <p className="text-base font-bold text-red-700">
             {reason ? labels[reason] : '확인 실패'}
           </p>
           <p className="text-sm text-slate-400 mt-2 leading-relaxed">{message}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4 text-sm text-slate-400 space-y-2">
-        <p className="font-medium text-slate-300">다음 사항을 확인해 주세요</p>
+      <div className="rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-400 space-y-2">
+        <p className="font-medium text-slate-500">다음 사항을 확인해 주세요</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
           <li>사업자등록번호가 정확히 입력되었는지 확인해 주세요.</li>
           <li>영업 중인 사업자 기준으로만 가입이 가능합니다.</li>
@@ -272,7 +272,7 @@ function VerifyFailed({ reason, message }: { reason: FailReason; message: string
 
       <Link
         href="/signup/step-4"
-        className="block text-center w-full py-3 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+        className="block text-center w-full py-3 rounded-lg border border-slate-300 text-sm text-slate-500 hover:border-slate-500 hover:text-slate-900 transition-colors"
       >
         4단계로 돌아가 수정하기
       </Link>
@@ -283,14 +283,14 @@ function VerifyFailed({ reason, message }: { reason: FailReason; message: string
 function VerifyError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-amber-700 bg-amber-950/40 p-6 flex flex-col items-center gap-3 text-center">
-        <div className="w-14 h-14 rounded-full bg-amber-900/40 border border-amber-700/50 flex items-center justify-center">
-          <svg className="w-7 h-7 text-amber-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+      <div className="rounded-xl border border-amber-700 bg-amber-50 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="w-14 h-14 rounded-full bg-amber-50 border border-amber-700/50 flex items-center justify-center">
+          <svg className="w-7 h-7 text-amber-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
           </svg>
         </div>
         <div>
-          <p className="text-base font-bold text-amber-300">일시적 오류</p>
+          <p className="text-base font-bold text-amber-700">일시적 오류</p>
           <p className="text-sm text-slate-400 mt-1">{message}</p>
         </div>
       </div>
@@ -304,7 +304,7 @@ function VerifyError({ message, onRetry }: { message: string; onRetry: () => voi
 
       <Link
         href="/signup/step-4"
-        className="block text-center w-full py-3 rounded-lg border border-slate-700 text-sm text-slate-300 hover:border-slate-500 hover:text-white transition-colors"
+        className="block text-center w-full py-3 rounded-lg border border-slate-300 text-sm text-slate-500 hover:border-slate-500 hover:text-slate-900 transition-colors"
       >
         4단계로 돌아가 사업자 정보 수정하기
       </Link>

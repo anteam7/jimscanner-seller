@@ -36,7 +36,7 @@ export default function AccountSuspendedPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center px-4">
       <div className="w-full max-w-md text-center">
         <div className="mb-6 inline-flex h-16 w-16 items-center justify-center rounded-full bg-orange-500/10 border border-orange-500/20">
           <svg className="w-8 h-8 text-orange-400" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
@@ -56,9 +56,9 @@ export default function AccountSuspendedPage() {
           </div>
         )}
 
-        <p className="text-slate-500 text-sm mb-8">
+        <p className="text-slate-400 text-sm mb-8">
           정지 해제를 요청하시거나 이의가 있으시면{' '}
-          <a href="mailto:support@jimscanner.co.kr" className="text-indigo-400 hover:text-indigo-300 underline">
+          <a href="mailto:support@jimscanner.co.kr" className="text-indigo-600 hover:text-indigo-700 underline">
             support@jimscanner.co.kr
           </a>
           로 문의해 주세요.
@@ -67,7 +67,7 @@ export default function AccountSuspendedPage() {
         <button
           onClick={handleLogout}
           disabled={loading}
-          className="w-full rounded-lg bg-slate-800 hover:bg-slate-700 border border-slate-700 px-4 py-2.5 text-sm font-medium text-slate-200 transition-colors disabled:opacity-50"
+          className="w-full rounded-lg bg-slate-100 hover:bg-slate-300 border border-slate-300 px-4 py-2.5 text-sm font-medium text-slate-800 transition-colors disabled:opacity-50"
         >
           {loading ? '로그아웃 중…' : '로그아웃'}
         </button>

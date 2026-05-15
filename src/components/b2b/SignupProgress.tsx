@@ -20,8 +20,8 @@ export function SignupProgress({ currentStep }: { currentStep: number }) {
                 i === currentStep
                   ? 'bg-indigo-600 text-white'
                   : i < currentStep
-                  ? 'bg-indigo-900 text-indigo-400'
-                  : 'bg-slate-800 text-slate-500'
+                  ? 'bg-indigo-900 text-indigo-600'
+                  : 'bg-slate-100 text-slate-400'
               }`}
           >
             {i < currentStep ? (
@@ -40,13 +40,13 @@ export function SignupProgress({ currentStep }: { currentStep: number }) {
           </div>
           <span
             className={`text-xs hidden sm:inline ${
-              i === currentStep ? 'text-white' : 'text-slate-600'
+              i === currentStep ? 'text-slate-900' : 'text-slate-400'
             }`}
           >
             {label}
           </span>
           {i < SIGNUP_STEPS.length - 1 && (
-            <span className="text-slate-700 mx-0.5" aria-hidden="true">
+            <span className="text-slate-500 mx-0.5" aria-hidden="true">
               ›
             </span>
           )}

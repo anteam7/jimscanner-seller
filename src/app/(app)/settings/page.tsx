@@ -164,7 +164,7 @@ export default function SettingsPage() {
   return (
     <div className="p-6 max-w-3xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-white">설정</h1>
+        <h1 className="text-xl font-bold text-slate-900">설정</h1>
         <p className="text-sm text-slate-400 mt-0.5">계정·보안·연동 설정을 관리합니다.</p>
       </div>
 
@@ -179,17 +179,17 @@ export default function SettingsPage() {
                 <Link
                   key={card.href}
                   href={card.href}
-                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-800 bg-slate-900/40 hover:bg-slate-800/60 hover:border-slate-700 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-200 bg-white hover:bg-slate-100 hover:border-slate-300 transition-colors group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-indigo-900/40 border border-indigo-800/40 flex items-center justify-center flex-shrink-0 text-indigo-400 group-hover:bg-indigo-900/60 transition-colors">
+                  <div className="w-9 h-9 rounded-lg bg-indigo-50 border border-indigo-200 flex items-center justify-center flex-shrink-0 text-indigo-600 group-hover:bg-indigo-50 transition-colors">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-white">{card.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 truncate">{card.description}</p>
+                    <p className="text-sm font-medium text-slate-900">{card.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">{card.description}</p>
                   </div>
                   <svg
-                    className="w-4 h-4 text-slate-600 group-hover:text-slate-400 flex-shrink-0 transition-colors"
+                    className="w-4 h-4 text-slate-400 group-hover:text-slate-400 flex-shrink-0 transition-colors"
                     fill="none"
                     viewBox="0 0 24 24"
                     strokeWidth={2}
@@ -202,18 +202,18 @@ export default function SettingsPage() {
               ) : (
                 <div
                   key={card.href}
-                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-800/60 bg-slate-900/20 cursor-not-allowed"
+                  className="flex items-center gap-4 px-4 py-4 rounded-xl border border-slate-200 bg-slate-50 cursor-not-allowed"
                   aria-disabled="true"
                 >
-                  <div className="w-9 h-9 rounded-lg bg-slate-800/40 border border-slate-700/30 flex items-center justify-center flex-shrink-0 text-slate-600">
+                  <div className="w-9 h-9 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center flex-shrink-0 text-slate-400">
                     {card.icon}
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium text-slate-500">{card.title}</p>
-                    <p className="text-xs text-slate-600 mt-0.5 truncate">{card.description}</p>
+                    <p className="text-sm font-medium text-slate-400">{card.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 truncate">{card.description}</p>
                   </div>
                   {card.badge && (
-                    <span className="flex-shrink-0 text-xs text-slate-600 bg-slate-800/60 rounded-full px-2.5 py-0.5 border border-slate-700/40">
+                    <span className="flex-shrink-0 text-xs text-slate-400 bg-slate-100 rounded-full px-2.5 py-0.5 border border-slate-200">
                       {card.badge}
                     </span>
                   )}

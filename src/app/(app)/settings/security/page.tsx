@@ -129,7 +129,7 @@ export default function SecuritySettingsPage() {
       <div className="flex items-center gap-3">
         <Link
           href="/settings"
-          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-700 bg-slate-800/60 text-slate-400 hover:text-white hover:bg-slate-800 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          className="flex items-center justify-center w-8 h-8 rounded-lg border border-slate-300 bg-slate-100 text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
           aria-label="설정으로 돌아가기"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -137,7 +137,7 @@ export default function SecuritySettingsPage() {
           </svg>
         </Link>
         <div>
-          <h1 className="text-xl font-bold text-white">보안 설정</h1>
+          <h1 className="text-xl font-bold text-slate-900">보안 설정</h1>
           <p className="text-xs text-slate-400 mt-0.5">2단계 인증(TOTP)으로 계정을 보호하세요.</p>
         </div>
       </div>
@@ -146,9 +146,9 @@ export default function SecuritySettingsPage() {
       {success && (
         <div
           role="status"
-          className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-green-900/40 border border-green-700/60 text-green-300 text-sm"
+          className="flex items-center gap-2.5 px-4 py-3 rounded-xl bg-emerald-50 border border-emerald-200/60 text-emerald-700 text-sm"
         >
-          <svg className="w-4 h-4 shrink-0 text-green-400" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          <svg className="w-4 h-4 shrink-0 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
           </svg>
           {success}
@@ -164,15 +164,15 @@ export default function SecuritySettingsPage() {
 
       {/* No MFA enrolled */}
       {view === 'no_mfa' && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-amber-900/30 border border-amber-800/40 flex items-center justify-center text-amber-400 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600 shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
               </svg>
             </div>
             <div>
-              <h2 className="text-base font-semibold text-white">2단계 인증 비활성화 상태</h2>
+              <h2 className="text-base font-semibold text-slate-900">2단계 인증 비활성화 상태</h2>
               <p className="text-sm text-slate-400 mt-1">
                 2단계 인증을 활성화하면 비밀번호 외에 OTP 앱의 6자리 코드로 추가 인증이 필요합니다.
                 Google Authenticator, Authy, Microsoft Authenticator 등을 사용할 수 있습니다.
@@ -180,7 +180,7 @@ export default function SecuritySettingsPage() {
             </div>
           </div>
           {error && (
-            <p role="alert" className="text-sm text-red-400 bg-red-950/40 border border-red-800/50 rounded-lg px-4 py-2.5">
+            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200/50 rounded-lg px-4 py-2.5">
               {error}
             </p>
           )}
@@ -196,9 +196,9 @@ export default function SecuritySettingsPage() {
 
       {/* Enrolling — QR + verify */}
       {view === 'enrolling' && qrCode && (
-        <div className="rounded-xl border border-indigo-800/60 bg-slate-900/40 p-6 space-y-6">
+        <div className="rounded-xl border border-indigo-200 bg-white p-6 space-y-6">
           <div>
-            <h2 className="text-base font-semibold text-white mb-1">OTP 앱으로 QR 코드 스캔</h2>
+            <h2 className="text-base font-semibold text-slate-900 mb-1">OTP 앱으로 QR 코드 스캔</h2>
             <p className="text-sm text-slate-400">
               Google Authenticator 또는 Authy에서 QR 코드를 스캔하세요.
               스캔 후 앱에 표시되는 6자리 코드를 입력하면 활성화됩니다.
@@ -222,16 +222,16 @@ export default function SecuritySettingsPage() {
 
           {/* Manual secret */}
           {secret && (
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4">
-              <p className="text-xs text-slate-500 mb-2">QR 스캔이 안 된다면 수동으로 코드를 입력하세요</p>
+            <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
+              <p className="text-xs text-slate-400 mb-2">QR 스캔이 안 된다면 수동으로 코드를 입력하세요</p>
               <div className="flex items-center gap-2">
-                <code className={`flex-1 text-xs font-mono text-slate-300 ${!showSecret ? 'blur-sm select-none' : ''} transition-all`}>
+                <code className={`flex-1 text-xs font-mono text-slate-500 ${!showSecret ? 'blur-sm select-none' : ''} transition-all`}>
                   {secret}
                 </code>
                 <button
                   type="button"
                   onClick={() => setShowSecret(!showSecret)}
-                  className="text-xs text-slate-500 hover:text-slate-300 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+                  className="text-xs text-slate-400 hover:text-slate-500 transition-colors shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
                 >
                   {showSecret ? '숨기기' : '표시'}
                 </button>
@@ -241,7 +241,7 @@ export default function SecuritySettingsPage() {
 
           {/* Verify code */}
           <div className="space-y-3">
-            <label htmlFor="verify-code" className="block text-sm font-medium text-slate-300">
+            <label htmlFor="verify-code" className="block text-sm font-medium text-slate-500">
               OTP 앱에서 생성된 6자리 코드
             </label>
             <div aria-live="polite" className="space-y-3">
@@ -259,12 +259,12 @@ export default function SecuritySettingsPage() {
                   setError(null)
                 }}
                 autoComplete="one-time-code"
-                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500 tracking-widest text-center text-lg font-mono max-w-[160px]"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 tracking-widest text-center text-lg font-mono max-w-[160px]"
                 aria-describedby={error ? 'verify-error' : undefined}
                 aria-invalid={!!error}
               />
               {error && (
-                <p id="verify-error" role="alert" className="text-sm text-red-400">
+                <p id="verify-error" role="alert" className="text-sm text-red-600">
                   {error}
                 </p>
               )}
@@ -291,7 +291,7 @@ export default function SecuritySettingsPage() {
                   setSecret(null)
                   setEnrollFactorId(null)
                 }}
-                className="text-slate-400 hover:text-white"
+                className="text-slate-400 hover:text-slate-900"
               >
                 취소
               </Button>
@@ -302,17 +302,17 @@ export default function SecuritySettingsPage() {
 
       {/* MFA Active */}
       {view === 'mfa_active' && (
-        <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6 space-y-5">
+        <div className="rounded-xl border border-slate-200 bg-white p-6 space-y-5">
           <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-lg bg-green-900/30 border border-green-800/40 flex items-center justify-center text-green-400 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shrink-0">
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75m-3-7.036A11.959 11.959 0 0 1 3.598 6 11.99 11.99 0 0 0 3 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285Z" />
               </svg>
             </div>
             <div className="flex-1">
               <div className="flex items-center gap-2">
-                <h2 className="text-base font-semibold text-white">2단계 인증 활성화됨</h2>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-400 border border-green-800/50">
+                <h2 className="text-base font-semibold text-slate-900">2단계 인증 활성화됨</h2>
+                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-600 border border-emerald-200">
                   보호 중
                 </span>
               </div>
@@ -329,7 +329,7 @@ export default function SecuritySettingsPage() {
               setDisableCode('')
               setError(null)
             }}
-            className="border-red-800/60 text-red-400 hover:bg-red-950/40 hover:text-red-300 hover:border-red-700"
+            className="border-red-200/60 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
           >
             2단계 인증 비활성화
           </Button>
@@ -344,9 +344,9 @@ export default function SecuritySettingsPage() {
           aria-modal="true"
           aria-labelledby="disable-modal-title"
         >
-          <div className="w-full max-w-sm mx-4 rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl space-y-5">
+          <div className="w-full max-w-sm mx-4 rounded-2xl border border-slate-200 bg-slate-50 p-6 shadow-2xl space-y-5">
             <div>
-              <h3 id="disable-modal-title" className="text-lg font-semibold text-white mb-1">
+              <h3 id="disable-modal-title" className="text-lg font-semibold text-slate-900 mb-1">
                 2단계 인증 비활성화 확인
               </h3>
               <p className="text-sm text-slate-400">
@@ -354,7 +354,7 @@ export default function SecuritySettingsPage() {
               </p>
             </div>
             <div aria-live="polite" className="space-y-3">
-              <label htmlFor="disable-code" className="block text-sm font-medium text-slate-300">
+              <label htmlFor="disable-code" className="block text-sm font-medium text-slate-500">
                 현재 OTP 코드
               </label>
               <Input
@@ -370,12 +370,12 @@ export default function SecuritySettingsPage() {
                   setError(null)
                 }}
                 autoComplete="one-time-code"
-                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-red-500 tracking-widest text-center text-lg font-mono"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-red-500 tracking-widest text-center text-lg font-mono"
                 aria-describedby={error ? 'disable-error' : undefined}
                 aria-invalid={!!error}
               />
               {error && (
-                <p id="disable-error" role="alert" className="text-sm text-red-400">
+                <p id="disable-error" role="alert" className="text-sm text-red-600">
                   {error}
                 </p>
               )}
@@ -395,7 +395,7 @@ export default function SecuritySettingsPage() {
                   setError(null)
                 }}
                 disabled={loading}
-                className="flex-1 text-slate-400 hover:text-white border border-slate-800"
+                className="flex-1 text-slate-400 hover:text-slate-900 border border-slate-200"
               >
                 취소
               </Button>
@@ -405,19 +405,19 @@ export default function SecuritySettingsPage() {
       )}
 
       {/* Info box */}
-      <div className="rounded-xl border border-slate-800/60 bg-slate-900/20 p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">참고 사항</h3>
-        <ul className="space-y-1.5 text-xs text-slate-500">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
+        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">참고 사항</h3>
+        <ul className="space-y-1.5 text-xs text-slate-400">
           <li className="flex items-start gap-2">
-            <span className="text-slate-600 mt-0.5">•</span>
+            <span className="text-slate-400 mt-0.5">•</span>
             Google Authenticator, Authy, Microsoft Authenticator 앱을 지원합니다.
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-slate-600 mt-0.5">•</span>
+            <span className="text-slate-400 mt-0.5">•</span>
             OTP 앱을 분실하면 계정 복구가 어려울 수 있습니다. 앱을 여러 기기에 백업하세요.
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-slate-600 mt-0.5">•</span>
+            <span className="text-slate-400 mt-0.5">•</span>
             2단계 인증 활성화 시 로그인마다 추가 코드 입력이 필요합니다.
           </li>
         </ul>

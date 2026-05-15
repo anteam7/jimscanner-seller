@@ -95,8 +95,8 @@ function fieldCls(
   const hasError = !!touchedErrors[name]
   const isValid = touched[name as keyof FormState] && !hasError
   return [
-    'bg-slate-900 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500 transition-colors',
-    hasError ? 'border-red-600 focus-visible:ring-red-500' : isValid ? 'border-green-600' : 'border-slate-700',
+    'bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 transition-colors',
+    hasError ? 'border-red-600 focus-visible:ring-red-500' : isValid ? 'border-green-600' : 'border-slate-300',
     extra,
   ]
     .filter(Boolean)
@@ -106,7 +106,7 @@ function fieldCls(
 function FieldError({ id, message }: { id?: string; message: string | undefined }) {
   if (!message) return null
   return (
-    <p id={id} className="mt-1 text-xs text-red-400" role="alert">
+    <p id={id} className="mt-1 text-xs text-red-600" role="alert">
       {message}
     </p>
   )
@@ -201,14 +201,14 @@ export default function SignupStep4Page() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <SignupHeader />
 
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-10">
@@ -223,8 +223,8 @@ export default function SignupStep4Page() {
           <form onSubmit={handleSubmit} noValidate className="space-y-5">
             {/* 사업자 유형 */}
             <fieldset>
-              <legend className="block text-sm font-medium text-slate-300 mb-2">
-                사업자 유형 <span className="text-red-400">*</span>
+              <legend className="block text-sm font-medium text-slate-500 mb-2">
+                사업자 유형 <span className="text-red-600">*</span>
               </legend>
               <div className="flex gap-3">
                 {(['개인사업자', '법인사업자'] as const).map((type) => (
@@ -236,7 +236,7 @@ export default function SignupStep4Page() {
                     className={`flex-1 py-2.5 rounded-lg border text-sm font-medium transition-colors
                       ${form.businessType === type
                         ? 'bg-indigo-600 border-indigo-600 text-white'
-                        : 'bg-slate-900 border-slate-700 text-slate-300 hover:border-slate-500 hover:text-white'
+                        : 'bg-white border-slate-300 text-slate-500 hover:border-slate-500 hover:text-slate-900'
                       }`}
                   >
                     {type}
@@ -248,8 +248,8 @@ export default function SignupStep4Page() {
 
             {/* 사업자등록번호 */}
             <div>
-              <label htmlFor="businessNo" className="block text-sm font-medium text-slate-300 mb-1.5">
-                사업자등록번호 <span className="text-red-400">*</span>
+              <label htmlFor="businessNo" className="block text-sm font-medium text-slate-500 mb-1.5">
+                사업자등록번호 <span className="text-red-600">*</span>
               </label>
               <Input
                 id="businessNo"
@@ -269,8 +269,8 @@ export default function SignupStep4Page() {
 
             {/* 상호 */}
             <div>
-              <label htmlFor="businessName" className="block text-sm font-medium text-slate-300 mb-1.5">
-                상호 <span className="text-red-400">*</span>
+              <label htmlFor="businessName" className="block text-sm font-medium text-slate-500 mb-1.5">
+                상호 <span className="text-red-600">*</span>
               </label>
               <Input
                 id="businessName"
@@ -288,8 +288,8 @@ export default function SignupStep4Page() {
 
             {/* 대표자명 */}
             <div>
-              <label htmlFor="ceoName" className="block text-sm font-medium text-slate-300 mb-1.5">
-                대표자명 <span className="text-red-400">*</span>
+              <label htmlFor="ceoName" className="block text-sm font-medium text-slate-500 mb-1.5">
+                대표자명 <span className="text-red-600">*</span>
               </label>
               <Input
                 id="ceoName"
@@ -309,8 +309,8 @@ export default function SignupStep4Page() {
             {/* 업태·종목 (2열) */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label htmlFor="categoryMain" className="block text-sm font-medium text-slate-300 mb-1.5">
-                  업태 <span className="text-red-400">*</span>
+                <label htmlFor="categoryMain" className="block text-sm font-medium text-slate-500 mb-1.5">
+                  업태 <span className="text-red-600">*</span>
                 </label>
                 <Input
                   id="categoryMain"
@@ -326,8 +326,8 @@ export default function SignupStep4Page() {
                 <FieldError id="categoryMain-error" message={touchedErrors.categoryMain} />
               </div>
               <div>
-                <label htmlFor="categorySub" className="block text-sm font-medium text-slate-300 mb-1.5">
-                  종목 <span className="text-red-400">*</span>
+                <label htmlFor="categorySub" className="block text-sm font-medium text-slate-500 mb-1.5">
+                  종목 <span className="text-red-600">*</span>
                 </label>
                 <Input
                   id="categorySub"
@@ -346,8 +346,8 @@ export default function SignupStep4Page() {
 
             {/* 전화번호 */}
             <div>
-              <label htmlFor="phone" className="block text-sm font-medium text-slate-300 mb-1.5">
-                사업장 전화번호 <span className="text-red-400">*</span>
+              <label htmlFor="phone" className="block text-sm font-medium text-slate-500 mb-1.5">
+                사업장 전화번호 <span className="text-red-600">*</span>
               </label>
               <Input
                 id="phone"
@@ -366,8 +366,8 @@ export default function SignupStep4Page() {
 
             {/* 주소 */}
             <div className="space-y-2">
-              <label className="block text-sm font-medium text-slate-300">
-                사업장 주소 <span className="text-red-400">*</span>
+              <label className="block text-sm font-medium text-slate-500">
+                사업장 주소 <span className="text-red-600">*</span>
               </label>
               <div className="flex gap-2">
                 <Input
@@ -403,12 +403,12 @@ export default function SignupStep4Page() {
                 placeholder="상세 주소 (호수·층 등, 선택)"
                 value={form.detailAddress}
                 onChange={(e) => setField('detailAddress', e.target.value)}
-                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
               />
             </div>
 
             {submitError && (
-              <div className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300" role="alert">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
                 {submitError}
               </div>
             )}
@@ -422,13 +422,13 @@ export default function SignupStep4Page() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-xs text-slate-500">
+          <p className="mt-6 text-center text-xs text-slate-400">
             입력하신 사업자 정보는 다음 단계에서 국세청 API로 자동 검증됩니다.
           </p>
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>

@@ -35,15 +35,15 @@ export default function QuotaBanner() {
     return (
       <div
         role="status"
-        className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-5 py-3 flex items-center justify-between gap-4"
+        className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-3 flex items-center justify-between gap-4"
       >
-        <p className="text-xs text-amber-400">
+        <p className="text-xs text-amber-600">
           쿼터 정보를 불러오지 못했습니다. 새로고침 해주세요.
         </p>
         <button
           type="button"
           onClick={load}
-          className="flex-shrink-0 text-xs font-medium text-amber-300 hover:text-amber-200 underline underline-offset-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+          className="flex-shrink-0 text-xs font-medium text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
         >
           다시 시도
         </button>
@@ -62,13 +62,13 @@ export default function QuotaBanner() {
     return (
       <div
         role="alert"
-        className="rounded-xl border border-red-800/60 bg-red-950/30 px-5 py-4 flex items-start justify-between gap-4"
+        className="rounded-xl border border-red-200/60 bg-red-50 px-5 py-4 flex items-start justify-between gap-4"
       >
         <div>
-          <p className="text-sm font-semibold text-red-300">
+          <p className="text-sm font-semibold text-red-700">
             이번 달 주문 할당량을 초과했습니다 ({used}/{quota}건)
           </p>
-          <p className="text-xs text-red-400/80 mt-0.5">
+          <p className="text-xs text-red-600/80 mt-0.5">
             플랜을 업그레이드하면 더 많은 주문을 처리할 수 있습니다.
           </p>
         </div>
@@ -88,15 +88,15 @@ export default function QuotaBanner() {
     <div
       role="status"
       aria-label={`주문 할당량 ${pct}% 사용`}
-      className="rounded-xl border border-amber-800/50 bg-amber-950/20 px-5 py-4"
+      className="rounded-xl border border-amber-200 bg-amber-50 px-5 py-4"
     >
       <div className="flex items-center justify-between gap-4 mb-2.5">
-        <p className="text-sm font-semibold text-amber-300">
+        <p className="text-sm font-semibold text-amber-700">
           이번 달 {used}/{quota}건 사용 · 남은 {remaining}건
         </p>
         <Link
           href="/pricing"
-          className="flex-shrink-0 text-xs font-medium text-amber-300 hover:text-amber-200 underline underline-offset-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
+          className="flex-shrink-0 text-xs font-medium text-amber-700 hover:text-amber-800 underline underline-offset-2 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 rounded"
         >
           플랜 업그레이드 →
         </Link>
@@ -104,7 +104,7 @@ export default function QuotaBanner() {
 
       {/* 프로그레스 바 */}
       <div
-        className="h-1.5 w-full bg-slate-800 rounded-full overflow-hidden"
+        className="h-1.5 w-full bg-slate-100 rounded-full overflow-hidden"
         aria-hidden="true"
       >
         <div
@@ -113,7 +113,7 @@ export default function QuotaBanner() {
         />
       </div>
 
-      <p className="text-xs text-slate-500 mt-1.5">
+      <p className="text-xs text-slate-400 mt-1.5">
         {data.plan_name_ko} 플랜 · 월 {quota}건 포함
       </p>
     </div>

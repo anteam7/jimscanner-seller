@@ -42,12 +42,12 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-        <Link href="/login" className="text-lg font-bold text-indigo-400 tracking-tight">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
           짐스캐너 B2B
         </Link>
-        <Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">
+        <Link href="/login" className="text-sm text-slate-400 hover:text-slate-900 transition-colors">
           로그인으로 돌아가기
         </Link>
       </header>
@@ -68,7 +68,7 @@ export default function ForgotPasswordPage() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -92,8 +92,8 @@ function RequestForm({
     <>
       <div className="mb-8">
         <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-indigo-900/40 border border-indigo-700 flex items-center justify-center">
-            <svg className="w-7 h-7 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+          <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-700 flex items-center justify-center">
+            <svg className="w-7 h-7 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round"
                 d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
@@ -107,7 +107,7 @@ function RequestForm({
 
       <form onSubmit={onSubmit} className="space-y-5">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+          <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1.5">
             이메일
           </label>
           <Input
@@ -118,14 +118,14 @@ function RequestForm({
             placeholder="you@example.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500"
+            className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
           />
         </div>
 
         {error && (
           <div
             role="alert"
-            className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300"
+            className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
           >
             {error}
           </div>
@@ -140,11 +140,11 @@ function RequestForm({
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-slate-400">
         비밀번호가 기억나셨나요?{' '}
         <Link
           href="/login"
-          className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+          className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
         >
           로그인
         </Link>
@@ -182,8 +182,8 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
   return (
     <div className="text-center space-y-6">
       <div className="flex justify-center">
-        <div className="w-16 h-16 rounded-full bg-green-900/40 border border-green-700 flex items-center justify-center">
-          <svg className="w-8 h-8 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+        <div className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-200 flex items-center justify-center">
+          <svg className="w-8 h-8 text-emerald-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
           </svg>
         </div>
@@ -192,16 +192,16 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
       <div className="space-y-2">
         <h1 className="text-2xl font-bold">이메일을 확인해 주세요</h1>
         <p className="text-slate-400 text-sm">
-          <span className="text-white font-medium">{email}</span>로
+          <span className="text-slate-900 font-medium">{email}</span>로
           비밀번호 재설정 링크를 보냈습니다.
         </p>
-        <p className="text-slate-500 text-xs mt-1">
+        <p className="text-slate-400 text-xs mt-1">
           이메일이 도착하지 않으면 스팸함을 확인하거나 아래 버튼으로 다시 보내주세요.
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 text-sm text-slate-400 text-left space-y-2">
-        <p className="font-medium text-slate-300">안내</p>
+      <div className="rounded-xl border border-slate-200 bg-slate-100 p-4 text-sm text-slate-400 text-left space-y-2">
+        <p className="font-medium text-slate-500">안내</p>
         <ul className="space-y-1 list-disc list-inside text-xs">
           <li>링크는 발송 후 1시간 동안 유효합니다.</li>
           <li>링크 클릭 후 새 비밀번호를 설정할 수 있습니다.</li>
@@ -210,7 +210,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
       </div>
 
       {resendError && (
-        <div role="alert" className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300">
+        <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
           {resendError}
         </div>
       )}
@@ -221,7 +221,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
           onClick={handleResend}
           disabled={resending || cooldown > 0}
           variant="outline"
-          className="border-slate-700 text-slate-300 hover:bg-slate-800 hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
+          className="border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {resending
             ? '전송 중…'
@@ -232,7 +232,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
 
         <Link
           href="/login"
-          className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-2"
+          className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors underline underline-offset-2"
         >
           로그인 페이지로 돌아가기
         </Link>

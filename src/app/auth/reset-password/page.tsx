@@ -15,7 +15,7 @@ function PasswordStrength({ password }: { password: string }) {
     { label: '특수문자', ok: /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password) },
   ]
   const score = checks.filter((c) => c.ok).length
-  const color = score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-yellow-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
+  const color = score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
 
   if (!password) return null
 
@@ -23,12 +23,12 @@ function PasswordStrength({ password }: { password: string }) {
     <div className="mt-2 space-y-1">
       <div className="flex gap-1">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? color : 'bg-slate-700'}`} />
+          <div key={i} className={`h-1 flex-1 rounded-full ${i < score ? color : 'bg-slate-300'}`} />
         ))}
       </div>
       <div className="flex flex-wrap gap-x-3 gap-y-0.5">
         {checks.map((c) => (
-          <span key={c.label} className={`text-xs ${c.ok ? 'text-green-400' : 'text-slate-500'}`}>
+          <span key={c.label} className={`text-xs ${c.ok ? 'text-emerald-600' : 'text-slate-400'}`}>
             {c.ok ? '✓' : '○'} {c.label}
           </span>
         ))}
@@ -101,7 +101,7 @@ export default function ResetPasswordPage() {
 
   if (checking) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center gap-4">
         <div
           className="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"
           role="status"
@@ -114,17 +114,17 @@ export default function ResetPasswordPage() {
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-        <header className="flex items-center px-6 py-4 border-b border-slate-800">
-          <Link href="/login" className="text-lg font-bold text-indigo-400 tracking-tight">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+        <header className="flex items-center px-6 py-4 border-b border-slate-200">
+          <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
             짐스캐너 B2B
           </Link>
         </header>
         <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
           <div className="w-full max-w-md text-center space-y-4">
             <div className="flex justify-center">
-              <div className="w-14 h-14 rounded-full bg-red-900/40 border border-red-700 flex items-center justify-center">
-                <svg className="w-7 h-7 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-14 h-14 rounded-full bg-red-900/40 border border-red-200 flex items-center justify-center">
+                <svg className="w-7 h-7 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round"
                     d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
                 </svg>
@@ -143,7 +143,7 @@ export default function ResetPasswordPage() {
             </Link>
           </div>
         </main>
-        <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+        <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
           © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
         </footer>
       </div>
@@ -151,9 +151,9 @@ export default function ResetPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      <header className="flex items-center px-6 py-4 border-b border-slate-800">
-        <Link href="/login" className="text-lg font-bold text-indigo-400 tracking-tight">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <header className="flex items-center px-6 py-4 border-b border-slate-200">
+        <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
           짐스캐너 B2B
         </Link>
       </header>
@@ -162,8 +162,8 @@ export default function ResetPasswordPage() {
         <div className="w-full max-w-md">
           <div className="mb-8">
             <div className="flex justify-center mb-6">
-              <div className="w-14 h-14 rounded-full bg-indigo-900/40 border border-indigo-700 flex items-center justify-center">
-                <svg className="w-7 h-7 text-indigo-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+              <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-700 flex items-center justify-center">
+                <svg className="w-7 h-7 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                   <path strokeLinecap="round" strokeLinejoin="round"
                     d="M16.5 10.5V6.75a4.5 4.5 0 10-9 0v3.75m-.75 11.25h10.5a2.25 2.25 0 002.25-2.25v-6.75a2.25 2.25 0 00-2.25-2.25H6.75a2.25 2.25 0 00-2.25 2.25v6.75a2.25 2.25 0 002.25 2.25z" />
                 </svg>
@@ -177,7 +177,7 @@ export default function ResetPasswordPage() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-500 mb-1.5">
                 새 비밀번호
               </label>
               <div className="relative">
@@ -189,13 +189,13 @@ export default function ResetPasswordPage() {
                   placeholder="12자 이상 · 대문자 · 숫자 · 특수문자"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500 pr-10"
+                  className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 pr-10"
                 />
                 <button
                   type="button"
                   aria-label={showPw ? '비밀번호 숨기기' : '비밀번호 보기'}
                   onClick={() => setShowPw((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800 transition-colors"
                 >
                   <EyeIcon open={showPw} />
                 </button>
@@ -204,7 +204,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm" className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label htmlFor="confirm" className="block text-sm font-medium text-slate-500 mb-1.5">
                 비밀번호 확인
               </label>
               <div className="relative">
@@ -217,26 +217,26 @@ export default function ResetPasswordPage() {
                   value={confirm}
                   onChange={(e) => setConfirm(e.target.value)}
                   aria-invalid={confirm.length > 0 && password !== confirm}
-                  className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500 pr-10"
+                  className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 pr-10"
                 />
                 <button
                   type="button"
                   aria-label={showConfirm ? '비밀번호 숨기기' : '비밀번호 보기'}
                   onClick={() => setShowConfirm((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition-colors"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-800 transition-colors"
                 >
                   <EyeIcon open={showConfirm} />
                 </button>
               </div>
               {confirm && password !== confirm && (
-                <p className="mt-1 text-xs text-red-400">비밀번호가 일치하지 않습니다.</p>
+                <p className="mt-1 text-xs text-red-600">비밀번호가 일치하지 않습니다.</p>
               )}
             </div>
 
             {error && (
               <div
                 role="alert"
-                className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300"
+                className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
               >
                 {error}
               </div>
@@ -253,7 +253,7 @@ export default function ResetPasswordPage() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>

@@ -16,15 +16,15 @@ function ResetSuccessToast({ onDismiss }: { onDismiss: () => void }) {
   return (
     <div
       role="status"
-      className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-green-900/90 border border-green-700 text-green-200 text-sm shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300"
+      className="fixed bottom-6 right-6 z-50 flex items-center gap-3 px-5 py-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-700 text-sm shadow-lg backdrop-blur-sm animate-in fade-in slide-in-from-bottom-2 duration-300"
     >
-      <svg className="w-4 h-4 text-green-400 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+      <svg className="w-4 h-4 text-emerald-600 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
         <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
       </svg>
       비밀번호가 성공적으로 변경되었습니다. 새 비밀번호로 로그인하세요.
       <button
         onClick={onDismiss}
-        className="ml-1 text-green-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded"
+        className="ml-1 text-emerald-600 hover:text-slate-900 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-green-400 rounded"
         aria-label="닫기"
       >
         ✕
@@ -90,15 +90,15 @@ function SellerLoginContent() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       {showResetToast && <ResetSuccessToast onDismiss={() => setShowResetToast(false)} />}
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-        <Link href="/signup" className="text-lg font-bold text-indigo-400 tracking-tight">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <Link href="/signup" className="text-lg font-bold text-indigo-600 tracking-tight">
           짐스캐너 B2B
         </Link>
-        <Link href="/signup" className="text-sm text-slate-400 hover:text-white transition-colors">
+        <Link href="/signup" className="text-sm text-slate-400 hover:text-slate-900 transition-colors">
           계정이 없으신가요?{' '}
-          <span className="text-indigo-400 font-medium">회원가입</span>
+          <span className="text-indigo-600 font-medium">회원가입</span>
         </Link>
       </header>
 
@@ -113,7 +113,7 @@ function SellerLoginContent() {
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-300 mb-1.5">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1.5">
                 이메일
               </label>
               <Input
@@ -124,18 +124,18 @@ function SellerLoginContent() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
               />
             </div>
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label htmlFor="password" className="text-sm font-medium text-slate-300">
+                <label htmlFor="password" className="text-sm font-medium text-slate-500">
                   비밀번호
                 </label>
                 <Link
                   href="/auth/forgot-password"
-                  className="text-xs text-slate-500 hover:text-indigo-400 transition-colors focus:outline-none focus-visible:text-indigo-400"
+                  className="text-xs text-slate-400 hover:text-indigo-600 transition-colors focus:outline-none focus-visible:text-indigo-600"
                 >
                   비밀번호 찾기
                 </Link>
@@ -148,14 +148,14 @@ function SellerLoginContent() {
                 placeholder="비밀번호 입력"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="bg-slate-900 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
               />
             </div>
 
             {error && (
               <div
                 role="alert"
-                className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300"
+                className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
               >
                 {error}
               </div>
@@ -170,11 +170,11 @@ function SellerLoginContent() {
             </Button>
           </form>
 
-          <p className="mt-6 text-center text-sm text-slate-500">
+          <p className="mt-6 text-center text-sm text-slate-400">
             사업자 계정이 없으신가요?{' '}
             <Link
               href="/signup"
-              className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+              className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
             >
               무료로 시작하기
             </Link>
@@ -182,7 +182,7 @@ function SellerLoginContent() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -192,7 +192,7 @@ function SellerLoginContent() {
 export default function SellerLoginPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center">
         <div className="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin" role="status" aria-label="로딩 중" />
       </div>
     }>

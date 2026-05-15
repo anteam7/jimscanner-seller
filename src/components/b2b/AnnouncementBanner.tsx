@@ -13,23 +13,23 @@ type Announcement = {
 
 const TYPE_STYLES: Record<Announcement['type'], { bar: string; badge: string; label: string }> = {
   urgent: {
-    bar: 'bg-red-900/80 border-red-700/60 text-red-100',
+    bar: 'bg-red-50 border-red-200 text-red-800',
     badge: 'bg-red-600 text-white',
     label: '긴급',
   },
   maintenance: {
-    bar: 'bg-yellow-900/70 border-yellow-700/60 text-yellow-100',
-    badge: 'bg-yellow-600 text-white',
+    bar: 'bg-amber-50 border-amber-200 text-amber-800',
+    badge: 'bg-amber-600 text-white',
     label: '점검',
   },
   feature_update: {
-    bar: 'bg-blue-900/70 border-blue-700/60 text-blue-100',
+    bar: 'bg-blue-50 border-blue-200 text-blue-800',
     badge: 'bg-blue-600 text-white',
     label: '업데이트',
   },
   general: {
-    bar: 'bg-slate-800/80 border-slate-700/60 text-slate-200',
-    badge: 'bg-slate-600 text-slate-200',
+    bar: 'bg-slate-100 border-slate-200 text-slate-700',
+    badge: 'bg-slate-600 text-white',
     label: '공지',
   },
 }
@@ -76,23 +76,23 @@ function ModalContent({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-lg rounded-xl bg-slate-900 border border-slate-700 shadow-2xl"
+        className="relative w-full max-w-lg rounded-xl bg-white border border-slate-300 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
         aria-labelledby="ann-modal-title"
       >
-        <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-slate-700">
+        <div className="flex items-start gap-3 px-5 pt-5 pb-4 border-b border-slate-300">
           <span className={`mt-0.5 shrink-0 rounded px-2 py-0.5 text-xs font-bold ${style.badge}`}>
             {style.label}
           </span>
-          <h2 id="ann-modal-title" className="flex-1 text-base font-semibold text-slate-100">
+          <h2 id="ann-modal-title" className="flex-1 text-base font-semibold text-slate-900">
             {ann.title}
           </h2>
           <button
             ref={closeRef}
             onClick={onClose}
-            className="shrink-0 text-slate-500 hover:text-slate-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
+            className="shrink-0 text-slate-400 hover:text-slate-500 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
             aria-label="닫기"
           >
             <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -101,11 +101,11 @@ function ModalContent({
           </button>
         </div>
         <div className="px-5 py-4 max-h-96 overflow-y-auto">
-          <pre className="whitespace-pre-wrap text-sm text-slate-300 font-sans leading-relaxed">
+          <pre className="whitespace-pre-wrap text-sm text-slate-500 font-sans leading-relaxed">
             {ann.body_markdown}
           </pre>
         </div>
-        <div className="px-5 pb-4 text-xs text-slate-500">
+        <div className="px-5 pb-4 text-xs text-slate-400">
           공지 기간: {new Date(ann.starts_at).toLocaleDateString('ko-KR')} ~{' '}
           {new Date(ann.ends_at).toLocaleDateString('ko-KR')}
         </div>

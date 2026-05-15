@@ -79,30 +79,30 @@ export default function CompliancePage() {
   return (
     <div className="p-6 max-w-2xl space-y-8">
       <div>
-        <h1 className="text-xl font-bold text-white">법규 컴플라이언스</h1>
+        <h1 className="text-xl font-bold text-slate-900">법규 컴플라이언스</h1>
         <p className="text-sm text-slate-400 mt-0.5">전자상거래법 의무 고지 및 법정 문서 설정을 관리합니다.</p>
       </div>
 
       {/* 청약철회 고지 섹션 */}
-      <section className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-5">
+      <section className="rounded-xl border border-slate-200 bg-white p-5 space-y-5">
         <div className="flex items-start justify-between gap-4">
           <div>
-            <h2 className="text-base font-semibold text-white">청약철회 권리 자동 고지</h2>
+            <h2 className="text-base font-semibold text-slate-900">청약철회 권리 자동 고지</h2>
             <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-              주문이 <strong className="text-slate-300">완료</strong> 상태로 전환될 때 의뢰자에게 청약철회 안내를 자동 발송합니다.
+              주문이 <strong className="text-slate-500">완료</strong> 상태로 전환될 때 의뢰자에게 청약철회 안내를 자동 발송합니다.
               <br />
-              <span className="text-amber-400">전자상거래법 제17조</span>에 따라 통신판매업자는 소비자에게 청약철회 권리를 의무 고지해야 합니다.
+              <span className="text-amber-600">전자상거래법 제17조</span>에 따라 통신판매업자는 소비자에게 청약철회 권리를 의무 고지해야 합니다.
             </p>
           </div>
           {loading ? (
-            <div className="w-12 h-6 rounded-full bg-slate-700 animate-pulse flex-shrink-0" />
+            <div className="w-12 h-6 rounded-full bg-slate-300 animate-pulse flex-shrink-0" />
           ) : (
             <button
               role="switch"
               aria-checked={enabled}
               onClick={() => setEnabled((v) => !v)}
               className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 ${
-                enabled ? 'bg-indigo-600' : 'bg-slate-700'
+                enabled ? 'bg-indigo-600' : 'bg-slate-300'
               }`}
             >
               <span
@@ -116,9 +116,9 @@ export default function CompliancePage() {
         </div>
 
         {/* 법정 기본 문구 */}
-        <div className="rounded-lg bg-slate-800/60 border border-slate-700/60 p-4">
+        <div className="rounded-lg bg-slate-100 border border-slate-200 p-4">
           <p className="text-xs font-medium text-slate-400 mb-1">법정 기본 문구 (미설정 시 자동 사용)</p>
-          <p className="text-sm text-slate-300 leading-relaxed">{DEFAULT_NOTICE}</p>
+          <p className="text-sm text-slate-500 leading-relaxed">{DEFAULT_NOTICE}</p>
         </div>
 
         {/* 커스텀 문구 */}
@@ -128,9 +128,9 @@ export default function CompliancePage() {
               type="checkbox"
               checked={useCustom}
               onChange={(e) => setUseCustom(e.target.checked)}
-              className="w-4 h-4 rounded border-slate-600 bg-slate-800 text-indigo-500 focus:ring-indigo-500"
+              className="w-4 h-4 rounded border-slate-600 bg-slate-100 text-indigo-500 focus:ring-indigo-500"
             />
-            <span className="text-sm text-slate-300">커스텀 문구 사용</span>
+            <span className="text-sm text-slate-500">커스텀 문구 사용</span>
           </label>
           {useCustom && (
             <div>
@@ -141,12 +141,12 @@ export default function CompliancePage() {
                 rows={4}
                 placeholder={DEFAULT_NOTICE}
                 aria-label="커스텀 청약철회 문구"
-                className="w-full rounded-lg border border-slate-700 bg-slate-800/60 px-3 py-2.5 text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
+                className="w-full rounded-lg border border-slate-300 bg-slate-100 px-3 py-2.5 text-sm text-slate-900 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent resize-none"
               />
-              <p className={`text-xs mt-1 text-right ${customText.length >= 500 ? 'text-red-400' : 'text-slate-500'}`}>
+              <p className={`text-xs mt-1 text-right ${customText.length >= 500 ? 'text-red-600' : 'text-slate-400'}`}>
                 {customText.length}/500
               </p>
-              <p className="text-xs text-slate-500 mt-0.5">
+              <p className="text-xs text-slate-400 mt-0.5">
                 법정 의무 고지 내용은 반드시 포함되어야 합니다. 삭제 시 기본 문구가 사용됩니다.
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function CompliancePage() {
         {/* 저장 버튼 */}
         <div className="flex items-center justify-between gap-4 pt-1">
           {saveMsg ? (
-            <p className={`text-sm ${saveMsg.type === 'success' ? 'text-emerald-400' : 'text-red-400'}`}>
+            <p className={`text-sm ${saveMsg.type === 'success' ? 'text-emerald-400' : 'text-red-600'}`}>
               {saveMsg.text}
             </p>
           ) : (
@@ -184,14 +184,14 @@ export default function CompliancePage() {
               value={data.stats.success_rate !== null ? `${data.stats.success_rate}%` : '—'}
               cls={
                 data.stats.success_rate !== null && data.stats.success_rate < 80
-                  ? 'text-amber-400'
+                  ? 'text-amber-600'
                   : 'text-emerald-400'
               }
             />
           </div>
           {data.stats.total_30d === 0 && (
-            <p className="text-xs text-slate-500 bg-slate-900/40 border border-slate-800 rounded-lg p-3">
-              아직 청약철회 고지가 발송된 내역이 없습니다. 주문 상태를 <strong className="text-slate-300">완료</strong>로
+            <p className="text-xs text-slate-400 bg-white border border-slate-200 rounded-lg p-3">
+              아직 청약철회 고지가 발송된 내역이 없습니다. 주문 상태를 <strong className="text-slate-500">완료</strong>로
               전환하면 의뢰자에게 자동 발송됩니다.
             </p>
           )}
@@ -203,9 +203,9 @@ export default function CompliancePage() {
 
 function StatCard({ label, value, cls }: { label: string; value: string; cls?: string }) {
   return (
-    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4 text-center">
-      <p className="text-xs text-slate-500 mb-1">{label}</p>
-      <p className={`text-2xl font-bold ${cls ?? 'text-white'}`}>{value}</p>
+    <div className="rounded-xl border border-slate-200 bg-white p-4 text-center">
+      <p className="text-xs text-slate-400 mb-1">{label}</p>
+      <p className={`text-2xl font-bold ${cls ?? 'text-slate-900'}`}>{value}</p>
     </div>
   )
 }

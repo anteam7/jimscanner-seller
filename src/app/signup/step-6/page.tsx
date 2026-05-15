@@ -138,14 +138,14 @@ export default function SignupStep6Page() {
 
   if (authLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="w-8 h-8 border-2 border-indigo-500 border-t-transparent rounded-full animate-spin" />
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
       <SignupHeader />
 
       <main className="flex-1 flex flex-col items-center justify-start px-4 py-10">
@@ -158,7 +158,7 @@ export default function SignupStep6Page() {
             <>
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-2xl font-bold">사업자등록증 업로드</h1>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-300">
                   선택
                 </span>
               </div>
@@ -168,8 +168,8 @@ export default function SignupStep6Page() {
               </p>
 
               {/* 업로드 조건 안내 */}
-              <div className="rounded-xl border border-slate-700 bg-slate-900/40 p-4 mb-6">
-                <p className="text-xs font-medium text-slate-300 mb-2">업로드 조건</p>
+              <div className="rounded-xl border border-slate-300 bg-white p-4 mb-6">
+                <p className="text-xs font-medium text-slate-500 mb-2">업로드 조건</p>
                 <ul className="space-y-1.5">
                   {[
                     'JPG, PNG, PDF 형식',
@@ -178,7 +178,7 @@ export default function SignupStep6Page() {
                   ].map((item) => (
                     <li key={item} className="flex items-center gap-2 text-xs text-slate-400">
                       <svg
-                        className="w-3.5 h-3.5 text-indigo-400 flex-shrink-0"
+                        className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0"
                         fill="none"
                         viewBox="0 0 24 24"
                         strokeWidth={2.5}
@@ -209,12 +209,12 @@ export default function SignupStep6Page() {
                 className={`relative rounded-xl border-2 border-dashed transition-colors
                   ${uploadState === 'uploading' ? 'cursor-not-allowed' : 'cursor-pointer'}
                   ${isDragging
-                    ? 'border-indigo-400 bg-indigo-900/20'
+                    ? 'border-indigo-400 bg-indigo-50'
                     : uploadState === 'selected'
-                    ? 'border-indigo-600/60 bg-slate-900/40'
-                    : 'border-slate-700 bg-slate-900/40 hover:border-slate-500 hover:bg-slate-900/60'
+                    ? 'border-indigo-600/60 bg-white'
+                    : 'border-slate-300 bg-white hover:border-slate-500 hover:bg-slate-100'
                   }
-                  focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950`}
+                  focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white`}
               >
                 <input
                   ref={inputRef}
@@ -228,7 +228,7 @@ export default function SignupStep6Page() {
 
                 {uploadState === 'idle' && (
                   <div className="flex flex-col items-center justify-center py-12 px-6 gap-3">
-                    <div className="w-14 h-14 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center">
+                    <div className="w-14 h-14 rounded-full bg-slate-100 border border-slate-300 flex items-center justify-center">
                       <svg
                         className="w-7 h-7 text-slate-400"
                         fill="none"
@@ -240,10 +240,10 @@ export default function SignupStep6Page() {
                       </svg>
                     </div>
                     <div className="text-center">
-                      <p className="text-sm font-medium text-slate-200">
+                      <p className="text-sm font-medium text-slate-800">
                         파일을 드래그하거나 클릭하여 선택
                       </p>
-                      <p className="text-xs text-slate-500 mt-1">JPG · PNG · PDF, 최대 5MB</p>
+                      <p className="text-xs text-slate-400 mt-1">JPG · PNG · PDF, 최대 5MB</p>
                     </div>
                   </div>
                 )}
@@ -255,12 +255,12 @@ export default function SignupStep6Page() {
                       <img
                         src={previewUrl}
                         alt="사업자등록증 미리보기"
-                        className="w-16 h-16 rounded-lg object-cover border border-slate-700 flex-shrink-0"
+                        className="w-16 h-16 rounded-lg object-cover border border-slate-300 flex-shrink-0"
                       />
                     ) : (
-                      <div className="w-16 h-16 rounded-lg bg-slate-800 border border-slate-700 flex items-center justify-center flex-shrink-0">
+                      <div className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center flex-shrink-0">
                         <svg
-                          className="w-8 h-8 text-red-400"
+                          className="w-8 h-8 text-red-600"
                           fill="none"
                           viewBox="0 0 24 24"
                           strokeWidth={1.5}
@@ -276,10 +276,10 @@ export default function SignupStep6Page() {
                     )}
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-200 truncate">{selectedFile.name}</p>
-                      <p className="text-xs text-slate-500 mt-0.5">{formatBytes(selectedFile.size)}</p>
+                      <p className="text-sm font-medium text-slate-800 truncate">{selectedFile.name}</p>
+                      <p className="text-xs text-slate-400 mt-0.5">{formatBytes(selectedFile.size)}</p>
                       {uploadState === 'uploading' && (
-                        <div className="mt-2 h-1.5 rounded-full bg-slate-800 overflow-hidden">
+                        <div className="mt-2 h-1.5 rounded-full bg-slate-100 overflow-hidden">
                           <div className="h-full bg-indigo-500 rounded-full w-2/3 animate-pulse" />
                         </div>
                       )}
@@ -289,7 +289,7 @@ export default function SignupStep6Page() {
                       <button
                         type="button"
                         onClick={handleRemoveFile}
-                        className="p-1.5 rounded-md text-slate-500 hover:text-white hover:bg-slate-800 transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                        className="p-1.5 rounded-md text-slate-400 hover:text-slate-900 hover:bg-slate-100 transition-colors flex-shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                         aria-label="파일 제거"
                       >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
@@ -302,7 +302,7 @@ export default function SignupStep6Page() {
               </div>
 
               {validationError && (
-                <p className="mt-2 text-xs text-red-400 flex items-center gap-1.5">
+                <p className="mt-2 text-xs text-red-600 flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -315,7 +315,7 @@ export default function SignupStep6Page() {
               )}
 
               {uploadError && (
-                <div className="mt-3 rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300">
+                <div className="mt-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
                   {uploadError}
                 </div>
               )}
@@ -343,13 +343,13 @@ export default function SignupStep6Page() {
                   type="button"
                   onClick={handleSkip}
                   disabled={uploadState === 'uploading'}
-                  className="w-full py-2.5 rounded-lg border border-slate-700 text-sm text-slate-400 hover:border-slate-500 hover:text-white transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+                  className="w-full py-2.5 rounded-lg border border-slate-300 text-sm text-slate-400 hover:border-slate-500 hover:text-slate-900 transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
                 >
                   나중에 업로드하고 계속하기
                 </button>
               </div>
 
-              <p className="mt-5 text-center text-xs text-slate-600">
+              <p className="mt-5 text-center text-xs text-slate-400">
                 업로드된 서류는 Supabase 암호화 스토리지에 저장되며, 담당 운영자만 열람합니다.
               </p>
             </>
@@ -357,7 +357,7 @@ export default function SignupStep6Page() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -367,10 +367,10 @@ export default function SignupStep6Page() {
 function CompleteCard() {
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-indigo-800 bg-indigo-950/40 p-8 flex flex-col items-center gap-4 text-center">
-        <div className="w-16 h-16 rounded-full bg-indigo-900/60 border border-indigo-700/50 flex items-center justify-center">
+      <div className="rounded-xl border border-indigo-200 bg-indigo-50 p-8 flex flex-col items-center gap-4 text-center">
+        <div className="w-16 h-16 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center">
           <svg
-            className="w-8 h-8 text-indigo-400"
+            className="w-8 h-8 text-indigo-600"
             fill="none"
             viewBox="0 0 24 24"
             strokeWidth={2}
@@ -381,22 +381,22 @@ function CompleteCard() {
         </div>
 
         <div>
-          <p className="text-xl font-bold text-indigo-200">가입 신청 완료!</p>
+          <p className="text-xl font-bold text-indigo-700">가입 신청 완료!</p>
           <p className="text-sm text-slate-400 mt-2 leading-relaxed">
             사업자 계정 신청이 접수되었습니다.<br />
             검토 완료 후 등록한 이메일로 안내 드리겠습니다.
           </p>
         </div>
 
-        <div className="w-full rounded-lg bg-slate-900/60 border border-slate-700 p-4 text-left space-y-3">
-          <p className="text-xs font-medium text-slate-300">다음 단계</p>
+        <div className="w-full rounded-lg bg-slate-100 border border-slate-300 p-4 text-left space-y-3">
+          <p className="text-xs font-medium text-slate-500">다음 단계</p>
           {[
             '운영팀이 사업자 정보를 검토합니다. (영업일 기준 1~2일)',
             '승인 완료 시 이메일로 알림을 발송합니다.',
             '대시보드에 로그인하여 서비스를 시작하세요.',
           ].map((text, i) => (
             <div key={i} className="flex items-start gap-2.5">
-              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-900/60 border border-indigo-700/50 flex items-center justify-center text-xs text-indigo-400 font-bold">
+              <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs text-indigo-600 font-bold">
                 {i + 1}
               </span>
               <p className="text-xs text-slate-400 leading-relaxed">{text}</p>
@@ -407,7 +407,7 @@ function CompleteCard() {
 
       <Link
         href="/login"
-        className="block w-full text-center py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+        className="block w-full text-center py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 focus-visible:ring-offset-2 focus-visible:ring-offset-white"
       >
         로그인 페이지로 이동
       </Link>

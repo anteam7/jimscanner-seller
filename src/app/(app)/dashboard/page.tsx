@@ -54,7 +54,7 @@ function StatusBanner({ account }: { account: FullAccount }) {
           <p className="text-sm font-semibold text-indigo-900">
             인증 완료 — 모든 기능을 사용할 수 있습니다
           </p>
-          <p className="text-xs text-slate-600 mt-0.5">
+          <p className="text-xs text-slate-400 mt-0.5">
             {account.business_name ? `${account.business_name} · ` : ''}
             {account.email}
           </p>
@@ -67,7 +67,7 @@ function StatusBanner({ account }: { account: FullAccount }) {
   return (
     <div className="rounded-lg border border-amber-200 bg-amber-50 px-5 py-4">
       <p className="text-sm font-semibold text-amber-800">계정 검증 진행 중</p>
-      <p className="text-xs text-slate-700 mt-1">
+      <p className="text-xs text-slate-500 mt-1">
         다음 단계:{' '}
         <span className="font-medium text-amber-900">{next?.label}</span>
         {next?.hint ? ` — ${next.hint}` : ''}
@@ -94,7 +94,7 @@ function VerificationProgress({ level }: { level: number }) {
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
-      <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-4">
+      <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-4">
         인증 진행 현황
       </p>
       <div className="flex items-center gap-2 flex-wrap">
@@ -104,7 +104,7 @@ function VerificationProgress({ level }: { level: number }) {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors
                 ${step.done
                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                  : 'bg-slate-50 text-slate-500 border-slate-200'
+                  : 'bg-slate-50 text-slate-400 border-slate-200'
                 }`}
             >
               {step.done ? (
@@ -117,7 +117,7 @@ function VerificationProgress({ level }: { level: number }) {
               {step.label}
             </div>
             {i < steps.length - 1 && (
-              <span className="text-slate-300 text-xs">›</span>
+              <span className="text-slate-500 text-xs">›</span>
             )}
           </div>
         ))}
@@ -129,7 +129,7 @@ function VerificationProgress({ level }: { level: number }) {
 function StatSkeleton({ label }: { label: string }) {
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-5">
-      <p className="text-xs text-slate-500 mb-2">{label}</p>
+      <p className="text-xs text-slate-400 mb-2">{label}</p>
       <div className="h-7 w-16 bg-slate-100 rounded-md animate-pulse" />
       <div className="h-3 w-24 bg-slate-100 rounded-md mt-2 animate-pulse" />
     </div>
@@ -164,7 +164,7 @@ export default async function SellerDashboardPage() {
         <h1 className="text-xl font-bold text-slate-900">
           안녕하세요{account.ceo_name ? `, ${account.ceo_name}님` : ''}
         </h1>
-        <p className="text-sm text-slate-600 mt-0.5">{displayName} 대시보드입니다.</p>
+        <p className="text-sm text-slate-400 mt-0.5">{displayName} 대시보드입니다.</p>
       </div>
 
       {/* 상태 배너 */}
@@ -178,7 +178,7 @@ export default async function SellerDashboardPage() {
 
       {/* 통계 스켈레톤 (Phase D 완료 후 실제 데이터로 교체) */}
       <div>
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+        <p className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-3">
           이번 달 현황
         </p>
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">

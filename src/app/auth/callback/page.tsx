@@ -45,7 +45,7 @@ function AuthCallbackContent() {
 
   if (!errorMsg) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
+      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center gap-4">
         <div
           className="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"
           role="status"
@@ -62,13 +62,13 @@ function AuthCallbackContent() {
     errorMsg.toLowerCase().includes('invalid')
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-800">
-        <Link href="/signup" className="text-lg font-bold text-indigo-400 tracking-tight">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
+      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+        <Link href="/signup" className="text-lg font-bold text-indigo-600 tracking-tight">
           짐스캐너 B2B
         </Link>
-        <Link href="/login" className="text-sm text-slate-400 hover:text-white transition-colors">
-          이미 계정이 있으신가요? <span className="text-indigo-400 font-medium">로그인</span>
+        <Link href="/login" className="text-sm text-slate-400 hover:text-slate-900 transition-colors">
+          이미 계정이 있으신가요? <span className="text-indigo-600 font-medium">로그인</span>
         </Link>
       </header>
 
@@ -76,8 +76,8 @@ function AuthCallbackContent() {
         <div className="w-full max-w-md space-y-6">
           {/* 아이콘 */}
           <div className="flex justify-center">
-            <div className="w-16 h-16 rounded-full bg-red-900/40 border border-red-700 flex items-center justify-center">
-              <svg className="w-8 h-8 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+            <div className="w-16 h-16 rounded-full bg-red-900/40 border border-red-200 flex items-center justify-center">
+              <svg className="w-8 h-8 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
                 <path strokeLinecap="round" strokeLinejoin="round"
                   d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
               </svg>
@@ -96,8 +96,8 @@ function AuthCallbackContent() {
           </div>
 
           {/* 재발송 폼 */}
-          <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-5 space-y-4">
-            <p className="text-sm font-medium text-slate-200">인증 이메일 재발송</p>
+          <div className="rounded-xl border border-slate-200 bg-slate-100 p-5 space-y-4">
+            <p className="text-sm font-medium text-slate-800">인증 이메일 재발송</p>
             <div>
               <label htmlFor="resend-email" className="block text-xs font-medium text-slate-400 mb-1.5">
                 가입 이메일 주소
@@ -109,18 +109,18 @@ function AuthCallbackContent() {
                 placeholder="you@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="bg-slate-800 border-slate-700 text-white placeholder:text-slate-600 focus-visible:ring-indigo-500"
+                className="bg-slate-100 border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500"
               />
             </div>
 
             {resendMsg && (
-              <div className="rounded-lg bg-green-950/60 border border-green-800 px-4 py-3 text-sm text-green-300" role="status">
+              <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700" role="status">
                 {resendMsg}
               </div>
             )}
 
             {resendError && (
-              <div className="rounded-lg bg-red-950/60 border border-red-800 px-4 py-3 text-sm text-red-300" role="alert">
+              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
                 {resendError}
               </div>
             )}
@@ -141,13 +141,13 @@ function AuthCallbackContent() {
           <div className="flex flex-col gap-2 text-center">
             <Link
               href="/login"
-              className="text-sm text-indigo-400 hover:text-indigo-300 transition-colors underline underline-offset-2"
+              className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors underline underline-offset-2"
             >
               로그인 페이지로 돌아가기
             </Link>
-            <p className="text-xs text-slate-600">
+            <p className="text-xs text-slate-400">
               계속 문제가 발생하면{' '}
-              <a href="mailto:support@jimscanner.co.kr" className="text-slate-400 hover:text-white underline">
+              <a href="mailto:support@jimscanner.co.kr" className="text-slate-400 hover:text-slate-900 underline">
                 고객센터
               </a>
               에 문의해 주세요.
@@ -156,7 +156,7 @@ function AuthCallbackContent() {
         </div>
       </main>
 
-      <footer className="text-center py-6 text-xs text-slate-600 border-t border-slate-800">
+      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
         © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
       </footer>
     </div>
@@ -165,7 +165,7 @@ function AuthCallbackContent() {
 
 function LoadingFallback() {
   return (
-    <div className="min-h-screen bg-slate-950 text-white flex flex-col items-center justify-center gap-4">
+    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center gap-4">
       <div
         className="w-10 h-10 rounded-full border-4 border-indigo-600 border-t-transparent animate-spin"
         role="status"
