@@ -55,6 +55,7 @@ type OrderDetail = {
   forwarder_id: string | null
   forwarder_country: string | null
   forwarder_request_no: string | null
+  forwarders: { name: string; slug: string } | null
   // 비용
   estimated_cost_krw: number | string | null
   actual_cost_krw: number | string | null
@@ -234,7 +235,7 @@ export default async function OrderDetailPage({
   const { data: order } = (await db
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
+      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
     )
     .eq('id', id)
     .eq('account_id', account.id)
@@ -481,23 +482,20 @@ export default async function OrderDetailPage({
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">배대지</p>
             <dl className="text-sm">
-              <InfoRow label="국가">{order.forwarder_country ?? '—'}</InfoRow>
-              <InfoRow label="배대지 ID">
-                {order.forwarder_id ? (
-                  <span className="font-mono text-[10px] text-slate-600 break-all">{order.forwarder_id}</span>
+              <InfoRow label="배대지">
+                {order.forwarders?.name ? (
+                  <span className="font-medium text-slate-900">{order.forwarders.name}</span>
                 ) : (
                   <span className="text-slate-400">선택 안 됨</span>
                 )}
               </InfoRow>
+              <InfoRow label="국가">{order.forwarder_country ?? '—'}</InfoRow>
               <InfoRow label="신청번호">
                 {order.forwarder_request_no ? (
                   <span className="font-mono text-xs">{order.forwarder_request_no}</span>
                 ) : '—'}
               </InfoRow>
             </dl>
-            <p className="text-[10px] text-slate-500 mt-2">
-              Phase D — 33 배대지 dropdown 정식 활성 예정
-            </p>
           </section>
 
           {/* 액션 (양식 변환) */}
