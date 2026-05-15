@@ -6,14 +6,24 @@ import { sendWithdrawalNoticeEmail } from '@/lib/b2b/email'
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
-const VALID_STATUSES = ['pending', 'processing', 'shipped', 'completed', 'cancelled']
+// b2b_orders.status enum 과 일치 (supabase/b2b_schema.sql L267)
+const VALID_STATUSES = [
+  'pending', 'confirmed', 'paid', 'forwarder_submitted',
+  'in_transit', 'arrived_korea', 'delivered', 'completed',
+  'cancelled', 'refunded',
+]
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending:    ['processing', 'cancelled'],
-  processing: ['shipped', 'cancelled'],
-  shipped:    ['completed', 'cancelled'],
-  completed:  [],
-  cancelled:  [],
+  pending:             ['confirmed', 'cancelled'],
+  confirmed:           ['paid', 'cancelled'],
+  paid:                ['forwarder_submitted', 'cancelled', 'refunded'],
+  forwarder_submitted: ['in_transit', 'cancelled', 'refunded'],
+  in_transit:          ['arrived_korea', 'cancelled'],
+  arrived_korea:       ['delivered'],
+  delivered:           ['completed'],
+  completed:           [],
+  cancelled:           [],
+  refunded:            [],
 }
 
 const DEFAULT_WITHDRAWAL_TEXT =
