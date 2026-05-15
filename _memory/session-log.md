@@ -30,3 +30,17 @@
 - 짐스캐너 B2C 로고 그대로 사용 (브라이트니스 0 + invert 로 다크 사이드바 호환)
 
 다음 세션: Stage 2b 주문 관리 MVP. 자세한 건 `_memory/next-steps.md`.
+
+---
+
+## 2026-05-15 (Stage 2b — 주문 관리 MVP UI 골격)
+
+- `src/app/(app)/orders/page.tsx` — 목록 (server): 상태 필터 7종 핍 그룹, 주문번호 검색, 빈상태 카드, hover row, status badge 10종, 50건 limit
+- `src/app/(app)/orders/new/page.tsx` — 수동 입력 폼 (client): order_number 자동 생성, 의뢰자명, 상품 1건(MVP), USD/JPY/CNY/EUR/KRW, 합계 자동 계산
+- `src/app/api/orders/route.ts` — POST(create + 의뢰자 자동 upsert + 쿼터·grace period 체크 + 라인 아이템) + GET(목록)
+- `SellerShell.tsx` — NAV `/orders` available=true 활성
+- `dashboard/page.tsx` — "새 주문 입력" QuickAction 활성
+- 쿼터 트리거 `tg_b2b_order_quota_increment` 가 DB 에 이미 있음(b2b_schema.sql L907) — API 에서 명시적 increment 불필요
+- `npm run build` 통과, 28 page
+
+남은 작업: orders/[id] 상세, ForwarderExportModal, 33 배대지 spec seed. next-steps 참조.

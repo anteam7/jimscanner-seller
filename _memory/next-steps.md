@@ -1,42 +1,38 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-15 (디자인 v2.1 + 로고 적용 완료 시점)
+마지막 갱신: 2026-05-15 (Stage 2b MVP P0 완료 시점)
 
 ---
 
-## 🥇 1순위 — Stage 2b: 주문 관리 MVP UI 골격
+## 🥇 1순위 — Stage 2b 계속: 주문 상세·양식 변환·실데이터 검증
 
-**왜:** 가입·인증·결제 인프라는 거의 완성됐지만 정작 "왜 가입했는지" = 주문 관리가 비어있음. SellerShell NAV 의 `/orders` 도 `available: false` 상태.
+**왜:** P0 골격(목록·생성·NAV·API) 은 끝났지만, 정작 "왜 가입했는지" = 33 배대지 양식 변환이 아직 비어있음. 그리고 라이브 DB 로 실제 주문 등록·표시가 동작하는지 검증해야 함.
 
-**MVP 범위 (사용자 합의):**
-- 수동으로 주문을 입력
-- 33 배대지 양식 중 선택해 엑셀로 다운로드
+**완료된 것 (2026-05-15):**
+- ✅ `src/app/(app)/orders/page.tsx` — 목록 (필터·검색·빈상태)
+- ✅ `src/app/(app)/orders/new/page.tsx` — 수동 입력 폼 (1상품 MVP)
+- ✅ `src/app/api/orders/route.ts` — POST(쿼터·의뢰자 upsert·라인) + GET
+- ✅ SellerShell NAV `/orders` 활성
+- ✅ Dashboard "새 주문 입력" QuickAction 활성
 
-**작업 단위:**
+**다음 작업 단위:**
 
 | 파일 | 내용 | 우선순위 |
 |---|---|---|
-| `src/app/(app)/orders/page.tsx` | 주문 목록 (server) — 빈 상태 + 테이블 + 필터/검색 + "엑셀 변환" 액션 | 🔴 P0 |
-| `src/app/(app)/orders/new/page.tsx` | 수동 주문 입력 폼 (client) — order_number·client·product 1개·quantity·price·notes | 🔴 P0 |
-| `src/app/(app)/orders/[id]/page.tsx` | 주문 상세 + 상태 변경 + 라인 아이템 편집 | 🟡 P1 |
-| `src/components/b2b/ForwarderExportModal.tsx` | 33 배대지 선택 모달 + XLSX 다운로드 (Web Worker) | 🟡 P1 |
-| `src/app/api/orders/route.ts` (POST/GET) | 주문 생성·목록 API | 🔴 P0 |
-| `src/app/api/orders/export/route.ts` | 선택된 주문 → 양식별 XLSX 변환·반환 | 🟡 P1 |
+| `src/app/(app)/orders/[id]/page.tsx` | 주문 상세 + 상태 변경 + 라인 아이템 표시 | 🔴 P0 |
+| 라이브 DB 등록·표시 dogfood | seller.jimscanner.co.kr or 로컬에서 실 주문 1건 등록·목록 확인 | 🔴 P0 |
+| `src/components/b2b/ForwarderExportModal.tsx` | 배대지 선택 + XLSX 다운로드 (Web Worker) | 🟡 P1 |
+| `src/app/api/orders/export/route.ts` | 양식별 XLSX 변환·반환 | 🟡 P1 |
 | `supabase/b2b_forwarder_form_specs.sql` | 33 배대지 양식 컬럼 정의 (사전 데이터 수집 필요) | 🟠 P2 |
-| `src/components/b2b/SellerShell.tsx` | `/orders` `available: true` 로 변경 | 🔴 P0 |
+| 다상품 입력 지원 | new 페이지에서 라인 아이템 add/remove | 🟠 P2 |
 
 **디자인:** v2.1 패턴 — dashboard 와 같은 톤 (shadow-sm 카드, gradient banner, accent border, p-8 max-w-{4,5,6}xl).
 
-**진행 권장 순서:**
-1. orders/page.tsx + new/page.tsx (UI 골격) — 데이터 연결 X, 빈 상태·로딩·에러 모두 표시
-2. SellerShell NAV `/orders` available=true 처리
-3. /api/orders POST/GET 구현 + 실 데이터 연결
-4. ForwarderExportModal — 일단 mock 양식 1~2개로 시작
-5. 33 배대지 spec DB seed (별도 작업, 사용자 검토)
-
-**db schema 참고:**
-- `supabase/b2b_schema.sql` 의 `b2b_orders` (라인 238~) + `b2b_order_items` (라인 295~)
-- 상태 enum: pending/confirmed/paid/forwarder_submitted/in_transit/arrived_korea/delivered/completed/cancelled/refunded
+**구현 메모 (다음 세션 컨텍스트):**
+- 쿼터 트리거 `tg_b2b_order_quota_increment` 는 b2b_schema.sql L907 에 이미 있음 — POST 가 명시적 increment 안 함, DB 가 알아서 처리
+- 의뢰자는 display_name 기준 자동 upsert. 동일 이름이면 첫 매칭 재사용 (의뢰자 관리 UI 완성 후 정교화)
+- status 전이 검증은 `/api/orders/[id]/status` (이미 존재) 가 담당, 단 status enum 이 b2b_schema 와 다름 — 정렬 필요
+- 상태 enum 정렬: pending/confirmed/paid/forwarder_submitted/in_transit/arrived_korea/delivered/completed/cancelled/refunded
 
 ---
 

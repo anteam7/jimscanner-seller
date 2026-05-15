@@ -261,7 +261,7 @@ export default async function SellerDashboardPage() {
             title="새 주문 입력"
             description="수동으로 의뢰자 주문을 입력합니다"
             href="/orders/new"
-            available={false}
+            available={true}
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
