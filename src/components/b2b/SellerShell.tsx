@@ -125,13 +125,20 @@ export default function SellerShell({
     <div className="h-screen flex bg-slate-50 text-slate-900 overflow-hidden">
       {/* 사이드바 — 다크 톤 */}
       <aside className="w-[220px] flex-shrink-0 flex flex-col bg-slate-800 text-slate-100">
-        {/* 로고 */}
+        {/* 로고 — A: 짐스캐너 시그니처 (B2C 운송 메타포 차용) */}
         <div className="px-5 py-4 border-b border-slate-700">
           <Link
             href="/dashboard"
-            className="text-base font-bold tracking-tight text-white hover:text-indigo-300 transition-colors"
+            className="flex items-center gap-2 group focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
           >
-            짐스캐너 <span className="text-indigo-400">B2B</span>
+            <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-gradient-to-br from-sky-400 to-indigo-500 shadow-sm">
+              <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 9.75 12 4l8.25 5.75M5.25 9.75v9.5h13.5v-9.5M9.75 19.25v-5h4.5v5" />
+              </svg>
+            </span>
+            <span className="text-sm font-bold tracking-tight text-white group-hover:text-indigo-200 transition-colors">
+              짐스캐너 <span className="text-indigo-300 font-semibold">SELLER</span>
+            </span>
           </Link>
         </div>
 
