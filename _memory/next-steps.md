@@ -19,24 +19,39 @@
 
 ---
 
-## 🥇 1순위 — 다음 세션 시작 시 즉시: dogfood 검증
+## 🥇 1순위 — dogfood 검증 (2 트랙)
 
-**Phase A~D 완료 (2026-05-15, commits `b9c52da` → `4394fef` → `d103bb7`).**
-prod DB 마이그도 직접 적용 완료. Vercel 자동 배포 완료 가정.
+세션 5(Phase A~D, 도메인 재정의) + 세션 6(일괄 입력) 모두 prod 반영 완료, **실 데이터 검증 미실행**. 다음 세션 시작 시 둘 중 하나 또는 둘 다.
 
-**검증 시나리오 (다음 세션 첫 작업):**
-1. Chrome DevTools MCP 로 prod 접속 → Vercel SSO + Supabase 로그인 (사용자 직접) → `/orders/new`
-2. 마켓(예: 쿠팡) + 마켓주문번호 + 구매자 PII 5필드 + 통관코드 + 해외 매입(예: 아마존US, ASIN, 매입가, 판매가) + 배대지 dropdown 1개 선택 → 등록
-3. `/orders` 목록에서 새 컬럼들 정상 표시 확인 (마켓 chip · 마켓번호 · 구매자명 · 판매가)
-4. `/orders/[id]` 상세에서 "마켓 주문 + 배송 수신자" 카드 + "해외 매입" 카드 (supplier chip + 매입가·판매가) + 배대지 카드 (배대지 이름) 확인
-5. 상태 변경 dropdown — pending → confirmed → paid → ... 정상 흐름 (PATCH 버그 fix 검증)
+### 트랙 A — 단일 주문 입력 검증 (Phase A~D)
 
-**검증 후 발견될 가능성 높은 이슈 후보:**
-- 4섹션 폼이 길어서 UX 불편 (특히 모바일) — 가로 폭 / 섹션 접기 등 고려
-- 통관코드·우편번호 검증 (P 시작 13자리 등 client-side validation 보강)
-- 상태 변경 시 한국어 옵션 라벨 어색함 ("으)로 변경") — 더 자연스럽게
-- 마진 KRW 자동 계산 미구현 (환율 적용 필요 — `/api/exchange-rate` 사용)
-- 페이지 title 중복 "주문 X | 짐스캐너 B2B | 짐스캐너 B2B" — layout title.template
+Commits `b9c52da` → `4394fef` → `d103bb7`. 다음 시나리오:
+
+1. Chrome DevTools MCP → prod 접속 → Vercel SSO + Supabase 로그인 (사용자 직접) → `/orders/new`
+2. 마켓(쿠팡) + 마켓주문번호 + 구매자 PII 5필드 + 통관코드 + 해외 매입(아마존US·매입가·판매가) + 배대지 dropdown → 등록
+3. `/orders` 목록에서 새 컬럼 (마켓 chip · 마켓번호 · 구매자명 · 판매가) 확인
+4. `/orders/[id]` 상세 — "마켓 주문 + 배송 수신자" + "해외 매입" + 배대지 이름 확인
+5. 상태 변경 dropdown — pending → confirmed → paid 흐름 (PATCH 버그 fix 검증)
+
+### 트랙 B — 일괄 입력 검증 (세션 6, commit `bb7deef`)
+
+1. `/orders/bulk` 진입 — 27 컬럼 그리드 + 그룹 헤더 렌더 확인
+2. CSV 템플릿 다운로드 → 헤더·샘플 행 확인 (BOM·한글 안전)
+3. **엑셀 paste 테스트** — 마켓 어드민에서 받은 실제 주문 엑셀로 (또는 샘플 TSV) paste → 자동 매핑 확인
+4. 실시간 검증 — 필수값(★) 빈 셀 빨강 표시 / 통계 chip 카운트
+5. forwarder dropdown 에 prod 의 10개 배대지 옵션 정상 노출 확인
+6. 5건 등록 시도 → 트랙 A 의 목록·상세에서 source='excel_upload' 로 표시되는지
+7. 부분 실패 케이스 — 일부 행에 잘못된 enum 값(예: marketplace='naver') 넣어 부분 성공 결과 배너 확인
+
+### 검증 후 발견될 가능성 높은 이슈 후보 (둘 다 공통)
+
+- 4섹션 폼 / 27컬럼 그리드 UX (가로 스크롤 길이, 모바일 대응)
+- 통관코드·우편번호 client-side validation (P 시작 13자리, 우편 5자리)
+- 상태 변경 옵션 라벨 어색함 ("(으)로 변경") — 더 자연스럽게
+- 마진 KRW 자동 계산 미구현 (환율 적용 — `/api/exchange-rate` 호출 시점)
+- 페이지 title 중복 "X | 짐스캐너 B2B | 짐스캐너 B2B" — layout title.template
+- 일괄 입력 paste 시 라벨(`쿠팡`) → enum(`coupang`) reverse lookup 미구현
+- 일괄 입력 행별 순차 insert latency — 100+건 시 체감
 
 ---
 
@@ -74,11 +89,15 @@ prod DB 마이그도 직접 적용 완료. Vercel 자동 배포 완료 가정.
 
 ## 🔵 4순위 — v0.5 자잘한 보강
 
-- 다상품 라인 입력 (`/orders/new` 의 ③ 섹션에서 add/remove 버튼)
+- 다상품 라인 입력 (`/orders/new` 의 ③ 섹션에서 add/remove 버튼) — 일괄 입력에서는 같은 market_order_number 행을 묶는 방식 보강 필요
 - 환율 적용 → 마진 KRW 자동 계산 (`/api/exchange-rate` 호출)
 - 통관코드 client-side validation
+- 일괄 입력 paste 시 한국어 라벨(`쿠팡`) → enum value(`coupang`) reverse lookup
+- 일괄 입력 server function 또는 batched insert 로 100+건 latency 최적화
 - `b2b_clients` 의미 변경 — 마켓 구매자 단골 추적용 (예: 같은 phone+marketplace 2회 이상 등장 시 자동 묶음)
 - `b2b_subscriptions.monthly_order_used` reset 동작 점검 (월 초 cron)
+- 페이지 title.template 중복 fix
+- 상태 변경 dropdown 옵션 라벨 자연스럽게 ("(으)로 변경" → 액션 라벨)
 
 ---
 
@@ -102,6 +121,43 @@ prod DB 마이그도 직접 적용 완료. Vercel 자동 배포 완료 가정.
 - forwarders 테이블 + 시드는 main repo schema 에 있음 (10개) — 신규 시드 마이그 불필요
 - DB 마이그·DDL 은 **Supabase MCP `apply_migration` 으로 직접 적용** (`feedback_db_migrations_apply_directly.md` 메모리 참조). 사용자에게 떠넘기지 않음
 - `triggerWithdrawalNotice` 함수는 git history `b9c52da` 의 이전 버전에서 회복 가능 — v0.5+ 옵션 토글 재활성용
+
+## 🗂️ 적용된 DB 컬럼 (현재 prod 상태)
+
+`b2b_orders` 추가 컬럼 (세션 5+6 누적):
+- 마켓: marketplace, market_order_number, market_commission_krw, shipping_fee_krw
+- 구매자: buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code
+- 배대지: forwarder_warehouse (세션 6 추가)
+
+`b2b_order_items` 추가 컬럼:
+- product_id (uuid, SKU 마스터 FK — v0.5 활성)
+- supplier_site, supplier_order_number, supplier_purchased_at
+- sale_price_krw, market_product_id, market_option
+
+마이그 SQL 파일 위치: `supabase/b2b_orders_market_fields.sql`, `supabase/b2b_orders_forwarder_warehouse.sql`
+
+## 📍 코드 진입점 맵 (다음 세션 빠른 탐색)
+
+```
+src/app/(app)/orders/
+├── page.tsx              ← 목록 (server) — 마켓 필터, 검색, 빈상태
+├── new/
+│   ├── page.tsx          ← server wrapper, forwarders 조회
+│   └── NewOrderForm.tsx  ← 단일 입력 폼 (4 섹션)
+├── [id]/page.tsx         ← 상세 — 마켓+구매자 / 매입 / 배대지 / 메타
+└── bulk/
+    ├── page.tsx          ← server wrapper
+    └── BulkOrderClient.tsx  ← 27 컬럼 그리드 + paste + 템플릿
+
+src/app/api/orders/
+├── route.ts              ← POST(단일) + GET(목록)
+├── bulk/route.ts         ← POST(일괄, 최대 500행)
+├── [id]/status/route.ts  ← PATCH(상태 전이)
+└── quota-check/route.ts  ← GET(쿼터 정보)
+
+src/components/b2b/
+└── OrderStatusSelector.tsx  ← 상태 변경 client island
+```
 
 ---
 
