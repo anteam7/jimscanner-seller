@@ -10,8 +10,13 @@
 2. [`_memory/next-steps.md`](_memory/next-steps.md) — **다음 할 일 우선순위 큐**
 3. [`_memory/design-system.md`](_memory/design-system.md) — 디자인 토큰·패턴 (코드 짤 때 참고)
 4. [`_memory/session-log.md`](_memory/session-log.md) — 진행 이력 (과거 결정 컨텍스트)
+5. [`_memory/auto-queue.md`](_memory/auto-queue.md) — **cron 자동 진행 큐** (활성 시)
+6. [`_memory/full-feature-roadmap.md`](_memory/full-feature-roadmap.md) — 전체 마스터
 
 새 작업 시작 전 (2)의 1순위 항목 확인.
+
+### 사용자가 "크론" / "30분마다 자동" 요청 시
+`/loop 30m <prompt>` 를 즉시 실행 (같은 세션 안 자동 반복). `CronCreate` 는 원격 routines 라 우리 워크플로우 (로컬 파일 + Supabase MCP) 에 안 맞음. 자세한 내용은 사용자 memory `project_cron_auto_queue.md`.
 
 ---
 
