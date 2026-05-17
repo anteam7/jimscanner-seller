@@ -5,10 +5,12 @@ import Link from 'next/link'
 import PricingCard, { type PlanData } from '@/components/b2b/PricingCard'
 
 const COMMON_FEATURES = [
-  '33개 배대지 실시간 환율 비교',
-  '주문 메모 + 의뢰자 정보 보관',
-  '국세청 사업자 진위 확인',
-  'TLS 암호화 데이터 전송',
+  '30+ 배대지 양식 자동 변환',
+  '한국수출입은행 환율 실시간 적용',
+  '마켓 구매자 PII + 통관코드 안전 보관',
+  '국세청 사업자 진위 확인 (자동)',
+  '합배송 자동 묶기 + xlsx 다운로드',
+  'TLS 암호화 + RLS 본인 데이터만 격리',
 ]
 
 export default function PricingPageClient({
@@ -26,9 +28,18 @@ export default function PricingPageClient({
     <div className="p-8 space-y-8 max-w-6xl">
       {/* 헤더 */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">플랜 선택</h1>
-        <p className="text-sm text-slate-600 mt-1">
-          사업 규모에 맞는 플랜을 선택하세요. 언제든지 변경 가능합니다.
+        <span className="inline-flex items-center gap-1.5 mb-3 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-[11px] font-semibold text-indigo-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          PLANS &amp; BILLING
+        </span>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+          사업 규모에 맞는{' '}
+          <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">
+            플랜 선택
+          </span>
+        </h1>
+        <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+          무료로 시작하고 주문량이 늘면 언제든지 업그레이드. 연간 결제로 ~17% 절감 가능합니다.
         </p>
       </div>
 
@@ -84,15 +95,22 @@ export default function PricingPageClient({
       </div>
 
       {/* 공통 기능 */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-6">
-        <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-          모든 플랜에 포함
-        </p>
-        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-emerald-500 bg-gradient-to-br from-emerald-50/30 to-white shadow-sm p-6">
+        <div className="flex items-baseline justify-between flex-wrap gap-2 mb-4">
+          <div>
+            <p className="text-xs font-semibold text-emerald-700 uppercase tracking-wider">
+              모든 플랜 공통
+            </p>
+            <p className="text-sm font-semibold text-slate-900 mt-0.5">
+              운영 자동화 핵심 기능은 무료 플랜에도 모두 포함됩니다
+            </p>
+          </div>
+        </div>
+        <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
           {COMMON_FEATURES.map((f) => (
             <li key={f} className="flex items-center gap-2 text-sm text-slate-700">
-              <svg className="w-3.5 h-3.5 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2 7l3.5 3.5 6.5-7" />
+              <svg className="w-4 h-4 text-emerald-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m4.5 12.75 6 6 9-13.5" />
               </svg>
               {f}
             </li>
