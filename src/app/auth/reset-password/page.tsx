@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { createClient } from '@/lib/auth/client'
+import AuthShell from '@/components/b2b/AuthShell'
 
 function PasswordStrength({ password }: { password: string }) {
   const checks = [
@@ -114,52 +115,39 @@ export default function ResetPasswordPage() {
 
   if (!hasSession) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-        <header className="flex items-center px-6 py-4 border-b border-slate-200">
-          <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
-            짐스캐너 B2B
-          </Link>
-        </header>
-        <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-          <div className="w-full max-w-md text-center space-y-4">
-            <div className="flex justify-center">
-              <div className="w-14 h-14 rounded-full bg-red-900/40 border border-red-200 flex items-center justify-center">
-                <svg className="w-7 h-7 text-red-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
-                  <path strokeLinecap="round" strokeLinejoin="round"
-                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
-                </svg>
-              </div>
+      <AuthShell topRight={null}>
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-xl p-8 text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="w-14 h-14 rounded-full bg-rose-50 border border-rose-200 flex items-center justify-center">
+              <svg className="w-7 h-7 text-rose-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
+                <path strokeLinecap="round" strokeLinejoin="round"
+                  d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" />
+              </svg>
             </div>
-            <h1 className="text-xl font-bold">링크가 만료되었거나 유효하지 않습니다</h1>
-            <p className="text-slate-400 text-sm">
-              비밀번호 재설정 링크는 1시간 동안만 유효합니다.<br />
-              새 링크를 요청해 주세요.
-            </p>
-            <Link
-              href="/auth/forgot-password"
-              className="inline-block mt-2 px-6 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white text-sm font-semibold rounded-lg transition-colors"
-            >
-              새 링크 요청하기
-            </Link>
           </div>
-        </main>
-        <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
-          © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
-        </footer>
-      </div>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">링크가 만료되었거나 유효하지 않습니다</h1>
+          <p className="text-slate-600 text-sm">
+            비밀번호 재설정 링크는 1시간 동안만 유효합니다.<br />
+            새 링크를 요청해 주세요.
+          </p>
+          <Link
+            href="/auth/forgot-password"
+            className="inline-flex items-center gap-1.5 mt-2 px-5 py-2.5 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white text-sm font-semibold rounded-md shadow-sm hover:shadow-md transition-all"
+          >
+            새 링크 요청하기
+            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+            </svg>
+          </Link>
+        </div>
+      </AuthShell>
     )
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      <header className="flex items-center px-6 py-4 border-b border-slate-200">
-        <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
-          짐스캐너 B2B
-        </Link>
-      </header>
-
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
+    <AuthShell topRight={null}>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-xl p-8">
+        <div className="w-full">
           <div className="mb-8">
             <div className="flex justify-center mb-6">
               <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-700 flex items-center justify-center">
@@ -169,15 +157,15 @@ export default function ResetPasswordPage() {
                 </svg>
               </div>
             </div>
-            <h1 className="text-2xl font-bold mb-2 text-center">새 비밀번호 설정</h1>
-            <p className="text-slate-400 text-sm text-center">
+            <h1 className="text-2xl font-bold mb-2 text-center tracking-tight text-slate-900">새 비밀번호 설정</h1>
+            <p className="text-slate-600 text-sm text-center">
               새 비밀번호를 입력해 주세요.
             </p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-500 mb-1.5">
+              <label htmlFor="password" className="block text-xs font-semibold text-slate-700 mb-1.5">
                 새 비밀번호
               </label>
               <div className="relative">
@@ -204,7 +192,7 @@ export default function ResetPasswordPage() {
             </div>
 
             <div>
-              <label htmlFor="confirm" className="block text-sm font-medium text-slate-500 mb-1.5">
+              <label htmlFor="confirm" className="block text-xs font-semibold text-slate-700 mb-1.5">
                 비밀번호 확인
               </label>
               <div className="relative">
@@ -229,14 +217,14 @@ export default function ResetPasswordPage() {
                 </button>
               </div>
               {confirm && password !== confirm && (
-                <p className="mt-1 text-xs text-red-600">비밀번호가 일치하지 않습니다.</p>
+                <p className="mt-1 text-xs text-rose-600">비밀번호가 일치하지 않습니다.</p>
               )}
             </div>
 
             {error && (
               <div
                 role="alert"
-                className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+                className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2.5 text-sm text-rose-700"
               >
                 {error}
               </div>
@@ -245,17 +233,13 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading || (confirm.length > 0 && password !== confirm)}
-              className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-50"
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
             >
               {loading ? '변경 중…' : '비밀번호 변경하기'}
             </Button>
           </form>
         </div>
-      </main>
-
-      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
-        © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
-      </footer>
-    </div>
+      </div>
+    </AuthShell>
   )
 }

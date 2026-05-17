@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import AuthShell from '@/components/b2b/AuthShell'
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState('')
@@ -42,36 +43,21 @@ export default function ForgotPasswordPage() {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col">
-      <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
-        <Link href="/login" className="text-lg font-bold text-indigo-600 tracking-tight">
-          짐스캐너 B2B
-        </Link>
-        <Link href="/login" className="text-sm text-slate-400 hover:text-slate-900 transition-colors">
-          로그인으로 돌아가기
-        </Link>
-      </header>
-
-      <main className="flex-1 flex flex-col items-center justify-center px-4 py-12">
-        <div className="w-full max-w-md">
-          {sent ? (
-            <SentState email={email} onResend={() => sendReset(email)} />
-          ) : (
-            <RequestForm
-              email={email}
-              setEmail={setEmail}
-              loading={loading}
-              error={error}
-              onSubmit={handleSubmit}
-            />
-          )}
-        </div>
-      </main>
-
-      <footer className="text-center py-6 text-xs text-slate-400 border-t border-slate-200">
-        © 2026 짐스캐너. 사업자 서비스는 현재 베타 운영 중입니다.
-      </footer>
-    </div>
+    <AuthShell topRight={{ href: '/login', label: '로그인으로 돌아가기' }}>
+      <div className="rounded-2xl border border-slate-200 bg-white shadow-xl p-8">
+        {sent ? (
+          <SentState email={email} onResend={() => sendReset(email)} />
+        ) : (
+          <RequestForm
+            email={email}
+            setEmail={setEmail}
+            loading={loading}
+            error={error}
+            onSubmit={handleSubmit}
+          />
+        )}
+      </div>
+    </AuthShell>
   )
 }
 
@@ -90,24 +76,24 @@ function RequestForm({
 }) {
   return (
     <>
-      <div className="mb-8">
-        <div className="flex justify-center mb-6">
-          <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-700 flex items-center justify-center">
+      <div className="mb-6">
+        <div className="flex justify-center mb-5">
+          <div className="w-14 h-14 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center">
             <svg className="w-7 h-7 text-indigo-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5">
               <path strokeLinecap="round" strokeLinejoin="round"
                 d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
             </svg>
           </div>
         </div>
-        <h1 className="text-2xl font-bold mb-2 text-center">비밀번호 재설정</h1>
-        <p className="text-slate-400 text-sm text-center">
+        <h1 className="text-2xl font-bold mb-2 text-center tracking-tight text-slate-900">비밀번호 재설정</h1>
+        <p className="text-slate-600 text-sm text-center">
           가입한 이메일 주소를 입력하시면 재설정 링크를 보내드립니다.
         </p>
       </div>
 
-      <form onSubmit={onSubmit} className="space-y-5">
+      <form onSubmit={onSubmit} className="space-y-4">
         <div>
-          <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1.5">
+          <label htmlFor="email" className="block text-xs font-semibold text-slate-700 mb-1.5">
             이메일
           </label>
           <Input
@@ -125,7 +111,7 @@ function RequestForm({
         {error && (
           <div
             role="alert"
-            className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700"
+            className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2.5 text-sm text-rose-700"
           >
             {error}
           </div>
@@ -134,19 +120,19 @@ function RequestForm({
         <Button
           type="submit"
           disabled={loading}
-          className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-50"
+          className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
         >
           {loading ? '처리 중…' : '재설정 이메일 보내기'}
         </Button>
       </form>
 
-      <p className="mt-6 text-center text-sm text-slate-400">
+      <p className="mt-5 text-center text-sm text-slate-600">
         비밀번호가 기억나셨나요?{' '}
         <Link
           href="/login"
-          className="text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
+          className="text-indigo-600 hover:text-indigo-700 font-semibold transition-colors"
         >
-          로그인
+          로그인 →
         </Link>
       </p>
     </>
@@ -190,19 +176,19 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
       </div>
 
       <div className="space-y-2">
-        <h1 className="text-2xl font-bold">이메일을 확인해 주세요</h1>
-        <p className="text-slate-400 text-sm">
-          <span className="text-slate-900 font-medium">{email}</span>로
+        <h1 className="text-2xl font-bold tracking-tight text-slate-900">이메일을 확인해 주세요</h1>
+        <p className="text-slate-600 text-sm">
+          <span className="text-slate-900 font-semibold">{email}</span>로
           비밀번호 재설정 링크를 보냈습니다.
         </p>
-        <p className="text-slate-400 text-xs mt-1">
+        <p className="text-slate-500 text-xs mt-1">
           이메일이 도착하지 않으면 스팸함을 확인하거나 아래 버튼으로 다시 보내주세요.
         </p>
       </div>
 
-      <div className="rounded-xl border border-slate-200 bg-slate-100 p-4 text-sm text-slate-400 text-left space-y-2">
-        <p className="font-medium text-slate-500">안내</p>
-        <ul className="space-y-1 list-disc list-inside text-xs">
+      <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm text-left">
+        <p className="font-semibold text-slate-700 mb-1.5">안내</p>
+        <ul className="space-y-1 list-disc list-inside text-xs text-slate-600">
           <li>링크는 발송 후 1시간 동안 유효합니다.</li>
           <li>링크 클릭 후 새 비밀번호를 설정할 수 있습니다.</li>
           <li>이메일이 없으시면 입력한 주소가 가입된 주소인지 확인해 주세요.</li>
@@ -210,7 +196,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
       </div>
 
       {resendError && (
-        <div role="alert" className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+        <div role="alert" className="rounded-lg bg-rose-50 border border-rose-200 px-3 py-2.5 text-sm text-rose-700">
           {resendError}
         </div>
       )}
@@ -221,7 +207,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
           onClick={handleResend}
           disabled={resending || cooldown > 0}
           variant="outline"
-          className="border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
+          className="border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {resending
             ? '전송 중…'
@@ -232,9 +218,9 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
 
         <Link
           href="/login"
-          className="text-sm text-indigo-600 hover:text-indigo-700 transition-colors underline underline-offset-2"
+          className="text-sm text-indigo-600 hover:text-indigo-700 font-medium transition-colors"
         >
-          로그인 페이지로 돌아가기
+          로그인 페이지로 돌아가기 →
         </Link>
       </div>
     </div>
