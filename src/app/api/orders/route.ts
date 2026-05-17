@@ -36,6 +36,8 @@ type ItemInput = {
   market_product_id?: unknown
   market_option?: unknown
   product_id?: unknown
+  image_url?: unknown
+  tracking_number_overseas?: unknown
 }
 
 type CreateOrderBody = {
@@ -236,6 +238,8 @@ export async function POST(request: Request) {
       market_product_id: str(it.market_product_id, 128),
       market_option: str(it.market_option, 200),
       product_id: isUuid(it.product_id) ? it.product_id : null,
+      image_url: str(it.image_url, 500),
+      tracking_number_overseas: str(it.tracking_number_overseas, 128),
     }
   })
 

@@ -56,6 +56,8 @@ export type OrderItem = {
   total_price_foreign: number | string | null
   weight_kg: number | string | null
   tracking_number: string | null
+  tracking_number_overseas: string | null
+  image_url: string | null
   supplier_site: string | null
   supplier_order_number: string | null
   supplier_purchased_at: string | null

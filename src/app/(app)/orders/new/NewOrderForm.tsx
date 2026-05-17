@@ -67,6 +67,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
     unitPrice: string
     weightKg: string
     salePriceKrw: string
+    imageUrl: string
+    trackingNumberOverseas: string
   }
   function blankLine(): LineItem {
     return {
@@ -82,6 +84,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
       unitPrice: '',
       weightKg: '',
       salePriceKrw: '',
+      imageUrl: '',
+      trackingNumberOverseas: '',
     }
   }
   const [lines, setLines] = useState<LineItem[]>([blankLine()])
@@ -249,6 +253,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
             supplier_order_number: l.supplierOrderNumber.trim() || null,
             sale_price_krw: Number(l.salePriceKrw) > 0 ? Number(l.salePriceKrw) : null,
             market_option: l.marketOption.trim() || null,
+            image_url: l.imageUrl.trim() || null,
+            tracking_number_overseas: l.trackingNumberOverseas.trim() || null,
           })),
         }),
       })
@@ -486,6 +492,14 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
               <Field label="마켓 판매가 (KRW)" htmlFor={`sale_price_krw_${i}`} hint="구매자에게 받은 금액 — 마진 계산용">
                 <input id={`sale_price_krw_${i}`} type="number" min={0} step={100} value={line.salePriceKrw} onChange={(e) => patchLine(i, { salePriceKrw: e.target.value })} placeholder="0" className={`${inputCls} text-right tabular-nums`} />
               </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="이미지 URL" htmlFor={`image_url_${i}`} hint="배대지 양식 9컬럼 (선택)">
+                  <input id={`image_url_${i}`} type="url" maxLength={500} value={line.imageUrl} onChange={(e) => patchLine(i, { imageUrl: e.target.value })} placeholder="https://" className={inputCls} />
+                </Field>
+                <Field label="현지 트래킹 (해외 → 배대지)" htmlFor={`tracking_overseas_${i}`} hint="배대지 양식 11컬럼 (선택)">
+                  <input id={`tracking_overseas_${i}`} type="text" maxLength={128} value={line.trackingNumberOverseas} onChange={(e) => patchLine(i, { trackingNumberOverseas: e.target.value })} placeholder="1Z999AA10123456784" className={`${inputCls} font-mono text-sm`} />
+                </Field>
+              </div>
             </div>
           ))}
 

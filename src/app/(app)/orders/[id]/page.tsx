@@ -27,6 +27,8 @@ type OrderItem = {
   total_price_krw: number | string | null
   weight_kg: number | string | null
   tracking_number: string | null
+  tracking_number_overseas: string | null
+  image_url: string | null
   notes: string | null
   supplier_site: string | null
   supplier_order_number: string | null
@@ -204,7 +206,7 @@ export default async function OrderDetailPage({
   const { data: order } = (await db
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
+      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
     )
     .eq('id', id)
     .eq('account_id', account.id)
@@ -450,6 +452,19 @@ export default async function OrderDetailPage({
                             {it.tracking_number && (
                               <p className="text-xs text-slate-500 mt-1">
                                 운송장: <span className="font-mono">{it.tracking_number}</span>
+                              </p>
+                            )}
+                            {it.tracking_number_overseas && (
+                              <p className="text-xs text-slate-500 mt-1">
+                                현지 트래킹: <span className="font-mono">{it.tracking_number_overseas}</span>
+                              </p>
+                            )}
+                            {it.image_url && (
+                              <p className="text-xs text-slate-500 mt-1 truncate">
+                                이미지:{' '}
+                                <a href={it.image_url} target="_blank" rel="noopener noreferrer" className="text-indigo-700 hover:text-indigo-800 underline underline-offset-2">
+                                  링크
+                                </a>
                               </p>
                             )}
                             {it.weight_kg && (

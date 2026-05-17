@@ -28,7 +28,7 @@ const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 const ORDER_COLUMNS =
   'id, order_number, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, request_notes, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, created_at, ' +
-  'b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, weight_kg, tracking_number, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option)'
+  'b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, weight_kg, tracking_number, tracking_number_overseas, image_url, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option)'
 
 export async function POST(request: Request) {
   let body: {
