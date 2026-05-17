@@ -5,7 +5,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: '회원가입',
   description:
-    '해외 직구 셀러를 위한 운영 자동화 SaaS. 33 배대지 양식 · 환율 자동 · 합배송 묶기로 시간과 마진을 동시에 지킵니다.',
+    '해외 직구 셀러를 위한 운영 자동화 SaaS. 30+ 배대지 양식 · 환율 자동 · 합배송 묶기로 시간과 마진을 동시에 지킵니다.',
   robots: { index: false },
 }
 
@@ -70,7 +70,7 @@ export default function SellerSignupPage() {
               </span>
             </h1>
             <p className="text-slate-600 text-base md:text-lg max-w-xl lg:max-w-none mb-6 leading-relaxed">
-              쿠팡·스마트스토어 주문 → 미국 아마존·라쿠텐 매입 → 33개 배대지 →
+              쿠팡·스마트스토어 주문 → 미국 아마존·라쿠텐 매입 → 30+ 배대지 →
               한국 구매자까지. 매번 다시 입력하던 양식·환율·합배송 계산을 자동화해{' '}
               <span className="text-slate-900 font-semibold">시간과 마진을 동시에 지킵니다.</span>
             </p>
@@ -119,11 +119,14 @@ export default function SellerSignupPage() {
         {/* 통계 바 — 사회 증거 / scale */}
         <section className="w-full mb-20">
           <div className="rounded-2xl border border-slate-200 bg-white shadow-sm grid grid-cols-2 md:grid-cols-4 divide-x divide-slate-100">
-            <StatBlock label="배대지 양식" value="33" suffix="개" />
-            <StatBlock label="국내 마켓" value="13" suffix="개" />
-            <StatBlock label="해외 매입처" value="24" suffix="개" />
-            <StatBlock label="통화" value="7" suffix="종" />
+            <StatBlock label="배대지" value="30" suffix="+" />
+            <StatBlock label="국내 마켓" value="14" suffix="개" />
+            <StatBlock label="해외 매입처" value="25" suffix="개" />
+            <StatBlock label="지원 통화" value="8" suffix="종" />
           </div>
+          <p className="text-[10px] text-slate-400 text-center mt-2">
+            ※ 활성 기준 · 신규 배대지·마켓은 사용자 정의 양식으로 직접 추가 가능
+          </p>
         </section>
 
         {/* 마진 예시 — "돈 절약" 시각화 */}
@@ -210,7 +213,7 @@ export default function SellerSignupPage() {
             <WorkflowStep
               num="3"
               color="indigo"
-              title="33 배대지 → 구매자"
+              title="배대지 → 구매자"
               subtitle="배대지 양식 자동 변환 + 같은 수취인 합배송 묶기 + 운송장 추적까지"
             />
           </div>
@@ -229,7 +232,7 @@ export default function SellerSignupPage() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <FeatureCard
               accent="indigo"
-              title="33개 배대지 양식 자동"
+              title="30+ 배대지 양식 자동"
               desc="짐패스·몰테일·아이포터 등 양식별 다른 컬럼을 주문 데이터로 자동 채움. 우리 양식이 없어도 직접 업로드해 매핑 가능."
               icon={
                 <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
