@@ -23,6 +23,8 @@ type OrderRow = {
   buyer_name: string | null
   buyer_phone: string | null
   buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_customs_code: string | null
   request_notes: string | null
   created_at: string
   b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
@@ -166,7 +168,7 @@ export default async function OrdersListPage({
   let qb = db
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
+      'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
     )
     .eq('account_id', account.id)
     .is('deleted_at', null)

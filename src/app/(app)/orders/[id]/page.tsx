@@ -547,6 +547,13 @@ export default async function OrderDetailPage({
               orderId={order.id}
               templates={templates}
               defaultTemplateId={defaultTemplateId}
+              buyerInfo={{
+                buyer_name: order.buyer_name,
+                buyer_phone: order.buyer_phone,
+                buyer_postal_code: order.buyer_postal_code,
+                buyer_address: order.buyer_address,
+                buyer_customs_code: order.buyer_customs_code,
+              }}
             />
           </section>
 

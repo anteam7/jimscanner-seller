@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
-import BulkExportModal from './BulkExportModal'
+import BulkExportModal, { type SelectedOrderInfo } from './BulkExportModal'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
 
 export type OrderRow = {
@@ -15,6 +15,8 @@ export type OrderRow = {
   buyer_name: string | null
   buyer_phone: string | null
   buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_customs_code: string | null
   request_notes: string | null
   created_at: string
   b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
@@ -225,6 +227,16 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
         orderIds={Array.from(selected)}
         orderCount={selected.size}
         groupCount={groupCount}
+        selectedOrders={selectedOrders.map<SelectedOrderInfo>((o) => ({
+          id: o.id,
+          market_order_number: o.market_order_number,
+          order_number: o.order_number,
+          buyer_name: o.buyer_name,
+          buyer_phone: o.buyer_phone,
+          buyer_postal_code: o.buyer_postal_code,
+          buyer_address: o.buyer_address,
+          buyer_customs_code: o.buyer_customs_code,
+        }))}
         onSuccess={() => setSelected(new Set())}
       />
     </>

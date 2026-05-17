@@ -3,6 +3,17 @@
 import { useEffect, useMemo, useState } from 'react'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
 
+export type SelectedOrderInfo = {
+  id: string
+  market_order_number: string | null
+  order_number: string
+  buyer_name: string | null
+  buyer_phone: string | null
+  buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_customs_code: string | null
+}
+
 type Props = {
   open: boolean
   onClose: () => void
@@ -10,7 +21,26 @@ type Props = {
   orderIds: string[]
   orderCount: number
   groupCount: number
+  selectedOrders?: SelectedOrderInfo[]
   onSuccess?: () => void
+}
+
+function countMissing(orders: SelectedOrderInfo[]): {
+  customs: number
+  postal: number
+  phone: number
+  name: number
+  address: number
+} {
+  let customs = 0, postal = 0, phone = 0, name = 0, address = 0
+  for (const o of orders) {
+    if (!o.buyer_customs_code?.trim()) customs++
+    if (!o.buyer_postal_code?.trim()) postal++
+    if (!o.buyer_phone?.trim()) phone++
+    if (!o.buyer_name?.trim()) name++
+    if (!o.buyer_address?.trim()) address++
+  }
+  return { customs, postal, phone, name, address }
 }
 
 export default function BulkExportModal({
@@ -20,6 +50,7 @@ export default function BulkExportModal({
   orderIds,
   orderCount,
   groupCount,
+  selectedOrders = [],
   onSuccess,
 }: Props) {
   const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? '')
@@ -147,6 +178,34 @@ export default function BulkExportModal({
         </div>
 
         <div className="px-6 py-5 space-y-5 overflow-y-auto">
+          {/* 누락 경고 */}
+          {(() => {
+            if (selectedOrders.length === 0) return null
+            const m = countMissing(selectedOrders)
+            const items: string[] = []
+            if (m.customs > 0) items.push(`통관코드 ${m.customs}건`)
+            if (m.postal > 0) items.push(`우편번호 ${m.postal}건`)
+            if (m.name > 0) items.push(`수취인명 ${m.name}건`)
+            if (m.phone > 0) items.push(`전화 ${m.phone}건`)
+            if (m.address > 0) items.push(`주소 ${m.address}건`)
+            if (items.length === 0) return null
+            return (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                  <div className="flex-1 text-xs">
+                    <p className="font-semibold text-amber-900">선택한 {orderCount}건 중 일부 누락</p>
+                    <p className="text-amber-800 mt-0.5">
+                      {items.join(' · ')} 비어 있음 — 양식에 빈 값으로 채워집니다. 배대지에서 거부될 수 있습니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           <div>
             <label htmlFor="bulk_tpl" className="block text-xs font-semibold text-slate-700 mb-1.5">
               양식 선택

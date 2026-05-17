@@ -22,12 +22,32 @@ export type ForwarderTemplateLite = {
   columns: ForwarderTemplateColumn[]
 }
 
+export type OrderBuyerInfo = {
+  buyer_name: string | null
+  buyer_phone: string | null
+  buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_customs_code: string | null
+}
+
 type Props = {
   open: boolean
   onClose: () => void
   orderId: string
   templates: ForwarderTemplateLite[]
   defaultTemplateId?: string | null
+  buyerInfo?: OrderBuyerInfo | null
+}
+
+function detectMissing(b: OrderBuyerInfo | null | undefined): string[] {
+  if (!b) return []
+  const missing: string[] = []
+  if (!b.buyer_name?.trim()) missing.push('수취인명')
+  if (!b.buyer_phone?.trim()) missing.push('전화')
+  if (!b.buyer_postal_code?.trim()) missing.push('우편번호')
+  if (!b.buyer_address?.trim()) missing.push('주소')
+  if (!b.buyer_customs_code?.trim()) missing.push('통관코드')
+  return missing
 }
 
 export default function ForwarderExportModal({
@@ -36,6 +56,7 @@ export default function ForwarderExportModal({
   orderId,
   templates,
   defaultTemplateId,
+  buyerInfo,
 }: Props) {
   const [templateId, setTemplateId] = useState<string>(
     defaultTemplateId ?? templates[0]?.id ?? '',
@@ -160,6 +181,33 @@ export default function ForwarderExportModal({
 
         {/* 본문 */}
         <div className="px-6 py-5 space-y-5 overflow-y-auto">
+          {/* 누락 경고 */}
+          {(() => {
+            const missing = detectMissing(buyerInfo)
+            if (missing.length === 0) return null
+            return (
+              <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-amber-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                  </svg>
+                  <div className="flex-1 text-xs">
+                    <p className="font-semibold text-amber-900">
+                      구매자 정보 {missing.length}개 항목이 비어 있음
+                    </p>
+                    <p className="text-amber-800 mt-0.5">
+                      {missing.join(' · ')} — 양식에 빈 값으로 채워집니다. 배대지에서 거부될 수 있으니
+                      <a href={`/orders/${orderId}`} className="ml-1 underline underline-offset-2 font-medium hover:text-amber-900">
+                        주문 상세에서 입력
+                      </a>
+                      을 권장합니다.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* 템플릿 선택 */}
           <div>
             <label htmlFor="tpl" className="block text-xs font-semibold text-slate-700 mb-1.5">

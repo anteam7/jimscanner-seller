@@ -1,15 +1,19 @@
 'use client'
 
 import { useState } from 'react'
-import ForwarderExportModal, { type ForwarderTemplateLite } from './ForwarderExportModal'
+import ForwarderExportModal, {
+  type ForwarderTemplateLite,
+  type OrderBuyerInfo,
+} from './ForwarderExportModal'
 
 type Props = {
   orderId: string
   templates: ForwarderTemplateLite[]
   defaultTemplateId?: string | null
+  buyerInfo?: OrderBuyerInfo | null
 }
 
-export default function ForwarderExportButton({ orderId, templates, defaultTemplateId }: Props) {
+export default function ForwarderExportButton({ orderId, templates, defaultTemplateId, buyerInfo }: Props) {
   const [open, setOpen] = useState(false)
   const noTemplates = templates.length === 0
 
@@ -41,6 +45,7 @@ export default function ForwarderExportButton({ orderId, templates, defaultTempl
         orderId={orderId}
         templates={templates}
         defaultTemplateId={defaultTemplateId ?? null}
+        buyerInfo={buyerInfo ?? null}
       />
     </>
   )
