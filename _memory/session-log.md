@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-05-17 (세션 10 — 자동 진행 배치 8건)
+
+사용자가 "이제 묻지 말고 추천 방법으로 자동 진행" 지시 → 우선순위 큐의
+대기 작업들을 한 세션 안에 순차 처리.
+
+### 작업 (commit hash 순서)
+1. **`09b4945`** feat(orders/new): 통관코드 P+12자리 client validation + 우편번호 5자리 + 환율 마진 자동
+2. **`befa479`** feat(v0.5): SKU 마스터 Phase 1 — b2b_products (3 테이블 + RLS) + CRUD + UI (사이드바 메뉴 + /products + new + [id])
+3. **`928edbf`** feat(v0.5): SKU autocomplete Phase 2 — ProductPicker + /orders/new 통합 (default 6필드 자동 채움 + product_id FK)
+4. **`4f48420`** feat(orders/new): 다상품 라인 지원 (MVP 1건 → N건). LineItem[] state, ProductPicker 라인 단위, 합계 footer
+5. **`c492e8f`** feat(dashboard): 통계 카드 실 데이터 (이번 달 주문/매출/할당량 + SKU 카운트), Promise.all 4쿼리
+6. **`60ee85d`** feat(bulk): paste 시 한글 라벨 → enum value reverse lookup (marketplace/supplier_site/currency/country)
+7. **`353ea21`** feat(analytics): 매출·마진 분석 페이지 (월별 추이 + SKU TOP 20 + 요약 4카드)
+8. **`a150578`** feat(templates): 공유 템플릿 fork — POST /api/form-templates/[id]/fork (storage + 메타 + 컬럼 모두 복제) + UI 버튼
+
+### 다음 세션
+- prod dogfood 8건 일괄 검증
+- 남은 보강: image_url 컬럼, 영문상품명 자동 번역, /orders/bulk SKU autocomplete, 운송장 트래킹
+
+---
+
 ## 2026-05-17 (세션 9 — 사용자 정의 양식 업로드)
 
 ### 작업

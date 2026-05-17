@@ -1,26 +1,28 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-17 (세션 9 — 사용자 정의 양식 업로드 구현)
+마지막 갱신: 2026-05-17 (세션 10 — 자동 진행 배치: 7건 commit)
 
 ---
 
-## 🥇 1순위 — prod dogfood (사용자 정의 양식 업로드)
+## 🥇 1순위 — prod dogfood (자동 진행 배치 검증)
 
-prod 브라우저에서:
-1. `/templates` 진입 → "새 양식 업로드" 모달 → 실 배대지 xlsx (예: 보고있는짐) 업로드
-2. 자동 생성된 user_input 컬럼들을 매핑 에디터에서 적절한 source 로 변경
-3. 주문 상세 → 배대지 양식 변환 → 업로드한 양식 선택 → 다운로드 → 실 배대지에 제출 가능한지 확인
+세션 10 에서 자동 진행한 7건의 prod 동작 검증:
+1. /orders/new 통관코드·우편번호 validation + 마진 자동
+2. v0.5 SKU 마스터 Phase 1 (/products + CRUD)
+3. v0.5 SKU autocomplete Phase 2 (/orders/new 통합)
+4. /orders/new 다상품 라인 (1건 MVP → N건)
+5. 대시보드 통계 실 데이터
+6. 일괄 입력 paste 한글 → enum reverse lookup
+7. 매출·마진 분석 페이지 (/analytics)
+8. 공유 템플릿 fork (/api/form-templates/[id]/fork)
 
-### P1 보강
+### 남은 P1/v0.5 보강
 
-- **합배송 (export-bulk)** — 같은 수취인 묶기 모달 (`POST /api/orders/export-bulk`, 주문 N개 선택)
-- **누락 경고 UI** — modal 내 findMissing 결과 노출 (현재는 미사용)
-- **양식 미리보기** — 매핑 에디터에서 실제 주문 데이터로 채워진 미리보기 row
-- **공유 템플릿 fork** — 공유 → 자기 양식 복사 (`POST /api/form-templates/[id]/fork`)
 - **`b2b_order_items` 컬럼 추가**: `image_url`, `tracking_number_overseas` (짐패스 9·11 컬럼용)
 - **영문상품명 자동 번역** (papago/google) — 현재는 alnum_only 만
+- **/orders/bulk SKU autocomplete** — grid 셀 안 dropdown (UX 도전적)
+- **운송장 자동 트래킹** — T1 일괄 입력 + T2 자동
 - **공유 템플릿 추가 (슈퍼관리자 기능)** — main repo `/admin/templates` 에서만 가능. v0.5 별도 작업.
-  - 현재는 짐패스 v1 1개로 운영, 나머지는 셀러가 직접 업로드
 
 ---
 
