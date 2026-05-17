@@ -4,6 +4,29 @@
 
 ---
 
+## 2026-05-17 (세션 8 — P1 배대지 양식 변환 구현)
+
+### 작업
+1. **DB 마이그**: `supabase/b2b_form_templates.sql` + Supabase MCP `apply_migration`
+   - `b2b_form_templates` (공유=owner null + 사용자 정의=owner set)
+   - `b2b_form_template_columns` (source_kind: order_field/item_field/account_field/constant/composite/user_input/order_meta, transform 모음)
+   - RLS: 공유는 모두 SELECT, 본인 소유만 modify
+2. **Storage 셋업**: `forwarder-templates` (public read) + `user-templates` (RLS, account_id 폴더) 버킷 + policies
+3. **짐패스 v1 시드**: row + 26 컬럼 INSERT. 원본 .xls → .xlsx 변환 후 Storage 업로드. 샘플 row 5건 splice 로 제거한 클린 템플릿 (size 11113)
+4. **exceljs 4.4.0 설치**
+5. **유틸**: `src/lib/b2b/forwarder-export.ts` — evaluateColumn / readPath / readItemPath / renderComposite / applyTransform (alnum_only, usd_2decimal, phone_strip_dash, customs_strip_p 등) / expandRows (combine_rule=jimpass_recipient) / findMissing / fillTemplate
+6. **API**: `src/app/api/orders/[id]/export/route.ts` (POST + GET) — 주문 RLS 검증, 템플릿 admin 조회 (공유 SELECT 보장), Storage download, fillTemplate → xlsx response
+7. **UI**: `ForwarderExportModal.tsx` + `ForwarderExportButton.tsx`. `/orders/[id]` 사이드바 templates fetch (admin OR(owner null, owner=me)) + default = forwarder_id 일치 템플릿
+8. **빌드 통과** (exceljs Buffer 타입 캐스팅 1건 처리)
+9. **e2e 검증** (Node REPL): prod COUPANG-26051700123 → 짐패스 v1 → 26 컬럼 모두 정확히 채움 (영문상품명 alnum_only, 단가 usd_2decimal, 전화 phone_strip_dash, 주소 composite 모두 정상)
+
+### 메모
+- exceljs 가 .xls 미지원 → SheetJS 로 일회성 변환. 향후 사용자가 .xls 업로드 시 같은 변환 자동화 필요 (v0.5)
+- 짐패스 양식 원본에 샘플 row 5건이 있었음 → splice 로 제거. 사용자 정의 양식 업로드 시에도 헤더 다음 빈 row 인지 검증 필요
+- 짐패스에 사용자 정의 컬럼(account_field=business_name 등)은 v1 양식에 없음 — 다른 배대지 spec 에서 활용 예정
+
+---
+
 ## 2026-05-17 (세션 7 — dogfood A+B + 이슈 7건 fix + P1 설계)
 
 ### 작업

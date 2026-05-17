@@ -1,24 +1,31 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-17 (세션 7 — dogfood A+B 완료, 이슈 7건 fix, P1 설계 완료)
+마지막 갱신: 2026-05-17 (세션 8 — P1 짐패스 v1 구현·e2e 통과)
 
 ---
 
-## 🥇 1순위 — P1 구현 (배대지 양식 변환)
+## 🥇 1순위 — P1 후속 (양식 spec 추가 + prod 검증)
 
-설계 문서: [`p1-forwarder-export-design.md`](p1-forwarder-export-design.md)
+### 즉시 해야 할 일
 
-구현 순서 (1~8 단계, 설계 문서 §8 참조):
-1. supabase/b2b_forwarder_form_specs.sql 마이그 + Supabase MCP `apply_migration`
-2. `npm i exceljs`
-3. src/lib/b2b/forwarder-export.ts (source_path 평가기)
-4. src/app/api/orders/[id]/export/route.ts
-5. src/components/b2b/ForwarderExportModal.tsx
-6. /orders/[id] 사이드바 버튼 활성
-7. 짐패스 spec 1개 seed → e2e
-8. 2~5개 추가 시드
+1. **prod 브라우저 dogfood** — /orders/{COUPANG-26051700123} 진입 → 배대지 양식으로 변환 모달 → 짐패스 v1 선택 → user_input 입력 → 다운로드 → 짐패스 사이트에 업로드 시도. (코드는 검증됨 — 실 사용성 점검)
+2. **추가 배대지 양식 spec 수집** — 다음 우선순위 후보 (셀러 사용 빈도순):
+   - 보고있는짐 / 직구직구 / 몰테일 / 아이포터 / 위메프 등
+   - spec 수집 → `b2b_form_templates` INSERT + xlsx Storage 업로드
+3. **사용자 정의 양식 업로드** (v0.5 진입)
+   - `POST /api/form-templates` (FormData: file + name + forwarder_id)
+   - `/templates` 페이지 (목록·업로드)
+   - `TemplateMappingEditor.tsx` (헤더 → source_kind 매핑)
+   - 공유 템플릿 fork: `POST /api/form-templates/[id]/fork`
 
-**사용자 협업 필요**: 다음 세션 진입 전 배대지 신청서 양식 3~5개 spec 수집 (설계 문서 §9 참조).
+### P1 보강
+
+- **합배송 (export-bulk)** — 같은 수취인 묶기 모달 (`POST /api/orders/export-bulk`, 주문 N개 선택)
+- **누락 경고 UI** — modal 내 findMissing 결과 노출 (현재는 미사용)
+- **xls → xlsx 자동 변환** (셀러 업로드용) — SheetJS 사용 (서버에서 1회 변환 후 Storage 저장)
+- **양식 미리보기** — modal 에 채워질 값 표 표시 (현재는 user_input 폼만)
+- **`b2b_order_items` 컬럼 추가**: `image_url`, `tracking_number_overseas` (짐패스 9·11 컬럼용)
+- **영문상품명 자동 번역** (papago/google) — 현재는 alnum_only 만
 
 ---
 

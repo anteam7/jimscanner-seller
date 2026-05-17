@@ -2,7 +2,10 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/auth/server'
+import { createAdminClient } from '@/lib/auth/admin-supabase'
 import OrderStatusSelector from '@/components/b2b/OrderStatusSelector'
+import ForwarderExportButton from '@/components/b2b/ForwarderExportButton'
+import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
 
 export const metadata: Metadata = {
@@ -209,6 +212,79 @@ export default async function OrderDetailPage({
     .maybeSingle()) as { data: OrderDetail | null }
 
   if (!order) notFound()
+
+  // 사용 가능한 양식 (공유 + 본인 소유) — admin client 로 공유 SELECT 보장
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adb = admin as any
+  const { data: tplRows } = await adb
+    .from('b2b_form_templates')
+    .select('id, name, owner_account_id, forwarder_id, combine_rule, is_active, forwarders(name)')
+    .eq('is_active', true)
+    .or(`owner_account_id.is.null,owner_account_id.eq.${account.id}`)
+    .order('owner_account_id', { ascending: true, nullsFirst: true })
+    .order('name', { ascending: true })
+
+  const templateIds = (tplRows ?? []).map((t: { id: string }) => t.id)
+  const { data: colRows } = templateIds.length
+    ? await adb
+        .from('b2b_form_template_columns')
+        .select('template_id, column_index, column_label, source_kind, user_input_label, user_input_options, constant_value, required')
+        .in('template_id', templateIds)
+        .order('column_index', { ascending: true })
+    : { data: [] as Array<Record<string, unknown>> }
+
+  type ColRow = {
+    template_id: string
+    column_index: number
+    column_label: string
+    source_kind: string
+    user_input_label: string | null
+    user_input_options: string[] | null
+    constant_value: string | null
+    required: boolean
+  }
+
+  type TplRow = {
+    id: string
+    name: string
+    owner_account_id: string | null
+    forwarder_id: string | null
+    combine_rule: string | null
+    is_active: boolean
+    forwarders: { name: string } | null
+  }
+
+  const columnsByTpl = new Map<string, ColRow[]>()
+  for (const c of (colRows ?? []) as ColRow[]) {
+    const arr = columnsByTpl.get(c.template_id) ?? []
+    arr.push(c)
+    columnsByTpl.set(c.template_id, arr)
+  }
+
+  const templates: ForwarderTemplateLite[] = ((tplRows ?? []) as TplRow[]).map((t) => ({
+    id: t.id,
+    name: t.name,
+    owner_account_id: t.owner_account_id,
+    forwarder_id: t.forwarder_id,
+    forwarder_name: t.forwarders?.name ?? null,
+    combine_rule: t.combine_rule,
+    columns: (columnsByTpl.get(t.id) ?? []).map((c) => ({
+      column_index: c.column_index,
+      column_label: c.column_label,
+      source_kind: c.source_kind,
+      user_input_label: c.user_input_label,
+      user_input_options: c.user_input_options,
+      constant_value: c.constant_value,
+      required: c.required,
+    })),
+  }))
+
+  // 주문의 forwarder_id 와 일치하는 템플릿 default
+  const defaultTemplateId =
+    templates.find((t) => order.forwarder_id && t.forwarder_id === order.forwarder_id)?.id ??
+    templates[0]?.id ??
+    null
 
   const items = (order.b2b_order_items ?? []).slice().sort((a, b) => a.display_order - b.display_order)
   const sourceLabel = SOURCE_LABEL[order.source] ?? order.source
@@ -467,18 +543,11 @@ export default async function OrderDetailPage({
           {/* 액션 (양식 변환) */}
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 space-y-2">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">액션</p>
-            <button
-              type="button"
-              disabled
-              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-sm font-semibold rounded-md text-slate-500 bg-slate-100 border border-slate-200 cursor-not-allowed"
-              title="P1 — 33 배대지 양식 변환 spec 수집 후 활성"
-            >
-              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 7.5h-.75A2.25 2.25 0 0 0 4.5 9.75v7.5a2.25 2.25 0 0 0 2.25 2.25h7.5a2.25 2.25 0 0 0 2.25-2.25v-7.5a2.25 2.25 0 0 0-2.25-2.25h-.75m-6 3.75 3 3m0 0 3-3m-3 3V1.5m6 9h.75a2.25 2.25 0 0 1 2.25 2.25v7.5a2.25 2.25 0 0 1-2.25 2.25h-7.5a2.25 2.25 0 0 1-2.25-2.25v-.75" />
-              </svg>
-              배대지 양식으로 변환
-            </button>
-            <p className="text-[10px] text-slate-500 text-center">준비 중 — P1</p>
+            <ForwarderExportButton
+              orderId={order.id}
+              templates={templates}
+              defaultTemplateId={defaultTemplateId}
+            />
           </section>
 
           {/* 비용 메타 */}
