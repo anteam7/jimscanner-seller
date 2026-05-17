@@ -185,11 +185,10 @@ export async function POST(request: Request) {
 
   // template id 미리 생성 (Storage path 에 사용)
   const templateId = crypto.randomUUID()
-  // 파일명: 한글 보존 + Storage 경로 안전 문자만 남김 (unicode letter/number/._- + 한글)
-  const safeFilename = file.name
-    .replace(/[^\p{L}\p{N}._-]+/gu, '_')
-    .replace(/\.xls$/i, '.xlsx')
-  const storagePath = `${account.id}/${templateId}/${safeFilename}`
+  // Supabase Storage 키는 ASCII 만 허용 — 한글 파일명은 storage 에서 거부됨.
+  // 사용자에게 보여줄 이름은 b2b_form_templates.name 에 따로 저장되므로
+  // 여기서는 ASCII 안전한 고정 이름만 사용.
+  const storagePath = `${account.id}/${templateId}/template.xlsx`
   const fullPath = `user-templates/${storagePath}`
 
   // Storage 업로드 (service_role)
