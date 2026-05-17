@@ -5,7 +5,7 @@ import Link from 'next/link'
 export const metadata: Metadata = {
   title: '회원가입',
   description:
-    '국내 마켓 셀러를 위한 해외 매입 + 33 배대지 양식 자동화 도구. 주문 1건 처리 5분 → 30초.',
+    '해외 직구 셀러를 위한 운영 자동화 SaaS. 33 배대지 양식 · 환율 자동 · 합배송 묶기로 시간과 마진을 동시에 지킵니다.',
   robots: { index: false },
 }
 
@@ -60,20 +60,34 @@ export default function SellerSignupPage() {
           <div className="text-center lg:text-left">
             <span className="inline-flex items-center gap-1.5 mb-5 rounded-full bg-white border border-indigo-200 px-3 py-1 text-[11px] font-semibold text-indigo-700 shadow-sm">
               <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-              쿠팡·스마트스토어·옥션 마켓 셀러용
+              해외 직구 셀러 전용 · 운영 자동화 SaaS
             </span>
             <h1 className="text-4xl md:text-5xl font-extrabold leading-[1.12] mb-5 tracking-tight">
-              마켓 주문 1건 처리,
+              해외 직구 셀러의
               <br />
               <span className="bg-gradient-to-r from-indigo-600 via-indigo-500 to-sky-600 bg-clip-text text-transparent">
-                5분 → 30초
+                운영 자동화 시스템
               </span>
             </h1>
-            <p className="text-slate-600 text-base md:text-lg max-w-xl lg:max-w-none mb-8 leading-relaxed">
-              쿠팡·스마트스토어에서 주문 받고 미국 아마존·라쿠텐에서 매입해서{' '}
-              <span className="text-slate-900 font-semibold">33개 배대지</span>로 한국
-              구매자에게 보내는 셀러를 위한 도구. 매번 다시 입력하던 양식 변환을 자동화합니다.
+            <p className="text-slate-600 text-base md:text-lg max-w-xl lg:max-w-none mb-6 leading-relaxed">
+              쿠팡·스마트스토어 주문 → 미국 아마존·라쿠텐 매입 → 33개 배대지 →
+              한국 구매자까지. 매번 다시 입력하던 양식·환율·합배송 계산을 자동화해{' '}
+              <span className="text-slate-900 font-semibold">시간과 마진을 동시에 지킵니다.</span>
             </p>
+            <ul className="text-sm text-slate-700 space-y-1.5 mb-8 max-w-md mx-auto lg:mx-0">
+              <li className="flex items-center gap-2">
+                <CheckIcon />
+                <span>주문 1건 처리 <span className="font-semibold text-slate-900">5분 → 30초</span></span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon />
+                <span>환율 자동 적용으로 <span className="font-semibold text-slate-900">마진 오차 0</span></span>
+              </li>
+              <li className="flex items-center gap-2">
+                <CheckIcon />
+                <span>합배송 묶기로 <span className="font-semibold text-slate-900">배송비 절감</span></span>
+              </li>
+            </ul>
             <div className="flex flex-col sm:flex-row gap-3 justify-center lg:justify-start mb-3">
               <Link
                 href="/signup/step-1"
@@ -109,6 +123,62 @@ export default function SellerSignupPage() {
             <StatBlock label="국내 마켓" value="13" suffix="개" />
             <StatBlock label="해외 매입처" value="24" suffix="개" />
             <StatBlock label="통화" value="7" suffix="종" />
+          </div>
+        </section>
+
+        {/* 마진 예시 — "돈 절약" 시각화 */}
+        <section className="w-full mb-20">
+          <div className="text-center mb-8">
+            <p className="text-[11px] font-bold text-emerald-700 tracking-widest uppercase mb-2">
+              MARGIN PROTECTION
+            </p>
+            <h2 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+              시간 절약을 넘어, <span className="text-emerald-700">마진 보호</span>로
+            </h2>
+            <p className="text-sm text-slate-600 mt-3 max-w-2xl mx-auto">
+              해외 직구 셀러의 진짜 위협은 시간보다 환율·통관·합배송 누락에서 새는 마진입니다.
+              주문 등록 즉시 환산해서 “남는 거래인가” 한눈에 확인.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <MarginExample
+              icon="🎮"
+              productName="Nintendo Switch OLED"
+              site="미국 아마존"
+              foreignPrice="$349.99"
+              foreignKrw="₩483,000"
+              salePrice="₩590,000"
+              margin="₩107,000"
+              marginRate="22%"
+            />
+            <MarginExample
+              icon="🎒"
+              productName="GoPro HERO12 Black"
+              site="일본 라쿠텐"
+              foreignPrice="¥58,800"
+              foreignKrw="₩542,000"
+              salePrice="₩689,000"
+              margin="₩147,000"
+              marginRate="27%"
+            />
+            <MarginExample
+              icon="👟"
+              productName="New Balance 990v6"
+              site="미국 아마존"
+              foreignPrice="$199.99"
+              foreignKrw="₩276,000"
+              salePrice="₩349,000"
+              margin="₩73,000"
+              marginRate="26%"
+            />
+          </div>
+
+          <div className="mt-5 text-center">
+            <p className="text-xs text-slate-500">
+              ※ 한국수출입은행 매매기준율 기준 · 관세·배송비 별도 ·
+              실제 마진은 SKU·합배송 여부에 따라 변동
+            </p>
           </div>
         </section>
 
@@ -256,21 +326,21 @@ export default function SellerSignupPage() {
           <div className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-sky-50 shadow-sm p-6 flex flex-col justify-between">
             <div>
               <h2 className="text-lg font-bold text-slate-900 tracking-tight mb-2">
-                지금 시작하면 무료 플랜
+                무료로 시작 · 시간과 마진을 동시에
               </h2>
               <p className="text-sm text-slate-700 leading-relaxed mb-4">
-                월 N건까지 무료. 신용카드 불필요. 가입 후 바로 첫 주문 등록 →
-                배대지 양식 다운로드를 30초 안에 체험할 수 있습니다.
+                신용카드 불필요. 가입 즉시 첫 주문 등록 →
+                배대지 양식 다운로드 → 환율 적용 마진 확인을 30초 안에 체험.
               </p>
               <ul className="text-xs text-slate-600 space-y-1 mb-5">
                 <li className="flex items-center gap-2">
-                  <CheckIcon /> 짐패스 v1 공식 양식 즉시 사용
+                  <CheckIcon /> 한국수출입은행 환율로 매일 자동 갱신
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon /> 내 배대지 양식 직접 업로드 가능
+                  <CheckIcon /> 합배송으로 같은 수취인 배송비 절감
                 </li>
                 <li className="flex items-center gap-2">
-                  <CheckIcon /> SKU 마스터 · 마진 분석 포함
+                  <CheckIcon /> 반복 SKU 자동 채움 + 마진 분석 페이지
                 </li>
               </ul>
             </div>
@@ -303,6 +373,14 @@ export default function SellerSignupPage() {
             <FaqItem
               q="환율은 어떻게 적용되나요?"
               a="한국수출입은행 매매기준율을 매일 자동 fetch 합니다. 주문 등록 시 해외 단가 (USD/JPY 등) 를 입력하면 즉시 KRW 환산 결과와 예상 마진을 보여드립니다. 환율 API 장애 시 직전 캐시값으로 폴백."
+            />
+            <FaqItem
+              q="월 10~30건 처리하는 소규모 셀러도 효과가 있나요?"
+              a="네. 오히려 소규모 셀러일수록 한 건 한 건의 양식 변환·환율 계산이 직접 일감으로 느껴집니다. 무료 플랜으로 시작해 SKU 한 번 등록해 두면 같은 상품 다음 주문부터 매입처·단가·배대지가 자동 채워져 시간이 누적 절감됩니다. 매월 새로 등록되는 SKU 가 쌓일수록 효율이 커지는 구조."
+            />
+            <FaqItem
+              q="우리 운영팀이 쓰던 엑셀 워크플로우를 깨지 않고 도입할 수 있나요?"
+              a="네. 일괄 입력 페이지가 엑셀 paste 를 그대로 받습니다 (한글 라벨 → enum 자동 변환). 기존 셀러의 운영 엑셀을 그대로 복사 → 27 컬럼 그리드에 붙여넣기 → 등록. 배대지 양식도 셀러가 쓰던 양식을 직접 업로드해 매핑할 수 있어 기존 흐름을 깨지 않습니다."
             />
           </div>
         </section>
@@ -422,6 +500,64 @@ function FaqItem({ q, a }: { q: string; a: string }) {
       </summary>
       <p className="px-5 pb-4 -mt-1 text-[13px] text-slate-600 leading-relaxed">{a}</p>
     </details>
+  )
+}
+
+function MarginExample({
+  icon,
+  productName,
+  site,
+  foreignPrice,
+  foreignKrw,
+  salePrice,
+  margin,
+  marginRate,
+}: {
+  icon: string
+  productName: string
+  site: string
+  foreignPrice: string
+  foreignKrw: string
+  salePrice: string
+  margin: string
+  marginRate: string
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-emerald-500 bg-white shadow-sm hover:shadow-md transition-shadow overflow-hidden">
+      <div className="p-5">
+        <div className="flex items-start gap-3 mb-4">
+          <div className="w-10 h-10 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-xl flex-shrink-0">
+            {icon}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-slate-900 truncate">{productName}</p>
+            <p className="text-[11px] text-slate-500 mt-0.5">{site}</p>
+          </div>
+        </div>
+
+        <div className="space-y-2 text-xs">
+          <div className="flex items-baseline justify-between">
+            <span className="text-slate-500">해외 매입가</span>
+            <span className="font-mono tabular-nums text-slate-700">{foreignPrice}</span>
+          </div>
+          <div className="flex items-baseline justify-between border-b border-slate-100 pb-2">
+            <span className="text-slate-500">KRW 환산</span>
+            <span className="font-semibold tabular-nums text-slate-900">{foreignKrw}</span>
+          </div>
+          <div className="flex items-baseline justify-between">
+            <span className="text-slate-500">국내 판매가</span>
+            <span className="font-semibold tabular-nums text-slate-900">{salePrice}</span>
+          </div>
+        </div>
+      </div>
+      <div className="px-5 py-3 bg-gradient-to-r from-emerald-50 to-emerald-50/40 border-t border-emerald-100 flex items-baseline justify-between">
+        <span className="text-[11px] font-semibold text-emerald-700 uppercase tracking-wider">예상 마진</span>
+        <span className="flex items-baseline gap-1.5">
+          <span className="text-base font-bold tabular-nums text-emerald-700">{margin}</span>
+          <span className="text-[11px] text-emerald-600 font-medium">{marginRate}</span>
+        </span>
+      </div>
+    </div>
   )
 }
 
