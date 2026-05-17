@@ -15,9 +15,12 @@ type SettingCard = {
   icon: React.ReactNode
 }
 
-const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
+type Accent = 'indigo' | 'emerald' | 'sky' | 'amber'
+
+const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] }[] = [
   {
     heading: '계정 보안',
+    accent: 'indigo',
     cards: [
       {
         title: '계정 정보',
@@ -57,6 +60,7 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
   },
   {
     heading: '팀 관리',
+    accent: 'emerald',
     cards: [
       {
         title: '팀원 초대',
@@ -74,6 +78,7 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
   },
   {
     heading: '연동·자동화',
+    accent: 'sky',
     cards: [
       {
         title: '웹훅 수신',
@@ -101,7 +106,7 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
       },
       {
         title: '카카오 알림톡',
-        description: '주문 상태 변경 시 의뢰자에게 카카오 알림톡 자동 발송',
+        description: '주문 상태 변경 시 마켓 구매자에게 카카오 알림톡 자동 발송',
         href: '/settings/integrations/kakao',
         available: false,
         badge: '준비 중',
@@ -115,6 +120,7 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
   },
   {
     heading: '법규·컴플라이언스',
+    accent: 'amber',
     cards: [
       {
         title: '청약철회 고지 설정',
@@ -130,23 +136,12 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
     ],
   },
   {
-    heading: '의뢰자 서비스',
+    heading: '구매자 서비스',
+    accent: 'indigo',
     cards: [
       {
-        title: '주문 접수 폼',
-        description: '의뢰자가 직접 주문을 접수하는 공개 페이지 설정',
-        href: '/settings/intake-page',
-        available: false,
-        badge: '준비 중',
-        icon: (
-          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
-          </svg>
-        ),
-      },
-      {
         title: '주문 조회 포털',
-        description: '의뢰자가 주문번호·연락처로 배송 상태를 직접 조회하는 공개 페이지',
+        description: '마켓 구매자가 주문번호·연락처로 배송 상태를 직접 조회하는 공개 페이지',
         href: '/settings/tracking',
         available: false,
         badge: '준비 중',
@@ -160,69 +155,122 @@ const SETTING_SECTIONS: { heading: string; cards: SettingCard[] }[] = [
   },
 ]
 
+const ACCENT_MAP: Record<Accent, { borderL: string; iconBg: string; iconC: string; hoverBorder: string; hoverIconBg: string; hoverTitle: string; hoverArrow: string }> = {
+  indigo: {
+    borderL: 'border-l-indigo-500',
+    iconBg: 'bg-indigo-50',
+    iconC: 'text-indigo-600',
+    hoverBorder: 'hover:border-indigo-200',
+    hoverIconBg: 'group-hover:bg-indigo-100',
+    hoverTitle: 'group-hover:text-indigo-700',
+    hoverArrow: 'group-hover:text-indigo-500',
+  },
+  emerald: {
+    borderL: 'border-l-emerald-500',
+    iconBg: 'bg-emerald-50',
+    iconC: 'text-emerald-600',
+    hoverBorder: 'hover:border-emerald-200',
+    hoverIconBg: 'group-hover:bg-emerald-100',
+    hoverTitle: 'group-hover:text-emerald-700',
+    hoverArrow: 'group-hover:text-emerald-500',
+  },
+  sky: {
+    borderL: 'border-l-sky-500',
+    iconBg: 'bg-sky-50',
+    iconC: 'text-sky-600',
+    hoverBorder: 'hover:border-sky-200',
+    hoverIconBg: 'group-hover:bg-sky-100',
+    hoverTitle: 'group-hover:text-sky-700',
+    hoverArrow: 'group-hover:text-sky-500',
+  },
+  amber: {
+    borderL: 'border-l-amber-500',
+    iconBg: 'bg-amber-50',
+    iconC: 'text-amber-700',
+    hoverBorder: 'hover:border-amber-200',
+    hoverIconBg: 'group-hover:bg-amber-100',
+    hoverTitle: 'group-hover:text-amber-700',
+    hoverArrow: 'group-hover:text-amber-600',
+  },
+}
+
 export default function SettingsPage() {
   return (
-    <div className="p-8 max-w-4xl space-y-8">
+    <div className="p-8 max-w-5xl space-y-8">
       <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">설정</h1>
-        <p className="text-sm text-slate-600 mt-1">계정·보안·연동 설정을 관리합니다.</p>
+        <span className="inline-flex items-center gap-1.5 mb-3 rounded-full bg-indigo-50 border border-indigo-200 px-3 py-1 text-[11px] font-semibold text-indigo-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500" />
+          SETTINGS
+        </span>
+        <h1 className="text-2xl md:text-3xl font-bold text-slate-900 tracking-tight">
+          계정 ·{' '}
+          <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">
+            보안 · 연동
+          </span>
+        </h1>
+        <p className="text-sm text-slate-600 mt-2 max-w-2xl">
+          사업자 계정 정보, 2단계 인증, 외부 연동, 컴플라이언스 등을 한 곳에서 관리합니다.
+        </p>
       </div>
 
-      {SETTING_SECTIONS.map((section) => (
-        <section key={section.heading}>
-          <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
-            {section.heading}
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {section.cards.map((card) =>
-              card.available ? (
-                <Link
-                  key={card.href}
-                  href={card.href}
-                  className="group flex items-start gap-3 p-5 rounded-xl border border-slate-200 bg-white shadow-sm hover:shadow-md hover:border-indigo-200 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center flex-shrink-0 text-indigo-600 group-hover:bg-indigo-100 transition-colors">
-                    {card.icon}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-900 group-hover:text-indigo-700 transition-colors">{card.title}</p>
-                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{card.description}</p>
-                  </div>
-                  <svg
-                    className="w-4 h-4 text-slate-400 group-hover:text-indigo-500 flex-shrink-0 mt-1 transition-colors"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    strokeWidth={2}
-                    stroke="currentColor"
-                    aria-hidden="true"
+      {SETTING_SECTIONS.map((section) => {
+        const c = ACCENT_MAP[section.accent]
+        return (
+          <section key={section.heading}>
+            <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+              {section.heading}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {section.cards.map((card) =>
+                card.available ? (
+                  <Link
+                    key={card.href}
+                    href={card.href}
+                    className={`group flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] ${c.borderL} bg-white shadow-sm hover:shadow-md ${c.hoverBorder} transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
                   >
-                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                  </svg>
-                </Link>
-              ) : (
-                <div
-                  key={card.href}
-                  className="flex items-start gap-3 p-5 rounded-xl border border-slate-200 bg-white shadow-sm cursor-not-allowed opacity-60"
-                  aria-disabled="true"
-                >
-                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                    {card.icon}
+                    <div className={`w-10 h-10 rounded-lg ${c.iconBg} flex items-center justify-center flex-shrink-0 ${c.iconC} ${c.hoverIconBg} transition-colors`}>
+                      {card.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-sm font-semibold text-slate-900 ${c.hoverTitle} transition-colors`}>{card.title}</p>
+                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{card.description}</p>
+                    </div>
+                    <svg
+                      className={`w-4 h-4 text-slate-400 ${c.hoverArrow} flex-shrink-0 mt-1 transition-colors`}
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      strokeWidth={2}
+                      stroke="currentColor"
+                      aria-hidden="true"
+                    >
+                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                    </svg>
+                  </Link>
+                ) : (
+                  <div
+                    key={card.href}
+                    className="flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] border-l-slate-300 bg-white shadow-sm cursor-not-allowed opacity-60"
+                    aria-disabled="true"
+                  >
+                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                      {card.icon}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-slate-500">{card.title}</p>
+                      <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{card.description}</p>
+                    </div>
+                    {card.badge && (
+                      <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
+                        {card.badge}
+                      </span>
+                    )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-slate-500">{card.title}</p>
-                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{card.description}</p>
-                  </div>
-                  {card.badge && (
-                    <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
-                      {card.badge}
-                    </span>
-                  )}
-                </div>
-              )
-            )}
-          </div>
-        </section>
-      ))}
+                )
+              )}
+            </div>
+          </section>
+        )
+      })}
     </div>
   )
 }
