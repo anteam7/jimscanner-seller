@@ -114,6 +114,20 @@ export default function TemplateMappingEditor({
   }
 
   async function onSave() {
+    // 클라이언트 검증
+    if (!name.trim()) {
+      setMsg({ kind: 'err', text: '양식 이름을 입력해주세요.' })
+      return
+    }
+    const emptyLabel = columns.find((c) => !c.column_label.trim())
+    if (emptyLabel) {
+      setMsg({
+        kind: 'err',
+        text: `[${emptyLabel.column_letter ?? emptyLabel.column_index}열] 헤더 라벨을 입력해주세요.`,
+      })
+      return
+    }
+
     setSaving(true)
     setMsg(null)
     try {
@@ -136,7 +150,7 @@ export default function TemplateMappingEditor({
       const payload = {
         columns: columns.map((c) => ({
           column_index: c.column_index,
-          column_label: c.column_label,
+          column_label: c.column_label.trim(),
           source_kind: c.source_kind,
           source_path: c.source_path || null,
           composite_template: c.composite_template || null,

@@ -140,9 +140,9 @@ BEGIN
     combine_rule, notes
   ) VALUES (
     v_template_id, NULL, v_forwarder_id, '짐패스 v1 (공식)',
-    'forwarder-templates/jimpass_v1.xls', '업로드양식', 2, 1,
+    'forwarder-templates/jimpass_v1.xlsx', '업로드양식', 2, 1,
     'jimpass_recipient',
-    '짐패스 공식 업로드 양식. 같은 수취인명+연락처+우편번호 묶기. 고객사주문번호 있으면 그것 우선.'
+    '짐패스 공식 업로드 양식 (xls → xlsx 변환됨, exceljs 호환). 같은 수취인명+연락처+우편번호 묶기. 고객사주문번호 있으면 그것 우선.'
   ) ON CONFLICT (id) DO NOTHING;
 
   -- 컬럼 26개
@@ -165,13 +165,13 @@ BEGIN
     (v_template_id, 16, 'P', '우편번호',         'order_field', 'buyer_postal_code', NULL, NULL, NULL, NULL, NULL, true, NULL),
     (v_template_id, 17, 'Q', '주소',             'composite',   NULL, '{buyer_address} {buyer_detail_address}', NULL, NULL, NULL, NULL, true, NULL),
     (v_template_id, 18, 'R', '세관신고정보',     'order_field', 'buyer_customs_code', NULL, NULL, NULL, NULL, NULL, false, NULL),
-    (v_template_id, 19, 'S', '포장보완',         'user_input',  NULL, NULL, NULL, '포장보완', ARRAY['Y',''], NULL, false, NULL),
-    (v_template_id, 20, 'T', '사업자통관',       'user_input',  NULL, NULL, NULL, '사업자통관', ARRAY['Y',''], NULL, false, NULL),
+    (v_template_id, 19, 'S', '포장보완',         'user_input',  NULL, NULL, NULL, '포장보완', ARRAY['Y'], NULL, false, NULL),
+    (v_template_id, 20, 'T', '사업자통관',       'user_input',  NULL, NULL, NULL, '사업자통관', ARRAY['Y'], NULL, false, NULL),
     (v_template_id, 21, 'U', '입고담당자메모',   'order_field', 'request_notes', NULL, NULL, NULL, NULL, NULL, false, 'v0: request_notes 공용'),
     (v_template_id, 22, 'V', '택배사요청메모',   'user_input',  NULL, NULL, NULL, '택배사 요청 메모', NULL, NULL, false, NULL),
-    (v_template_id, 23, 'W', '바로출고',         'user_input',  NULL, NULL, NULL, '바로출고', ARRAY['Y',''], NULL, false, NULL),
-    (v_template_id, 24, 'X', '실물검수',         'user_input',  NULL, NULL, NULL, '실물검수', ARRAY['Y',''], NULL, false, NULL),
+    (v_template_id, 23, 'W', '바로출고',         'user_input',  NULL, NULL, NULL, '바로출고', ARRAY['Y'], NULL, false, NULL),
+    (v_template_id, 24, 'X', '실물검수',         'user_input',  NULL, NULL, NULL, '실물검수', ARRAY['Y'], NULL, false, NULL),
     (v_template_id, 25, 'Y', '현지택배사',       'user_input',  NULL, NULL, NULL, '현지택배사', ARRAY['야마토','사가와','우체국','아마존익스프레스','윌포트','라쿠텐','후쿠야마','세이노','에코하이','그 외'], NULL, false, NULL),
-    (v_template_id, 26, 'Z', '해외 구매물품 보상보험', 'user_input', NULL, NULL, NULL, '해외 구매물품 보상보험', ARRAY['Y',''], NULL, false, NULL)
+    (v_template_id, 26, 'Z', '해외 구매물품 보상보험', 'user_input', NULL, NULL, NULL, '해외 구매물품 보상보험', ARRAY['Y'], NULL, false, NULL)
   ON CONFLICT (template_id, column_index) DO NOTHING;
 END $$;

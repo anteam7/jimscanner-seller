@@ -99,6 +99,14 @@ export async function PATCH(
         { status: 400 },
       )
     }
+    const labelTrim = typeof c.column_label === 'string' ? c.column_label.trim() : ''
+    if (!labelTrim) {
+      return NextResponse.json(
+        { error: `[${c.column_index}열] 헤더 라벨이 비어 있습니다.` },
+        { status: 400 },
+      )
+    }
+    c.column_label = labelTrim
   }
 
   // 기존 컬럼들 조회 → 각 column_index 별 update

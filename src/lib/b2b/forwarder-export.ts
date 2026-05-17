@@ -147,13 +147,19 @@ export function evaluateColumn(
 // path 평가
 // ============================================================
 
-/** 'buyer_name' / 'forwarders.name' 같은 dot path */
+// 사용자 입력 path 가 prototype chain 을 타지 못하도록 차단
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+
+/** 'buyer_name' / 'forwarders.name' 같은 dot path. prototype 키는 빈 값 처리. */
 function readPath(obj: unknown, path: string): unknown {
   if (!path) return ''
   const parts = path.split('.')
   let cur: unknown = obj
   for (const p of parts) {
     if (cur == null) return ''
+    if (FORBIDDEN_KEYS.has(p)) return ''
+    if (typeof cur !== 'object') return ''
+    if (!Object.prototype.hasOwnProperty.call(cur, p)) return ''
     cur = (cur as Record<string, unknown>)[p]
   }
   return cur ?? ''

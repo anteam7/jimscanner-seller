@@ -66,6 +66,7 @@ export default async function TemplatesPage() {
   const { data: rows } = await adb
     .from('b2b_form_templates')
     .select('id, name, owner_account_id, forwarder_id, data_sheet_name, data_start_row, source_file_size, is_active, created_at, forwarders(name, slug)')
+    .eq('is_active', true)
     .or(`owner_account_id.is.null,owner_account_id.eq.${account.id}`)
     .order('owner_account_id', { ascending: true, nullsFirst: true })
     .order('created_at', { ascending: false })

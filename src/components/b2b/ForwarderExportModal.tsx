@@ -98,10 +98,16 @@ export default function ForwarderExportModal({
       }
       // 파일명은 Content-Disposition 에서 추출
       const cd = res.headers.get('Content-Disposition') ?? ''
-      const match = cd.match(/filename\*=UTF-8''([^;]+)/)
-      const filename = match
-        ? decodeURIComponent(match[1])
-        : `${tpl.name}.xlsx`
+      // RFC 5987: filename*=UTF-8''<encoded> — 끝의 ; 또는 공백/CR 모두 cut
+      const match = cd.match(/filename\*=UTF-8''([^;\s]+)/)
+      let filename = `${tpl.name}.xlsx`
+      if (match) {
+        try {
+          filename = decodeURIComponent(match[1])
+        } catch {
+          /* malformed encoding — fallback 유지 */
+        }
+      }
       const blob = await res.blob()
       const url = URL.createObjectURL(blob)
       const a = document.createElement('a')

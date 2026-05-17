@@ -29,6 +29,17 @@ export const dynamic = 'force-dynamic'
 
 const MAX_BYTES = 5 * 1024 * 1024 // 5 MB
 
+/** 1 → 'A', 26 → 'Z', 27 → 'AA', 702 → 'ZZ', 703 → 'AAA' (엑셀과 동일한 base-26) */
+function excelColumnLetter(n: number): string {
+  let s = ''
+  while (n > 0) {
+    const r = (n - 1) % 26
+    s = String.fromCharCode(65 + r) + s
+    n = Math.floor((n - 1) / 26)
+  }
+  return s
+}
+
 export async function GET() {
   const sb = await createClient()
   const {
@@ -119,24 +130,28 @@ export async function POST(request: Request) {
     if (sheetNames.length === 0) {
       return NextResponse.json({ error: '시트가 없습니다.' }, { status: 400 })
     }
-    pickedSheet =
-      dataSheetOverride && sheetNames.includes(dataSheetOverride)
-        ? dataSheetOverride
-        : sheetNames[0]
+    if (dataSheetOverride && !sheetNames.includes(dataSheetOverride)) {
+      return NextResponse.json(
+        { error: `시트 '${dataSheetOverride}' 가 파일에 없습니다. 시트 목록: ${sheetNames.join(', ')}` },
+        { status: 400 },
+      )
+    }
+    pickedSheet = dataSheetOverride || sheetNames[0]
     const ws = wb.Sheets[pickedSheet]
     if (!ws || !ws['!ref']) {
-      return NextResponse.json({ error: '시트가 비어 있습니다.' }, { status: 400 })
+      return NextResponse.json({ error: '선택한 시트가 비어 있습니다.' }, { status: 400 })
     }
     const range = XLSX.utils.decode_range(ws['!ref'])
     headers = []
+    // 중간 빈 칸은 빈 라벨로 보존 — 사용자가 매핑 에디터에서 채울 수 있음.
+    // trailing empty 컬럼만 trim.
     for (let c = range.s.c; c <= range.e.c; c++) {
       const addr = XLSX.utils.encode_cell({ r: range.s.r, c })
       const cell = ws[addr]
-      const label =
-        cell && (cell.v != null ? String(cell.v).trim() : '') ? String(cell.v).trim() : ''
-      if (label) headers.push(label)
-      else break // 빈 칸 만나면 종료 — 양식 끝
+      const label = cell && cell.v != null ? String(cell.v).trim() : ''
+      headers.push(label)
     }
+    while (headers.length > 0 && headers[headers.length - 1] === '') headers.pop()
     if (headers.length === 0) {
       return NextResponse.json({ error: '첫 행에서 헤더를 읽지 못했습니다.' }, { status: 400 })
     }
@@ -170,7 +185,10 @@ export async function POST(request: Request) {
 
   // template id 미리 생성 (Storage path 에 사용)
   const templateId = crypto.randomUUID()
-  const safeFilename = file.name.replace(/[^a-zA-Z0-9._-]+/g, '_').replace(/\.xls$/i, '.xlsx')
+  // 파일명: 한글 보존 + Storage 경로 안전 문자만 남김 (unicode letter/number/._- + 한글)
+  const safeFilename = file.name
+    .replace(/[^\p{L}\p{N}._-]+/gu, '_')
+    .replace(/\.xls$/i, '.xlsx')
   const storagePath = `${account.id}/${templateId}/${safeFilename}`
   const fullPath = `user-templates/${storagePath}`
 
@@ -216,15 +234,13 @@ export async function POST(request: Request) {
   }
 
   // 컬럼 자동 생성 — 모두 user_input 으로 시작, 사용자가 매핑 에디터에서 변경
-  const A = 'A'.charCodeAt(0)
   const colRows = headers.map((label, idx) => ({
     template_id: templateId,
     column_index: idx + 1,
-    column_letter:
-      idx < 26 ? String.fromCharCode(A + idx) : `A${String.fromCharCode(A + idx - 26)}`,
-    column_label: label,
+    column_letter: excelColumnLetter(idx + 1),
+    column_label: label || `컬럼 ${idx + 1}`,
     source_kind: 'user_input',
-    user_input_label: label,
+    user_input_label: label || null,
     required: false,
   }))
 

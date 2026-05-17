@@ -4,8 +4,6 @@
  *
  * body: { template_id: string, user_inputs?: Record<string,string> }
  *
- * GET /api/orders/[id]/export?template_id=... 도 지원 (브라우저 다운로드 편의).
- *
  * 설계: _memory/p1-forwarder-export-design.md §3.1
  */
 import { NextResponse } from 'next/server'
@@ -28,7 +26,6 @@ const ORDER_COLUMNS =
   'b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, weight_kg, tracking_number, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option)'
 
 async function handle(
-  request: Request,
   orderId: string,
   templateId: string | null,
   userInputs: Record<string, string>,
@@ -162,15 +159,5 @@ export async function POST(
   } catch {
     return NextResponse.json({ error: '잘못된 요청 형식입니다.' }, { status: 400 })
   }
-  return handle(request, id, body.template_id ?? null, body.user_inputs ?? {})
-}
-
-export async function GET(
-  request: Request,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  const { id } = await params
-  const url = new URL(request.url)
-  const templateId = url.searchParams.get('template_id')
-  return handle(request, id, templateId, {})
+  return handle(id, body.template_id ?? null, body.user_inputs ?? {})
 }
