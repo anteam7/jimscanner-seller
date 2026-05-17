@@ -95,7 +95,7 @@ export default function OrderStatusSelector({
           const meta = STATUS_OPTIONS.find((o) => o.value === s)
           return (
             <option key={s} value={s}>
-              {meta?.label ?? s} (으)로 변경
+              → {meta?.label ?? s}
             </option>
           )
         })}

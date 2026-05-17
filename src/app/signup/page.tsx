@@ -3,7 +3,7 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
 export const metadata: Metadata = {
-  title: '사업자 회원가입 | 짐스캐너 B2B',
+  title: '사업자 회원가입',
   description: '직구 구매대행 사업자를 위한 주문 통합·배대지 양식 자동화·의뢰자 관리 서비스에 가입하세요.',
   robots: { index: false },
 }

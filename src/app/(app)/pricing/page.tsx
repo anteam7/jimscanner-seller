@@ -4,7 +4,7 @@ import PricingPageClient from './PricingPageClient'
 import type { PlanData } from '@/components/b2b/PricingCard'
 
 export const metadata: Metadata = {
-  title: '플랜 선택 | 짐스캐너 B2B',
+  title: '플랜 선택',
   robots: { index: false },
 }
 

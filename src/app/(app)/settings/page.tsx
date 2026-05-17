@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 export const metadata: Metadata = {
-  title: '설정 | 짐스캐너 B2B',
+  title: '설정',
   robots: { index: false },
 }
 

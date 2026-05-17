@@ -12,7 +12,7 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
-  // Resolve the user's current plan_code for target_plan_codes filtering
+  // Resolve the user's current plan_code via subscription → plan join
   let planCode: string | null = null
   const { data: account } = await db
     .from('b2b_accounts')
@@ -23,10 +23,10 @@ export async function GET() {
   if (account) {
     const { data: sub } = await db
       .from('b2b_subscriptions')
-      .select('plan_code')
+      .select('b2b_subscription_plans(plan_code)')
       .eq('account_id', account.id)
       .maybeSingle()
-    planCode = sub?.plan_code ?? null
+    planCode = sub?.b2b_subscription_plans?.plan_code ?? null
   }
 
   const now = new Date().toISOString()
@@ -38,13 +38,12 @@ export async function GET() {
     .order('created_at', { ascending: false })
 
   if (error) {
+    // b2b_announcements 테이블 미존재(42P01) — 기능 비활성 상태에서는 조용히 빈 배열 반환.
+    if (error.code === '42P01') return NextResponse.json([])
     console.error('[announcements/active] DB 오류:', error)
     return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  // Filter by plan code:
-  // - empty target_plan_codes = show to all plans
-  // - non-empty = show only to matching plan
   type AnnRow = { target_plan_codes: string[] | null; [key: string]: unknown }
   const filtered = (data as AnnRow[] ?? []).filter((ann) => {
     const codes = ann.target_plan_codes

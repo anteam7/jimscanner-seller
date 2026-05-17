@@ -3,7 +3,7 @@ import { createClient } from '@/lib/auth/server'
 import BulkOrderClient, { type ForwarderOption } from './BulkOrderClient'
 
 export const metadata: Metadata = {
-  title: '일괄 입력 | 짐스캐너 B2B',
+  title: '일괄 입력',
   robots: { index: false },
 }
 

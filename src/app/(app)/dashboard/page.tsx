@@ -5,7 +5,7 @@ import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
 
 export const metadata: Metadata = {
-  title: '대시보드 | 짐스캐너 B2B',
+  title: '대시보드',
   robots: { index: false },
 }
 

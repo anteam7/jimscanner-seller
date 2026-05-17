@@ -3,7 +3,7 @@ import { createClient } from '@/lib/auth/server'
 import NewOrderForm, { type ForwarderOption } from './NewOrderForm'
 
 export const metadata: Metadata = {
-  title: '새 주문 입력 | 짐스캐너 B2B',
+  title: '새 주문 입력',
   robots: { index: false },
 }
 
