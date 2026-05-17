@@ -1,5 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { getExchangeRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
+import { MARKETPLACES } from '@/lib/b2b/order-options'
 import { createClient } from '@/lib/auth/server'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
@@ -366,6 +368,8 @@ export default async function SellerDashboardPage() {
     { data: subRows },
     { data: monthOrderItems },
     { count: skuCount },
+    { data: recentOrdersRaw },
+    { data: statusRowsRaw },
   ] = await Promise.all([
     db
       .from('b2b_orders')
@@ -390,7 +394,39 @@ export default async function SellerDashboardPage() {
       .select('id', { count: 'exact', head: true })
       .eq('account_id', account.id)
       .eq('is_active', true),
+    db
+      .from('b2b_orders')
+      .select('id, order_number, market_order_number, marketplace, status, buyer_name, created_at, b2b_order_items(product_name, sale_price_krw)')
+      .eq('account_id', account.id)
+      .is('deleted_at', null)
+      .order('created_at', { ascending: false })
+      .limit(5),
+    // status 별 카운트 — 이번 달
+    db
+      .from('b2b_orders')
+      .select('status')
+      .eq('account_id', account.id)
+      .is('deleted_at', null)
+      .gte('created_at', monthStart),
   ])
+
+  type RecentOrder = {
+    id: string
+    order_number: string
+    market_order_number: string | null
+    marketplace: string | null
+    status: string
+    buyer_name: string | null
+    created_at: string
+    b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
+  }
+  const recentOrders = (recentOrdersRaw as RecentOrder[] | null) ?? []
+
+  type StatusRow = { status: string }
+  const statusCounts: Record<string, number> = {}
+  for (const r of (statusRowsRaw as StatusRow[] | null) ?? []) {
+    statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1
+  }
 
   type Subscription = { plan_code: string; monthly_order_used: number; monthly_order_limit: number | null }
   const sub: Subscription | null = (subRows as Subscription[] | null)?.[0] ?? null
@@ -421,6 +457,14 @@ export default async function SellerDashboardPage() {
       : 'SKU 등록 시 자동 채움 활성'
 
   const isNewSeller = (monthOrderCount ?? 0) === 0 && (skuCount ?? 0) === 0
+
+  // 환율 (실패 시 null)
+  let rates: ExchangeRates | null = null
+  try {
+    rates = await getExchangeRates()
+  } catch {
+    rates = null
+  }
 
   return (
     <div className="p-8 space-y-8 max-w-5xl">
@@ -506,6 +550,200 @@ export default async function SellerDashboardPage() {
           상품 SKU {skuSub}.
         </p>
       </section>
+
+      {/* 환율 + 상태 파이프라인 */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <ExchangeRatesCard rates={rates} />
+        <StatusPipelineCard counts={statusCounts} total={monthOrderCount ?? 0} />
+      </section>
+
+      {/* 최근 주문 */}
+      <RecentOrdersCard orders={recentOrders} />
     </div>
+  )
+}
+
+const STATUS_PIPELINE_META: { value: string; label: string; color: string }[] = [
+  { value: 'pending', label: '마켓 접수', color: 'bg-slate-400' },
+  { value: 'confirmed', label: '매입 발주', color: 'bg-blue-500' },
+  { value: 'paid', label: '매입 완료', color: 'bg-sky-500' },
+  { value: 'forwarder_submitted', label: '배대지 입고', color: 'bg-indigo-500' },
+  { value: 'in_transit', label: '운송 중', color: 'bg-violet-500' },
+  { value: 'arrived_korea', label: '한국 통관', color: 'bg-amber-500' },
+  { value: 'delivered', label: '구매자 수령', color: 'bg-emerald-500' },
+  { value: 'completed', label: '구매 확정', color: 'bg-emerald-600' },
+]
+
+const MP_LABEL: Record<string, string> = Object.fromEntries(
+  MARKETPLACES.map((m) => [m.value, m.label]),
+)
+
+function ExchangeRatesCard({ rates }: { rates: ExchangeRates | null }) {
+  const SHOW = ['USD', 'JPY', 'CNY', 'EUR']
+  return (
+    <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-gradient-to-br from-sky-50/40 to-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3">
+        <div>
+          <p className="text-xs font-semibold text-sky-700 uppercase tracking-wider">오늘의 환율</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">한국수출입은행 매매기준율</p>
+        </div>
+        {rates?.isFallback && (
+          <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
+            캐시값
+          </span>
+        )}
+      </div>
+      {rates == null ? (
+        <p className="text-xs text-slate-500 py-2">환율 정보를 불러올 수 없습니다.</p>
+      ) : (
+        <ul className="grid grid-cols-4 gap-2">
+          {SHOW.map((code) => {
+            const r = rates.rates[code]
+            if (!r) return (
+              <li key={code} className="text-center">
+                <p className="text-[10px] text-slate-500">{code}</p>
+                <p className="text-sm font-semibold text-slate-400 tabular-nums">—</p>
+              </li>
+            )
+            const unit = r.unit ?? 1
+            return (
+              <li key={code} className="text-center">
+                <p className="text-[10px] text-slate-500">{unit > 1 ? `${unit} ${code}` : code}</p>
+                <p className="text-sm font-bold text-slate-900 tabular-nums">
+                  {new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(r.rate)}
+                </p>
+                <p className="text-[9px] text-slate-400">원</p>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function StatusPipelineCard({
+  counts,
+  total,
+}: {
+  counts: Record<string, number>
+  total: number
+}) {
+  return (
+    <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-indigo-500 bg-gradient-to-br from-indigo-50/40 to-white shadow-sm p-5">
+      <div className="mb-3">
+        <p className="text-xs font-semibold text-indigo-700 uppercase tracking-wider">진행 상태</p>
+        <p className="text-[10px] text-slate-500 mt-0.5">이번 달 주문 {total}건</p>
+      </div>
+      {total === 0 ? (
+        <p className="text-xs text-slate-500 py-2">이번 달 주문이 없습니다.</p>
+      ) : (
+        <ul className="space-y-2">
+          {STATUS_PIPELINE_META.map((s) => {
+            const n = counts[s.value] ?? 0
+            if (n === 0) return null
+            const pct = Math.round((n / total) * 100)
+            return (
+              <li key={s.value} className="text-xs">
+                <div className="flex items-baseline justify-between mb-1">
+                  <span className="text-slate-700">{s.label}</span>
+                  <span className="tabular-nums text-slate-500">
+                    {n}건 <span className="text-slate-400">({pct}%)</span>
+                  </span>
+                </div>
+                <div className="h-1.5 bg-slate-100 rounded">
+                  <div className={`h-1.5 ${s.color} rounded`} style={{ width: `${pct}%` }} />
+                </div>
+              </li>
+            )
+          })}
+        </ul>
+      )}
+    </div>
+  )
+}
+
+function RecentOrdersCard({
+  orders,
+}: {
+  orders: Array<{
+    id: string
+    order_number: string
+    market_order_number: string | null
+    marketplace: string | null
+    status: string
+    buyer_name: string | null
+    created_at: string
+    b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
+  }>
+}) {
+  if (orders.length === 0) return null
+  function formatDateShort(s: string): string {
+    const d = new Date(s)
+    if (Number.isNaN(d.getTime())) return s
+    return `${d.getMonth() + 1}/${d.getDate()}`
+  }
+  function totalSale(items: { sale_price_krw: number | string | null }[] | null): string {
+    if (!items || items.length === 0) return '—'
+    let sum = 0
+    let any = false
+    for (const it of items) {
+      const n = typeof it.sale_price_krw === 'number' ? it.sale_price_krw : Number(it.sale_price_krw)
+      if (Number.isFinite(n) && n > 0) {
+        sum += n
+        any = true
+      }
+    }
+    return any ? new Intl.NumberFormat('ko-KR').format(sum) + '원' : '—'
+  }
+  return (
+    <section>
+      <div className="flex items-baseline justify-between mb-3">
+        <h2 className="text-sm font-semibold text-slate-900">최근 주문</h2>
+        <Link href="/orders" className="text-xs text-indigo-700 hover:text-indigo-800 font-medium">
+          전체 보기 →
+        </Link>
+      </div>
+      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <ul className="divide-y divide-slate-100">
+          {orders.map((o) => {
+            const product = o.b2b_order_items?.[0]?.product_name ?? '—'
+            const extra = (o.b2b_order_items?.length ?? 0) > 1 ? ` 외 ${(o.b2b_order_items?.length ?? 1) - 1}건` : ''
+            return (
+              <li key={o.id}>
+                <Link
+                  href={`/orders/${o.id}`}
+                  className="flex items-center gap-3 px-4 py-3 hover:bg-slate-50/70 transition-colors"
+                >
+                  <span className="text-[11px] text-slate-500 w-12 tabular-nums">
+                    {formatDateShort(o.created_at)}
+                  </span>
+                  {o.marketplace ? (
+                    <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[10px] font-medium text-slate-700 w-16 justify-center">
+                      {MP_LABEL[o.marketplace] ?? o.marketplace}
+                    </span>
+                  ) : (
+                    <span className="w-16" />
+                  )}
+                  <span className="font-mono text-xs text-slate-700 w-32 truncate">
+                    {o.market_order_number ?? o.order_number}
+                  </span>
+                  <span className="text-xs text-slate-700 flex-1 truncate">
+                    {product}
+                    {extra && <span className="text-slate-400 ml-1">{extra}</span>}
+                  </span>
+                  <span className="text-xs text-slate-500 hidden sm:inline">
+                    {o.buyer_name ?? '—'}
+                  </span>
+                  <span className="text-xs font-semibold text-emerald-700 tabular-nums">
+                    {totalSale(o.b2b_order_items)}
+                  </span>
+                </Link>
+              </li>
+            )
+          })}
+        </ul>
+      </div>
+    </section>
   )
 }
