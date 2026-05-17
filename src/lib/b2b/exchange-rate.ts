@@ -79,6 +79,70 @@ const getCachedRates = unstable_cache(fetchFromKoreaExim, ['b2b-exchange-rates']
 })
 
 /**
+ * 특정 날짜의 환율 fetch (전일 비교용).
+ * - 한국수출입은행은 주말·공휴일 환율을 별도로 제공하지 않으므로 빈 응답 시 하루씩 뒤로.
+ * - 24시간 단위 캐싱 (날짜가 캐시 key 라 자연스럽게 갱신됨)
+ */
+async function fetchRatesForDate(searchdate: string): Promise<ExchangeRates | null> {
+  const apiKey = process.env.KOREAEXIM_API_KEY
+  if (!apiKey) return null
+
+  const url = `${KOREAEXIM_API}?authkey=${encodeURIComponent(apiKey)}&searchdate=${searchdate}&data=AP01`
+  const res = await fetch(url, { cache: 'no-store' })
+  if (!res.ok) return null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const data: any[] = await res.json()
+  if (!Array.isArray(data) || data.length === 0) return null
+
+  const fetchedAt = new Date().toISOString()
+  const rates: Record<string, ExchangeRate> = {}
+  for (const item of data) {
+    const rawUnit = String(item.cur_unit ?? '')
+    const currency = rawUnit.replace(/\(\d+\)/, '').trim()
+    if (!SUPPORTED_CURRENCIES.includes(currency)) continue
+    const rateStr = String(item.deal_bas_r ?? '').replace(/,/g, '')
+    const rate = parseFloat(rateStr)
+    if (isNaN(rate) || rate <= 0) continue
+    const unit = rawUnit.includes('(100)') ? 100 : 1
+    rates[currency] = { currency, rate, unit, fetchedAt, isFallback: false }
+  }
+  if (Object.keys(rates).length === 0) return null
+  return { rates, fetchedAt, isFallback: false }
+}
+
+/**
+ * 전일(영업일) 환율 — 24시간 캐싱.
+ * 주말/공휴일이면 직전 영업일로 최대 7일 뒤로 탐색.
+ */
+async function fetchYesterdayRatesUncached(): Promise<ExchangeRates | null> {
+  const yesterday = new Date()
+  yesterday.setDate(yesterday.getDate() - 1)
+  for (let i = 0; i < 7; i++) {
+    const yyyy = yesterday.getFullYear()
+    const mm = String(yesterday.getMonth() + 1).padStart(2, '0')
+    const dd = String(yesterday.getDate()).padStart(2, '0')
+    const result = await fetchRatesForDate(`${yyyy}${mm}${dd}`)
+    if (result) return result
+    yesterday.setDate(yesterday.getDate() - 1)
+  }
+  return null
+}
+
+const getCachedYesterdayRates = unstable_cache(
+  fetchYesterdayRatesUncached,
+  ['b2b-exchange-rates-yesterday'],
+  { revalidate: 86400, tags: ['b2b-exchange-rates-yesterday'] },
+)
+
+export async function getYesterdayRates(): Promise<ExchangeRates | null> {
+  try {
+    return await getCachedYesterdayRates()
+  } catch {
+    return null
+  }
+}
+
+/**
  * 한국수출입은행 기준환율 반환.
  * API 장애 시 직전 성공 스냅샷을 isFallback=true 로 반환.
  * KOREAEXIM_API_KEY 미설정 + 스냅샷 없음 → 에러 throw.

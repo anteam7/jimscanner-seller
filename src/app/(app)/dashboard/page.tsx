@@ -1,6 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { getExchangeRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
+import { getExchangeRates, getYesterdayRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
 import { getDashboardStats } from '@/lib/b2b/dashboard-data'
 import { createClient } from '@/lib/auth/server'
@@ -386,10 +386,14 @@ export default async function SellerDashboardPage() {
 
   const isNewSeller = (monthOrderCount ?? 0) === 0 && (skuCount ?? 0) === 0
 
-  // 환율 (실패 시 null)
+  // 환율 (실패 시 null) + 전일 비교
   let rates: ExchangeRates | null = null
+  let yesterdayRates: ExchangeRates | null = null
   try {
-    rates = await getExchangeRates()
+    [rates, yesterdayRates] = await Promise.all([
+      getExchangeRates(),
+      getYesterdayRates(),
+    ])
   } catch {
     rates = null
   }
@@ -481,7 +485,7 @@ export default async function SellerDashboardPage() {
 
       {/* 환율 + 상태 파이프라인 */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ExchangeRatesCard rates={rates} />
+        <ExchangeRatesCard rates={rates} yesterday={yesterdayRates} />
         <StatusPipelineCard counts={statusCounts} total={monthOrderCount ?? 0} />
       </section>
 
@@ -506,14 +510,39 @@ const MP_LABEL: Record<string, string> = Object.fromEntries(
   MARKETPLACES.map((m) => [m.value, m.label]),
 )
 
-function ExchangeRatesCard({ rates }: { rates: ExchangeRates | null }) {
+function ExchangeRatesCard({
+  rates,
+  yesterday,
+}: {
+  rates: ExchangeRates | null
+  yesterday: ExchangeRates | null
+}) {
   const SHOW = ['USD', 'JPY', 'CNY', 'EUR']
+  // 큰 변동 (절댓값 1% 이상) 알림용
+  const bigMove =
+    rates && yesterday
+      ? SHOW.map((code) => {
+          const t = rates.rates[code]
+          const y = yesterday.rates[code]
+          if (!t || !y) return null
+          const tUnit = t.unit || 1
+          const yUnit = y.unit || 1
+          const tPerOne = t.rate / tUnit
+          const yPerOne = y.rate / yUnit
+          if (yPerOne === 0) return null
+          const pct = ((tPerOne - yPerOne) / yPerOne) * 100
+          if (Math.abs(pct) < 1) return null
+          return { code, pct }
+        }).filter((x): x is { code: string; pct: number } => x != null)
+      : []
   return (
     <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-gradient-to-br from-sky-50/40 to-white shadow-sm p-5">
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <p className="text-xs font-semibold text-sky-700 uppercase tracking-wider">오늘의 환율</p>
-          <p className="text-[10px] text-slate-500 mt-0.5">한국수출입은행 매매기준율</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            한국수출입은행 매매기준율 {yesterday ? '· 전일 대비' : ''}
+          </p>
         </div>
         {rates?.isFallback && (
           <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
@@ -524,27 +553,63 @@ function ExchangeRatesCard({ rates }: { rates: ExchangeRates | null }) {
       {rates == null ? (
         <p className="text-xs text-slate-500 py-2">환율 정보를 불러올 수 없습니다.</p>
       ) : (
-        <ul className="grid grid-cols-4 gap-2">
-          {SHOW.map((code) => {
-            const r = rates.rates[code]
-            if (!r) return (
-              <li key={code} className="text-center">
-                <p className="text-[10px] text-slate-500">{code}</p>
-                <p className="text-sm font-semibold text-slate-400 tabular-nums">—</p>
-              </li>
-            )
-            const unit = r.unit ?? 1
-            return (
-              <li key={code} className="text-center">
-                <p className="text-[10px] text-slate-500">{unit > 1 ? `${unit} ${code}` : code}</p>
-                <p className="text-sm font-bold text-slate-900 tabular-nums">
-                  {new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(r.rate)}
-                </p>
-                <p className="text-[9px] text-slate-400">원</p>
-              </li>
-            )
-          })}
-        </ul>
+        <>
+          <ul className="grid grid-cols-4 gap-2">
+            {SHOW.map((code) => {
+              const r = rates.rates[code]
+              if (!r) return (
+                <li key={code} className="text-center">
+                  <p className="text-[10px] text-slate-500">{code}</p>
+                  <p className="text-sm font-semibold text-slate-400 tabular-nums">—</p>
+                </li>
+              )
+              const unit = r.unit ?? 1
+              const y = yesterday?.rates[code]
+              let pct: number | null = null
+              if (y) {
+                const tPerOne = r.rate / (r.unit || 1)
+                const yPerOne = y.rate / (y.unit || 1)
+                if (yPerOne > 0) pct = ((tPerOne - yPerOne) / yPerOne) * 100
+              }
+              const big = pct != null && Math.abs(pct) >= 1
+              return (
+                <li key={code} className="text-center">
+                  <p className="text-[10px] text-slate-500">{unit > 1 ? `${unit} ${code}` : code}</p>
+                  <p className="text-sm font-bold text-slate-900 tabular-nums">
+                    {new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(r.rate)}
+                  </p>
+                  {pct != null ? (
+                    <p
+                      className={`text-[10px] tabular-nums ${
+                        big
+                          ? pct > 0
+                            ? 'text-rose-600 font-semibold'
+                            : 'text-emerald-600 font-semibold'
+                          : pct > 0
+                            ? 'text-rose-500'
+                            : pct < 0
+                              ? 'text-emerald-500'
+                              : 'text-slate-400'
+                      }`}
+                    >
+                      {pct > 0 ? '▲' : pct < 0 ? '▼' : '–'} {Math.abs(pct).toFixed(2)}%
+                    </p>
+                  ) : (
+                    <p className="text-[9px] text-slate-400">원</p>
+                  )}
+                </li>
+              )
+            })}
+          </ul>
+          {bigMove.length > 0 && (
+            <div className="mt-3 pt-3 border-t border-sky-100">
+              <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-2 py-1.5">
+                ⚠ 큰 변동 — {bigMove.map((m) => `${m.code} ${m.pct > 0 ? '+' : ''}${m.pct.toFixed(1)}%`).join(' · ')}.
+                매입 단가 확인이 필요합니다.
+              </p>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
