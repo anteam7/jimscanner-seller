@@ -12,25 +12,9 @@ export async function GET() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
 
-  // Resolve the user's current plan_code via subscription → plan join
-  let planCode: string | null = null
-  const { data: account } = await db
-    .from('b2b_accounts')
-    .select('id')
-    .eq('user_id', user.id)
-    .maybeSingle()
-
-  if (account) {
-    const { data: sub } = await db
-      .from('b2b_subscriptions')
-      .select('b2b_subscription_plans(plan_code)')
-      .eq('account_id', account.id)
-      .maybeSingle()
-    planCode = sub?.b2b_subscription_plans?.plan_code ?? null
-  }
-
+  // 먼저 announcements 자체를 시도 — 테이블 미존재 / 결과 빈 경우 account/subscription 조회 skip.
   const now = new Date().toISOString()
-  const { data, error } = await db
+  const { data: rows, error } = await db
     .from('b2b_announcements')
     .select('id,type,title,body_markdown,starts_at,ends_at,target_plan_codes')
     .lt('starts_at', now)
@@ -45,7 +29,33 @@ export async function GET() {
   }
 
   type AnnRow = { target_plan_codes: string[] | null; [key: string]: unknown }
-  const filtered = (data as AnnRow[] ?? []).filter((ann) => {
+  const annRows = (rows as AnnRow[]) ?? []
+  if (annRows.length === 0) return NextResponse.json([])
+
+  // 활성 공지가 있을 때만 plan_code 조회 (target_plan_codes 필터링용)
+  let planCode: string | null = null
+  const needsPlanFilter = annRows.some(
+    (a) => Array.isArray(a.target_plan_codes) && a.target_plan_codes.length > 0,
+  )
+
+  if (needsPlanFilter) {
+    const { data: account } = await db
+      .from('b2b_accounts')
+      .select('id')
+      .eq('user_id', user.id)
+      .maybeSingle()
+
+    if (account) {
+      const { data: sub } = await db
+        .from('b2b_subscriptions')
+        .select('b2b_subscription_plans(plan_code)')
+        .eq('account_id', account.id)
+        .maybeSingle()
+      planCode = sub?.b2b_subscription_plans?.plan_code ?? null
+    }
+  }
+
+  const filtered = annRows.filter((ann) => {
     const codes = ann.target_plan_codes
     if (!codes || codes.length === 0) return true
     return planCode ? codes.includes(planCode) : false
