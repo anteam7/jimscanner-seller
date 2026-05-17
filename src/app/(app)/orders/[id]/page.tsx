@@ -569,7 +569,37 @@ export default async function OrderDetailPage({
                 ) : '—'}
               </InfoRow>
             </dl>
-            <p className="mt-2 text-[10px] text-slate-400">환율 적용·실제 비용 입력은 v0.5 예정</p>
+            {(() => {
+              // 마진율 경고: estimated_cost_krw + totalSale 둘 다 있을 때만
+              const purchase = order.estimated_cost_krw == null ? null : Number(order.estimated_cost_krw)
+              if (totalSale == null || purchase == null || !Number.isFinite(purchase) || purchase <= 0) {
+                return (
+                  <p className="mt-2 text-[10px] text-slate-400">
+                    환율 적용·실제 비용 입력은 v0.5 예정
+                  </p>
+                )
+              }
+              const margin = totalSale - purchase
+              const rate = (margin / totalSale) * 100
+              if (rate >= 5) {
+                return (
+                  <p className="mt-2 text-[10px] text-emerald-600">
+                    마진율 {rate.toFixed(1)}% (양호)
+                  </p>
+                )
+              }
+              const negative = rate < 0
+              return (
+                <div className={`mt-2 rounded-md border px-2.5 py-2 ${negative ? 'border-rose-200 bg-rose-50' : 'border-amber-200 bg-amber-50'}`}>
+                  <p className={`text-[11px] font-semibold ${negative ? 'text-rose-900' : 'text-amber-900'}`}>
+                    {negative ? `마진 음수 (${rate.toFixed(1)}%)` : `마진율 낮음 (${rate.toFixed(1)}%)`}
+                  </p>
+                  <p className={`text-[10px] mt-0.5 leading-relaxed ${negative ? 'text-rose-800' : 'text-amber-800'}`}>
+                    배대지·관세·플랫폼 수수료 고려 시 실 마진은 더 줄어듭니다.
+                  </p>
+                </div>
+              )
+            })()}
           </section>
 
           {/* 메타 */}

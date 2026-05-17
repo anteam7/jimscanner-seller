@@ -164,6 +164,14 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
     return saleKrwTotal - purchaseKrwTotal
   }, [saleKrwTotal, purchaseKrwTotal])
 
+  const marginRate = useMemo(() => {
+    if (marginKrw == null || saleKrwTotal == null || saleKrwTotal <= 0) return null
+    return (marginKrw / saleKrwTotal) * 100
+  }, [marginKrw, saleKrwTotal])
+
+  /** 마진율 < 5% (음수 포함) 일 때 경고 표시 */
+  const marginWarning = marginRate != null && marginRate < 5
+
   // 검증
   const customsValid =
     !buyerCustomsCode.trim() || /^P\d{12}$/i.test(buyerCustomsCode.trim())
@@ -518,6 +526,11 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
                     <span className={`font-semibold tabular-nums ${marginKrw >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                       {new Intl.NumberFormat('ko-KR').format(marginKrw)}원
                     </span>
+                    {marginRate != null && (
+                      <span className={`text-[11px] tabular-nums ${marginKrw >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                        ({marginRate.toFixed(1)}%)
+                      </span>
+                    )}
                   </>
                 )}
                 {!rates && lines.some((l) => l.currency !== 'KRW') && (
@@ -526,6 +539,34 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
               </div>
             )}
           </div>
+
+          {/* 마진율 경고 (5% 미만 + 음수) */}
+          {marginWarning && marginRate != null && (
+            <div className={`mt-3 rounded-md border px-3 py-2.5 ${
+              marginRate < 0
+                ? 'border-rose-200 bg-rose-50'
+                : 'border-amber-200 bg-amber-50'
+            }`}>
+              <div className="flex items-start gap-2">
+                <svg className={`w-4 h-4 flex-shrink-0 mt-0.5 ${marginRate < 0 ? 'text-rose-600' : 'text-amber-600'}`} fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126ZM12 15.75h.007v.008H12v-.008Z" />
+                </svg>
+                <div className="flex-1 text-xs">
+                  <p className={`font-semibold ${marginRate < 0 ? 'text-rose-900' : 'text-amber-900'}`}>
+                    {marginRate < 0
+                      ? `마진이 음수입니다 (${marginRate.toFixed(1)}%)`
+                      : `마진율이 낮습니다 (${marginRate.toFixed(1)}%)`}
+                  </p>
+                  <p className={`mt-0.5 leading-relaxed ${marginRate < 0 ? 'text-rose-800' : 'text-amber-800'}`}>
+                    배대지 배송비·관세·플랫폼 수수료를 고려하면 실 마진은 더 줄어듭니다.
+                    {marginRate < 0
+                      ? ' 판매가나 매입가를 다시 확인하세요.'
+                      : ' 판매가를 높이거나 매입처 가격을 비교하는 것을 검토하세요.'}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </Section>
 
         {/* 4. 배대지 + 메모 */}
