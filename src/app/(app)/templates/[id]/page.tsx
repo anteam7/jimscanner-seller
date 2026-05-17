@@ -6,6 +6,8 @@ import { createAdminClient } from '@/lib/auth/admin-supabase'
 import TemplateMappingEditor, {
   type EditorColumn,
   type EditorForwarder,
+  type SampleAccount,
+  type SampleOrder,
 } from '@/components/b2b/TemplateMappingEditor'
 
 export const metadata: Metadata = {
@@ -88,6 +90,30 @@ export default async function TemplateEditPage({
     .order('name', { ascending: true })
   const forwarders = (fwdRows ?? []) as EditorForwarder[]
 
+  // 미리보기용 — 가장 최근 주문 1건 + 첫 라인
+  const { data: sampleOrderRows } = await db
+    .from('b2b_orders')
+    .select(
+      'id, order_number, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, request_notes, forwarder_country, forwarder_request_no, b2b_order_items(display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, weight_kg, supplier_site, supplier_order_number, market_product_id, market_option, tracking_number)',
+    )
+    .eq('account_id', account.id)
+    .is('deleted_at', null)
+    .order('created_at', { ascending: false })
+    .limit(1)
+  const sampleOrder: SampleOrder | null =
+    (sampleOrderRows && sampleOrderRows[0]) ? (sampleOrderRows[0] as SampleOrder) : null
+
+  // account 메타
+  const { data: accountFull } = await adb
+    .from('b2b_accounts')
+    .select('id, business_name, phone')
+    .eq('id', account.id)
+    .single()
+  const sampleAccount: SampleAccount = {
+    business_name: accountFull?.business_name ?? null,
+    phone: accountFull?.phone ?? null,
+  }
+
   return (
     <div className="p-8 space-y-6 max-w-5xl">
       <div className="flex items-start gap-3">
@@ -119,6 +145,8 @@ export default async function TemplateEditPage({
         forwarderId={tpl.forwarder_id}
         forwarders={forwarders}
         initialColumns={columns}
+        sampleOrder={sampleOrder}
+        sampleAccount={sampleAccount}
       />
     </div>
   )

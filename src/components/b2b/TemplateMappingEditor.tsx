@@ -3,6 +3,154 @@
 import { useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
+// ============================================================
+// 미리보기용 데이터 + 평가기 (서버 forwarder-export.ts 와 동일 로직, ts-only)
+// ============================================================
+
+export type SampleAccount = {
+  business_name: string | null
+  phone: string | null
+}
+
+export type SampleOrderItem = {
+  display_order: number
+  product_name: string
+  product_url: string | null
+  quantity: number
+  currency: string | null
+  unit_price_foreign: number | string | null
+  total_price_foreign: number | string | null
+  weight_kg: number | string | null
+  supplier_site: string | null
+  supplier_order_number: string | null
+  market_product_id: string | null
+  market_option: string | null
+  tracking_number: string | null
+}
+
+export type SampleOrder = {
+  id: string
+  order_number: string
+  marketplace: string | null
+  market_order_number: string | null
+  buyer_name: string | null
+  buyer_phone: string | null
+  buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_detail_address: string | null
+  buyer_customs_code: string | null
+  request_notes: string | null
+  forwarder_country: string | null
+  forwarder_request_no: string | null
+  b2b_order_items: SampleOrderItem[] | null
+}
+
+const FORBIDDEN_KEYS = new Set(['__proto__', 'constructor', 'prototype'])
+
+function readPath(obj: unknown, path: string): unknown {
+  if (!path) return ''
+  const parts = path.split('.')
+  let cur: unknown = obj
+  for (const p of parts) {
+    if (cur == null) return ''
+    if (FORBIDDEN_KEYS.has(p)) return ''
+    if (typeof cur !== 'object') return ''
+    if (!Object.prototype.hasOwnProperty.call(cur, p)) return ''
+    cur = (cur as Record<string, unknown>)[p]
+  }
+  return cur ?? ''
+}
+
+function readItemPath(item: SampleOrderItem | null, path: string): unknown {
+  const m = path.match(/^items\[\d+\]\.(.+)$/)
+  if (!m || !item) return ''
+  return readPath(item, m[1])
+}
+
+function renderComposite(
+  tpl: string,
+  order: SampleOrder,
+  item: SampleOrderItem | null,
+  account: SampleAccount,
+): string {
+  return tpl.replace(/\{([^}]+)\}/g, (_, key: string) => {
+    if (key.startsWith('items[')) {
+      const v = readItemPath(item, key)
+      return v == null ? '' : String(v)
+    }
+    if (key.startsWith('account.')) {
+      const v = readPath(account, key.slice('account.'.length))
+      return v == null ? '' : String(v)
+    }
+    const v = readPath(order, key)
+    return v == null ? '' : String(v)
+  })
+}
+
+function applyTransform(value: unknown, transform: string | null): string | number {
+  if (value == null || value === '') return ''
+  const s = typeof value === 'number' ? String(value) : String(value)
+  switch (transform) {
+    case null:
+    case undefined:
+    case '':
+      return typeof value === 'number' ? value : s
+    case 'upper': return s.toUpperCase()
+    case 'lower': return s.toLowerCase()
+    case 'phone_strip_dash': return s.replace(/[^0-9+]/g, '')
+    case 'phone_intl': return s.replace(/^0/, '+82 ').replace(/-/g, ' ')
+    case 'krw_format': {
+      const n = Number(s.replace(/,/g, ''))
+      return Number.isFinite(n) ? new Intl.NumberFormat('en-US').format(n) : s
+    }
+    case 'usd_2decimal': {
+      const n = Number(s)
+      return Number.isFinite(n) ? n.toFixed(2) : s
+    }
+    case 'customs_strip_p': return s.replace(/^P/i, '')
+    case 'alnum_only': return s.replace(/[^\x20-\x7E]/g, '').trim()
+    default: return s
+  }
+}
+
+function evaluateColumn(
+  c: EditorColumn,
+  order: SampleOrder | null,
+  item: SampleOrderItem | null,
+  account: SampleAccount,
+): string | number {
+  if (!order) return ''
+  let raw: unknown
+  switch (c.source_kind) {
+    case 'constant':
+      raw = c.constant_value ?? ''
+      break
+    case 'user_input':
+      raw = c.constant_value ?? '' // 미리보기에서는 default 만
+      break
+    case 'order_field':
+      raw = readPath(order, c.source_path ?? '')
+      break
+    case 'item_field':
+      raw = readItemPath(item, c.source_path ?? '')
+      break
+    case 'account_field':
+      raw = readPath(account, c.source_path ?? '')
+      break
+    case 'composite':
+      raw = renderComposite(c.composite_template ?? '', order, item, account)
+      break
+    case 'order_meta':
+      if (c.source_path === 'today') raw = new Date().toISOString().slice(0, 10)
+      else if (c.source_path === 'now') raw = new Date().toISOString()
+      else raw = ''
+      break
+    default:
+      raw = ''
+  }
+  return applyTransform(raw, c.transform)
+}
+
 export type EditorColumn = {
   column_index: number
   column_letter: string | null
@@ -87,6 +235,8 @@ type Props = {
   forwarderId: string | null
   forwarders: EditorForwarder[]
   initialColumns: EditorColumn[]
+  sampleOrder?: SampleOrder | null
+  sampleAccount?: SampleAccount
 }
 
 export default function TemplateMappingEditor({
@@ -95,6 +245,8 @@ export default function TemplateMappingEditor({
   forwarderId,
   forwarders,
   initialColumns,
+  sampleOrder = null,
+  sampleAccount = { business_name: null, phone: null },
 }: Props) {
   const router = useRouter()
   const [name, setName] = useState(templateName)
@@ -108,6 +260,14 @@ export default function TemplateMappingEditor({
     () => name !== templateName || (fid || null) !== (forwarderId ?? null),
     [name, fid, templateName, forwarderId],
   )
+
+  // 미리보기용 첫 라인 (display_order asc)
+  const sampleItem = useMemo<SampleOrderItem | null>(() => {
+    if (!sampleOrder?.b2b_order_items?.length) return null
+    return [...sampleOrder.b2b_order_items].sort(
+      (a, b) => a.display_order - b.display_order,
+    )[0]
+  }, [sampleOrder])
 
   function patchCol(idx: number, p: Partial<EditorColumn>) {
     setColumns((prev) => prev.map((c, i) => (i === idx ? { ...c, ...p } : c)))
@@ -244,6 +404,9 @@ export default function TemplateMappingEditor({
           </h2>
           <p className="text-xs text-slate-500">
             각 컬럼이 주문의 어떤 값으로 채워질지 지정합니다. “사용자 입력” 컬럼은 변환할 때마다 모달에서 입력받습니다.
+            {sampleOrder
+              ? ' 우측 미리보기는 가장 최근 주문 1건으로 평가됩니다.'
+              : ' 주문이 등록되면 우측에 미리보기가 표시됩니다.'}
           </p>
         </div>
         <div className="overflow-x-auto">
@@ -256,6 +419,14 @@ export default function TemplateMappingEditor({
                 <th className="px-3 py-2 font-semibold text-slate-600 text-xs uppercase tracking-wider">값</th>
                 <th className="px-3 py-2 font-semibold text-slate-600 text-xs uppercase tracking-wider">변환</th>
                 <th className="px-3 py-2 font-semibold text-slate-600 text-xs uppercase tracking-wider text-center w-14">필수</th>
+                {sampleOrder && (
+                  <th className="px-3 py-2 font-semibold text-emerald-700 text-xs uppercase tracking-wider w-56">
+                    미리보기
+                    <span className="ml-1 font-normal normal-case text-slate-500">
+                      ({sampleOrder.market_order_number ?? sampleOrder.order_number})
+                    </span>
+                  </th>
+                )}
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -305,6 +476,16 @@ export default function TemplateMappingEditor({
                       className="rounded border-slate-300"
                     />
                   </td>
+                  {sampleOrder && (
+                    <td className="px-3 py-2 pt-3">
+                      <PreviewCell
+                        col={c}
+                        order={sampleOrder}
+                        item={sampleItem}
+                        account={sampleAccount}
+                      />
+                    </td>
+                  )}
                 </tr>
               ))}
             </tbody>
@@ -461,4 +642,40 @@ function ValueField({
     default:
       return <span className="text-xs text-slate-400">—</span>
   }
+}
+
+function PreviewCell({
+  col,
+  order,
+  item,
+  account,
+}: {
+  col: EditorColumn
+  order: SampleOrder
+  item: SampleOrderItem | null
+  account: SampleAccount
+}) {
+  const evaluated = evaluateColumn(col, order, item, account)
+  const display =
+    evaluated === '' || evaluated == null
+      ? null
+      : typeof evaluated === 'number'
+        ? evaluated.toLocaleString('ko-KR')
+        : String(evaluated)
+
+  if (display == null) {
+    if (col.source_kind === 'user_input') {
+      return (
+        <span className="text-[11px] text-slate-400 italic">
+          변환 시 입력
+        </span>
+      )
+    }
+    return <span className="text-[11px] text-slate-400">—</span>
+  }
+  return (
+    <span className="text-xs text-emerald-800 bg-emerald-50 border border-emerald-100 rounded px-1.5 py-0.5 break-all inline-block max-w-full">
+      {display}
+    </span>
+  )
 }
