@@ -139,17 +139,45 @@ function VerificationProgress({ level }: { level: number }) {
   )
 }
 
-function StatCard({ label, accent }: { label: string; accent: 'indigo' | 'emerald' | 'sky' }) {
+function StatCard({
+  label,
+  accent,
+  value,
+  sub,
+  loading,
+}: {
+  label: string
+  accent: 'indigo' | 'emerald' | 'sky'
+  value?: string | null
+  sub?: string | null
+  loading?: boolean
+}) {
   const accentMap = {
     indigo: 'from-indigo-50 to-white border-l-indigo-500',
     emerald: 'from-emerald-50 to-white border-l-emerald-500',
     sky: 'from-sky-50 to-white border-l-sky-500',
   }
+  const valueColor = {
+    indigo: 'text-indigo-700',
+    emerald: 'text-emerald-700',
+    sky: 'text-sky-700',
+  }
   return (
     <div className={`rounded-xl border border-slate-200 border-l-[3px] bg-gradient-to-br ${accentMap[accent]} p-5 shadow-sm hover:shadow-md transition-shadow`}>
       <p className="text-xs font-medium text-slate-500 mb-2">{label}</p>
-      <div className="h-8 w-20 bg-slate-100 rounded-md animate-pulse" />
-      <div className="h-3 w-28 bg-slate-100 rounded-md mt-2 animate-pulse" />
+      {loading ? (
+        <>
+          <div className="h-8 w-20 bg-slate-100 rounded-md animate-pulse" />
+          <div className="h-3 w-28 bg-slate-100 rounded-md mt-2 animate-pulse" />
+        </>
+      ) : (
+        <>
+          <p className={`text-2xl font-bold tabular-nums ${valueColor[accent]}`}>
+            {value ?? '—'}
+          </p>
+          {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+        </>
+      )}
     </div>
   )
 }
@@ -228,6 +256,71 @@ export default async function SellerDashboardPage() {
 
   const displayName = account.business_name ?? account.email
 
+  // 이번 달 통계 — 현재 월 1일 00:00 KST 부터
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const now = new Date()
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
+
+  const [
+    { count: monthOrderCount },
+    { data: subRows },
+    { data: monthOrderItems },
+    { count: skuCount },
+  ] = await Promise.all([
+    db
+      .from('b2b_orders')
+      .select('id', { count: 'exact', head: true })
+      .eq('account_id', account.id)
+      .is('deleted_at', null)
+      .gte('created_at', monthStart),
+    db
+      .from('b2b_subscriptions')
+      .select('plan_code, monthly_order_used, monthly_order_limit')
+      .eq('account_id', account.id)
+      .order('created_at', { ascending: false })
+      .limit(1),
+    db
+      .from('b2b_order_items')
+      .select('sale_price_krw, b2b_orders!inner(account_id, deleted_at, created_at)')
+      .eq('b2b_orders.account_id', account.id)
+      .is('b2b_orders.deleted_at', null)
+      .gte('b2b_orders.created_at', monthStart),
+    db
+      .from('b2b_products')
+      .select('id', { count: 'exact', head: true })
+      .eq('account_id', account.id)
+      .eq('is_active', true),
+  ])
+
+  type Subscription = { plan_code: string; monthly_order_used: number; monthly_order_limit: number | null }
+  const sub: Subscription | null = (subRows as Subscription[] | null)?.[0] ?? null
+
+  type ItemRow = { sale_price_krw: number | string | null }
+  const monthSaleKrw = ((monthOrderItems as ItemRow[] | null) ?? []).reduce((acc, it) => {
+    const v = it.sale_price_krw
+    if (v == null || v === '') return acc
+    const n = typeof v === 'number' ? v : Number(v)
+    return Number.isFinite(n) ? acc + n : acc
+  }, 0)
+
+  const ordersValue = (monthOrderCount ?? 0).toLocaleString('ko-KR') + '건'
+  const saleValue =
+    monthSaleKrw > 0
+      ? new Intl.NumberFormat('ko-KR').format(Math.round(monthSaleKrw)) + '원'
+      : '—'
+  const quotaValue =
+    sub != null
+      ? `${sub.monthly_order_used.toLocaleString('ko-KR')} / ${(sub.monthly_order_limit ?? '∞')}`
+      : '—'
+  const quotaSub = sub != null
+    ? `${sub.plan_code.toUpperCase()} 플랜`
+    : '구독 정보 없음'
+  const skuSub =
+    (skuCount ?? 0) > 0
+      ? `등록된 SKU ${skuCount}개`
+      : 'SKU 등록 시 자동 채움 활성'
+
   return (
     <div className="p-8 space-y-8 max-w-5xl">
       {/* 인사말 — B: 시각적 무게감 강화 */}
@@ -286,12 +379,27 @@ export default async function SellerDashboardPage() {
       <section>
         <h2 className="text-sm font-semibold text-slate-900 mb-3">이번 달 현황</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard label="처리된 주문" accent="indigo" />
-          <StatCard label="등록 의뢰자" accent="emerald" />
-          <StatCard label="주문 할당량" accent="sky" />
+          <StatCard
+            label="처리된 주문"
+            accent="indigo"
+            value={ordersValue}
+            sub={`${new Date().getMonth() + 1}월 1일 이후`}
+          />
+          <StatCard
+            label="이번 달 판매 합계 (KRW)"
+            accent="emerald"
+            value={saleValue}
+            sub={monthSaleKrw > 0 ? '주문 라인 합산' : 'sale_price_krw 입력 시 집계'}
+          />
+          <StatCard
+            label="주문 할당량"
+            accent="sky"
+            value={quotaValue}
+            sub={quotaSub}
+          />
         </div>
         <p className="mt-3 text-xs text-slate-500">
-          주문 관리 기능이 활성화되면 실제 수치가 표시됩니다.
+          상품 SKU {skuSub}.
         </p>
       </section>
     </div>
