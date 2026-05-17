@@ -35,6 +35,11 @@ const NAV_ITEMS = [
       </svg>
     ),
     available: true,
+    children: [
+      { href: '/orders', label: '주문 목록', exact: true },
+      { href: '/orders/new', label: '단건 등록' },
+      { href: '/orders/bulk', label: '일괄 등록' },
+    ],
   },
   {
     href: '/clients',
@@ -167,20 +172,48 @@ export default function SellerShell({
               )
             }
 
+            const children = 'children' in item ? item.children : undefined
+            const showChildren = children && isActive
+
             return (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={isActive ? 'page' : undefined}
-                className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-800
-                  ${isActive
-                    ? 'bg-indigo-500/20 text-indigo-200 font-medium'
-                    : 'text-slate-300 hover:bg-slate-700 hover:text-white'
-                  }`}
-              >
-                {item.icon}
-                {item.label}
-              </Link>
+              <div key={item.href}>
+                <Link
+                  href={item.href}
+                  aria-current={isActive ? 'page' : undefined}
+                  className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-800
+                    ${isActive
+                      ? 'bg-indigo-500/20 text-indigo-200 font-medium'
+                      : 'text-slate-300 hover:bg-slate-700 hover:text-white'
+                    }`}
+                >
+                  {item.icon}
+                  {item.label}
+                </Link>
+
+                {showChildren && (
+                  <div className="mt-0.5 mb-1 ml-7 pl-3 border-l border-slate-700 space-y-0.5">
+                    {children!.map((sub) => {
+                      const subActive = sub.exact
+                        ? pathname === sub.href
+                        : pathname === sub.href || pathname.startsWith(sub.href + '/')
+                      return (
+                        <Link
+                          key={sub.href}
+                          href={sub.href}
+                          aria-current={subActive ? 'page' : undefined}
+                          className={`block px-3 py-1.5 rounded-md text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-800
+                            ${subActive
+                              ? 'text-indigo-200 font-medium bg-slate-700/40'
+                              : 'text-slate-400 hover:text-white hover:bg-slate-700/60'
+                            }`}
+                        >
+                          {sub.label}
+                        </Link>
+                      )
+                    })}
+                  </div>
+                )}
+              </div>
             )
           })}
         </nav>
