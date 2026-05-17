@@ -1,7 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
+import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
+import OrderListClient from '@/components/b2b/OrderListClient'
+import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 
 export const metadata: Metadata = {
   title: '주문 관리',
@@ -18,6 +21,8 @@ type OrderRow = {
   marketplace: string | null
   market_order_number: string | null
   buyer_name: string | null
+  buyer_phone: string | null
+  buyer_postal_code: string | null
   request_notes: string | null
   created_at: string
   b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
@@ -133,68 +138,6 @@ function EmptyState() {
   )
 }
 
-function OrderTable({ orders }: { orders: OrderRow[] }) {
-  return (
-    <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="bg-slate-50 border-b border-slate-200">
-            <tr className="text-left">
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">마켓</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">마켓 주문번호</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">구매자</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">상품</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">상태</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap text-right">판매가</th>
-              <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">주문일</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-slate-100">
-            {orders.map((o) => {
-              const items = o.b2b_order_items ?? []
-              const firstName = items[0]?.product_name ?? '—'
-              const extra = items.length > 1 ? ` 외 ${items.length - 1}건` : ''
-              const totalSale = sumSale(items)
-              const detailHref = `/orders/${o.id}`
-              return (
-                <tr key={o.id} className="hover:bg-slate-50/70 transition-colors">
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <MarketplaceTag value={o.marketplace} />
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <Link
-                      href={detailHref}
-                      className="font-mono text-xs font-semibold text-slate-900 hover:text-indigo-700 transition-colors"
-                    >
-                      {o.market_order_number ?? <span className="text-slate-400 font-sans font-normal">{o.order_number}</span>}
-                    </Link>
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-700">
-                    {o.buyer_name ?? <span className="text-slate-400">미입력</span>}
-                  </td>
-                  <td className="px-4 py-3 text-slate-700 max-w-[260px] truncate">
-                    {firstName}
-                    {extra && <span className="text-slate-400 text-xs ml-1">{extra}</span>}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap">
-                    <StatusBadge status={o.status} />
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 tabular-nums">
-                    {formatKRW(totalSale)}
-                  </td>
-                  <td className="px-4 py-3 whitespace-nowrap text-slate-500 text-xs">
-                    {formatDate(o.order_date)}
-                  </td>
-                </tr>
-              )
-            })}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  )
-}
-
 export default async function OrdersListPage({
   searchParams,
 }: {
@@ -223,7 +166,7 @@ export default async function OrdersListPage({
   let qb = db
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
+      'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
     )
     .eq('account_id', account.id)
     .is('deleted_at', null)
@@ -243,6 +186,71 @@ export default async function OrdersListPage({
 
   const { data: rows } = (await qb) as { data: OrderRow[] | null }
   const orders = rows ?? []
+
+  // 합배송 모달용 templates fetch (공유 + 본인)
+  const admin = createAdminClient()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const adb = admin as any
+  const { data: tplRows } = await adb
+    .from('b2b_form_templates')
+    .select('id, name, owner_account_id, forwarder_id, combine_rule, forwarders(name)')
+    .eq('is_active', true)
+    .or(`owner_account_id.is.null,owner_account_id.eq.${account.id}`)
+    .order('owner_account_id', { ascending: true, nullsFirst: true })
+    .order('name', { ascending: true })
+
+  const templateIds = (tplRows ?? []).map((t: { id: string }) => t.id)
+  const { data: colRows } = templateIds.length
+    ? await adb
+        .from('b2b_form_template_columns')
+        .select('template_id, column_index, column_label, source_kind, user_input_label, user_input_options, constant_value, required')
+        .in('template_id', templateIds)
+        .order('column_index', { ascending: true })
+    : { data: [] as Array<Record<string, unknown>> }
+
+  type ColRow = {
+    template_id: string
+    column_index: number
+    column_label: string
+    source_kind: string
+    user_input_label: string | null
+    user_input_options: string[] | null
+    constant_value: string | null
+    required: boolean
+  }
+  type TplRow = {
+    id: string
+    name: string
+    owner_account_id: string | null
+    forwarder_id: string | null
+    combine_rule: string | null
+    forwarders: { name: string } | null
+  }
+
+  const columnsByTpl = new Map<string, ColRow[]>()
+  for (const c of (colRows ?? []) as ColRow[]) {
+    const arr = columnsByTpl.get(c.template_id) ?? []
+    arr.push(c)
+    columnsByTpl.set(c.template_id, arr)
+  }
+
+  const templates: ForwarderTemplateLite[] = ((tplRows ?? []) as TplRow[]).map((t) => ({
+    id: t.id,
+    name: t.name,
+    owner_account_id: t.owner_account_id,
+    forwarder_id: t.forwarder_id,
+    forwarder_name: t.forwarders?.name ?? null,
+    combine_rule: t.combine_rule,
+    columns: (columnsByTpl.get(t.id) ?? []).map((c) => ({
+      column_index: c.column_index,
+      column_label: c.column_label,
+      source_kind: c.source_kind,
+      user_input_label: c.user_input_label,
+      user_input_options: c.user_input_options,
+      constant_value: c.constant_value,
+      required: c.required,
+    })),
+  }))
 
   // 필터 링크 헬퍼
   const buildHref = (overrides: Record<string, string | null>) => {
@@ -373,7 +381,12 @@ export default async function OrdersListPage({
         )
       ) : (
         <>
-          <OrderTable orders={orders} />
+          <OrderListClient
+            orders={orders}
+            templates={templates}
+            marketplaceLabel={MARKETPLACE_LABEL}
+            statusMeta={STATUS_META}
+          />
           <p className="text-xs text-slate-500">
             최근 {orders.length}건 표시 · 페이지네이션은 추후 확장 예정
           </p>
