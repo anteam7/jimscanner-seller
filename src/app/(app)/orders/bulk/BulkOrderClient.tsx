@@ -195,12 +195,37 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
       ? headers.map((h) => headerToKey.get(h) ?? null)
       : columns.map((c) => c.key)
 
+    // select 컬럼별 label → value reverse lookup ('쿠팡' → 'coupang')
+    const reverseLookup: Record<string, Map<string, string>> = {}
+    for (const col of columns) {
+      if (col.type !== 'select' || !col.options) continue
+      const m = new Map<string, string>()
+      for (const opt of col.options) {
+        m.set(opt.label, opt.value)
+        m.set(opt.value, opt.value) // value 그대로도 통과
+        m.set(opt.label.toLowerCase(), opt.value)
+      }
+      reverseLookup[col.key] = m
+    }
+
     const parsed: Row[] = dataLines.map((line) => {
       const cells = line.split(splitter)
       const row: Row = {}
       cells.forEach((cell, i) => {
         const key = keyOrder[i]
-        if (key) row[key] = cell.trim()
+        if (!key) return
+        const raw = cell.trim()
+        if (!raw) {
+          row[key] = ''
+          return
+        }
+        const lookup = reverseLookup[key]
+        if (lookup) {
+          const mapped = lookup.get(raw) ?? lookup.get(raw.toLowerCase())
+          row[key] = mapped ?? raw // 매칭 실패 시 원문 유지 (검증에서 잡힘)
+        } else {
+          row[key] = raw
+        }
       })
       return row
     })
