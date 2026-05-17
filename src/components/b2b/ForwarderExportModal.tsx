@@ -206,8 +206,9 @@ export default function ForwarderExportModal({
                 {userInputCols.map((c) => {
                   const key = c.user_input_label ?? `col_${c.column_index}`
                   const value = userInputs[key] ?? ''
-                  const isEnum =
-                    Array.isArray(c.user_input_options) && c.user_input_options.length > 0
+                  // 빈 문자열 옵션은 "선택 안 함" 과 중복되므로 제거
+                  const enumOptions = (c.user_input_options ?? []).filter((o) => o !== '')
+                  const isEnum = enumOptions.length > 0
                   return (
                     <div key={c.column_index}>
                       <label
@@ -227,9 +228,9 @@ export default function ForwarderExportModal({
                           className="w-full rounded-md border border-slate-300 px-3 py-1.5 text-sm text-slate-900 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                         >
                           <option value="">(선택 안 함)</option>
-                          {(c.user_input_options ?? []).map((opt) => (
-                            <option key={opt || '__empty__'} value={opt}>
-                              {opt || '(빈 값)'}
+                          {enumOptions.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt}
                             </option>
                           ))}
                         </select>
