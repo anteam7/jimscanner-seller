@@ -75,8 +75,22 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
+  // 환율 (마진 자동 계산용) — 마운트 시 1회 fetch
+  type RatesMap = Record<string, { rate: number; unit: number }>
+  const [rates, setRates] = useState<RatesMap | null>(null)
   useEffect(() => {
     setOrderNumber(suggestOrderNumber())
+    fetch('/api/exchange-rate')
+      .then((r) => (r.ok ? r.json() : null))
+      .then((j) => {
+        if (!j?.rates) return
+        const m: RatesMap = {}
+        for (const [k, v] of Object.entries(j.rates) as [string, { rate: number; unit: number }][]) {
+          m[k] = { rate: v.rate, unit: v.unit }
+        }
+        setRates(m)
+      })
+      .catch(() => {/* fallback: 마진 비활성 */})
   }, [])
 
   const totalForeign = useMemo(() => {
@@ -86,16 +100,34 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
     return q * p
   }, [quantity, unitPrice])
 
+  // 매입 KRW = 외화 합계 * (환율 / 단위) — KRW 면 그대로
+  const purchaseKrw = useMemo(() => {
+    if (totalForeign == null) return null
+    if (currency === 'KRW') return totalForeign
+    const r = rates?.[currency]
+    if (!r) return null
+    return Math.round((totalForeign * r.rate) / (r.unit || 1))
+  }, [totalForeign, currency, rates])
+
   const marginKrw = useMemo(() => {
-    // 마진은 정확하려면 환율 필요. v0 에선 셀러에게 단순 "판매가 - 매입가(KRW 환산 보류)" 가
-    // 의미 없으므로 sale_price_krw 만 노출하고, 마진 자동 계산은 환율 적용 후 v0.5+ 에서.
-    return null
-  }, [])
+    const sale = Number(salePriceKrw)
+    if (!Number.isFinite(sale) || sale <= 0) return null
+    if (purchaseKrw == null) return null
+    return sale - purchaseKrw
+  }, [salePriceKrw, purchaseKrw])
+
+  // 검증
+  const customsValid =
+    !buyerCustomsCode.trim() || /^P\d{12}$/i.test(buyerCustomsCode.trim())
+  const postalValid =
+    !buyerPostalCode.trim() || /^\d{5}$/.test(buyerPostalCode.trim())
 
   const canSubmit =
     orderNumber.trim().length > 0 &&
     productName.trim().length > 0 &&
     Number(quantity) > 0 &&
+    customsValid &&
+    postalValid &&
     !submitting
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -253,7 +285,20 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-4">
             <Field label="우편번호" htmlFor="buyer_postal_code" required>
-              <input id="buyer_postal_code" type="text" maxLength={16} value={buyerPostalCode} onChange={(e) => setBuyerPostalCode(e.target.value)} placeholder="06234" className={inputCls} />
+              <input
+                id="buyer_postal_code"
+                type="text"
+                inputMode="numeric"
+                maxLength={5}
+                value={buyerPostalCode}
+                onChange={(e) => setBuyerPostalCode(e.target.value.replace(/\D/g, ''))}
+                placeholder="06234"
+                aria-invalid={!postalValid}
+                className={`${inputCls} ${!postalValid ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+              />
+              {!postalValid && (
+                <p className="text-[11px] text-rose-600 mt-1">우편번호는 숫자 5자리여야 합니다.</p>
+              )}
             </Field>
             <Field label="기본 주소" htmlFor="buyer_address" required>
               <input id="buyer_address" type="text" maxLength={300} value={buyerAddress} onChange={(e) => setBuyerAddress(e.target.value)} placeholder="서울 강남구 테헤란로 123" className={inputCls} />
@@ -263,7 +308,19 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
             <input id="buyer_detail_address" type="text" maxLength={200} value={buyerDetailAddress} onChange={(e) => setBuyerDetailAddress(e.target.value)} placeholder="동·호수 등" className={inputCls} />
           </Field>
           <Field label="개인통관고유부호" htmlFor="buyer_customs_code" required hint="P 로 시작하는 13자리. 해외직구 통관에 필수입니다.">
-            <input id="buyer_customs_code" type="text" maxLength={32} value={buyerCustomsCode} onChange={(e) => setBuyerCustomsCode(e.target.value)} placeholder="P123456789012" className={`${inputCls} font-mono`} />
+            <input
+              id="buyer_customs_code"
+              type="text"
+              maxLength={13}
+              value={buyerCustomsCode}
+              onChange={(e) => setBuyerCustomsCode(e.target.value.toUpperCase())}
+              placeholder="P123456789012"
+              aria-invalid={!customsValid}
+              className={`${inputCls} font-mono ${!customsValid ? 'border-rose-400 focus:border-rose-500 focus:ring-rose-200' : ''}`}
+            />
+            {!customsValid && (
+              <p className="text-[11px] text-rose-600 mt-1">P 로 시작하는 영문 1자 + 숫자 12자리여야 합니다 (예: P123456789012).</p>
+            )}
           </Field>
         </Section>
 
@@ -320,19 +377,31 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
             <input id="sale_price_krw" type="number" min={0} step={100} value={salePriceKrw} onChange={(e) => setSalePriceKrw(e.target.value)} placeholder="0" className={`${inputCls} text-right tabular-nums`} />
           </Field>
           {totalForeign !== null && (
-            <div className="flex items-center justify-end gap-2 text-xs text-slate-600 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-end gap-2 text-xs text-slate-600 pt-2 border-t border-slate-100 flex-wrap">
               <span>매입 합계 (외화)</span>
               <span className="font-semibold text-slate-900 tabular-nums">
                 {new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(totalForeign)} {currency}
               </span>
+              {purchaseKrw != null && currency !== 'KRW' && (
+                <>
+                  <span className="text-slate-300">·</span>
+                  <span className="text-slate-500">KRW 환산</span>
+                  <span className="font-semibold text-slate-800 tabular-nums">
+                    {new Intl.NumberFormat('ko-KR').format(purchaseKrw)}원
+                  </span>
+                </>
+              )}
               {marginKrw != null && (
                 <>
                   <span className="text-slate-300 mx-2">·</span>
                   <span>예상 마진</span>
-                  <span className="font-semibold text-emerald-700 tabular-nums">
+                  <span className={`font-semibold tabular-nums ${marginKrw >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
                     {new Intl.NumberFormat('ko-KR').format(marginKrw)}원
                   </span>
                 </>
+              )}
+              {currency !== 'KRW' && !rates && (
+                <span className="text-[10px] text-slate-400 italic">환율 로딩 중…</span>
               )}
             </div>
           )}
