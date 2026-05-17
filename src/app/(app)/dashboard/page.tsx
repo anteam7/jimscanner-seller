@@ -139,6 +139,105 @@ function VerificationProgress({ level }: { level: number }) {
   )
 }
 
+function OnboardingGuide() {
+  return (
+    <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-sky-50 shadow-sm overflow-hidden">
+      <div className="px-6 pt-6 pb-2">
+        <span className="inline-flex items-center gap-1.5 mb-2 rounded-full bg-white border border-indigo-200 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+          START GUIDE
+        </span>
+        <h2 className="text-lg font-bold text-slate-900 tracking-tight">
+          첫 주문 등록까지 3단계
+        </h2>
+        <p className="text-xs text-slate-600 mt-1">
+          한 번 셋업해 두면 다음 주문부터 모든 정보가 자동으로 채워집니다.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-5">
+        <OnboardingStep
+          step="1"
+          color="emerald"
+          title="상품 SKU 등록"
+          desc="반복 주문되는 상품을 미리 등록. 매입처·단가·배대지 default 까지."
+          href="/products/new"
+          cta="SKU 등록"
+          optional
+        />
+        <OnboardingStep
+          step="2"
+          color="sky"
+          title="첫 주문 입력"
+          desc="마켓에서 받은 주문을 등록. SKU 가 있으면 자동 채움."
+          href="/orders/new"
+          cta="주문 등록 →"
+        />
+        <OnboardingStep
+          step="3"
+          color="indigo"
+          title="배대지 양식 변환"
+          desc="주문 상세에서 30+ 양식 중 선택 → xlsx 다운로드 → 배대지 제출."
+          href="/templates"
+          cta="양식 보기"
+          optional
+        />
+      </div>
+      <div className="px-6 pb-5">
+        <p className="text-[11px] text-slate-500 text-center">
+          ※ 2번부터 시작해도 됩니다. 사용하면서 자주 등장하는 상품을 SKU 로 정리하는 게 효율적입니다.
+        </p>
+      </div>
+    </section>
+  )
+}
+
+function OnboardingStep({
+  step,
+  color,
+  title,
+  desc,
+  href,
+  cta,
+  optional,
+}: {
+  step: string
+  color: 'emerald' | 'sky' | 'indigo'
+  title: string
+  desc: string
+  href: string
+  cta: string
+  optional?: boolean
+}) {
+  const map = {
+    emerald: { border: 'border-l-emerald-500', txt: 'text-emerald-700', bg: 'bg-emerald-50' },
+    sky: { border: 'border-l-sky-500', txt: 'text-sky-700', bg: 'bg-sky-50' },
+    indigo: { border: 'border-l-indigo-500', txt: 'text-indigo-700', bg: 'bg-indigo-50' },
+  }
+  const c = map[color]
+  return (
+    <div className={`rounded-xl border border-slate-200 border-l-[3px] ${c.border} bg-white p-4 flex flex-col h-full shadow-sm`}>
+      <div className="flex items-center gap-2 mb-2">
+        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${c.bg} ${c.txt} text-xs font-bold`}>
+          {step}
+        </span>
+        <p className="text-sm font-semibold text-slate-900">{title}</p>
+        {optional && (
+          <span className="text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 ml-auto">
+            선택
+          </span>
+        )}
+      </div>
+      <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-3">{desc}</p>
+      <Link
+        href={href}
+        className={`inline-flex items-center justify-center gap-1 ${c.bg} ${c.txt} hover:brightness-95 text-xs font-semibold rounded-md py-1.5 transition-all`}
+      >
+        {cta}
+      </Link>
+    </div>
+  )
+}
+
 function StatCard({
   label,
   accent,
@@ -321,6 +420,8 @@ export default async function SellerDashboardPage() {
       ? `등록된 SKU ${skuCount}개`
       : 'SKU 등록 시 자동 채움 활성'
 
+  const isNewSeller = (monthOrderCount ?? 0) === 0 && (skuCount ?? 0) === 0
+
   return (
     <div className="p-8 space-y-8 max-w-5xl">
       {/* 인사말 — B: 시각적 무게감 강화 */}
@@ -346,13 +447,16 @@ export default async function SellerDashboardPage() {
       {/* 인증 진행 현황 */}
       <VerificationProgress level={account.verification_level} />
 
+      {/* 빈 상태 onboarding — 신규 셀러 전용 */}
+      {isNewSeller && <OnboardingGuide />}
+
       {/* 빠른 작업 — D: 보조 색 + 새로운 entry */}
       <section>
         <h2 className="text-sm font-semibold text-slate-900 mb-3">빠른 작업</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <QuickActionCard
             title="새 주문 입력"
-            description="수동으로 의뢰자 주문을 입력합니다"
+            description="마켓에서 받은 주문을 등록합니다"
             href="/orders/new"
             available={true}
             icon={
