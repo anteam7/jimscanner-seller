@@ -3,6 +3,7 @@
 import { useMemo, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
+import { MARKETPLACES, SUPPLIER_SITES, CURRENCIES } from '@/lib/b2b/order-options'
 
 export type ForwarderOption = {
   id: string
@@ -24,58 +25,9 @@ type ColumnDef = {
   placeholder?: string
 }
 
-const MARKETPLACE_OPTIONS = [
-  { value: 'coupang', label: '쿠팡' },
-  { value: 'smartstore', label: '스마트스토어' },
-  { value: 'auction', label: '옥션' },
-  { value: 'gmarket', label: '지마켓' },
-  { value: '11st', label: '11번가' },
-  { value: 'interpark', label: '인터파크' },
-  { value: 'wemakeprice', label: '위메프' },
-  { value: 'tmon', label: '티몬' },
-  { value: 'kakao_gift', label: '카카오 선물' },
-  { value: 'own_mall', label: '자사몰' },
-  { value: 'kakao_channel', label: '카카오 채널' },
-  { value: 'instagram', label: '인스타그램' },
-  { value: 'other', label: '기타' },
-]
-
-const SUPPLIER_OPTIONS = [
-  { value: 'amazon_us', label: '미국 아마존' },
-  { value: 'amazon_jp', label: '일본 아마존' },
-  { value: 'amazon_de', label: '독일 아마존' },
-  { value: 'amazon_uk', label: '영국 아마존' },
-  { value: 'amazon_ca', label: '캐나다 아마존' },
-  { value: 'rakuten_jp', label: '라쿠텐' },
-  { value: 'yahoo_jp', label: '야후 재팬' },
-  { value: 'mercari_jp', label: '메루카리' },
-  { value: 'zozotown', label: 'ZOZOTOWN' },
-  { value: 'taobao', label: '타오바오' },
-  { value: 'tmall', label: '티몰' },
-  { value: 'aliexpress', label: '알리익스프레스' },
-  { value: 'jd', label: '징동' },
-  { value: 'pinduoduo', label: '핀둬둬' },
-  { value: 'ebay', label: 'eBay' },
-  { value: 'walmart', label: 'Walmart' },
-  { value: 'target', label: 'Target' },
-  { value: 'shopee', label: 'Shopee' },
-  { value: 'lazada', label: 'Lazada' },
-  { value: 'farfetch', label: 'Farfetch' },
-  { value: 'ssense', label: 'SSENSE' },
-  { value: 'matchesfashion', label: 'Matches Fashion' },
-  { value: 'mytheresa', label: 'Mytheresa' },
-  { value: 'other', label: '기타' },
-]
-
-const CURRENCY_OPTIONS = [
-  { value: 'USD', label: 'USD' },
-  { value: 'JPY', label: 'JPY' },
-  { value: 'CNY', label: 'CNY' },
-  { value: 'EUR', label: 'EUR' },
-  { value: 'GBP', label: 'GBP' },
-  { value: 'HKD', label: 'HKD' },
-  { value: 'KRW', label: 'KRW' },
-]
+const MARKETPLACE_OPTIONS = MARKETPLACES
+const SUPPLIER_OPTIONS = SUPPLIER_SITES
+const CURRENCY_OPTIONS = CURRENCIES.map((c) => ({ value: c.code, label: c.code }))
 
 const FORWARDER_COUNTRY_OPTIONS = [
   { value: 'US', label: '미국' },

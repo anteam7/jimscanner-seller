@@ -1,9 +1,10 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
+import { MARKETPLACES } from '@/lib/b2b/order-options'
 
 export const metadata: Metadata = {
-  title: '주문 관리 | 짐스캐너 B2B',
+  title: '주문 관리',
   robots: { index: false },
 }
 
@@ -35,21 +36,9 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   refunded:             { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
-const MARKETPLACE_LABEL: Record<string, string> = {
-  coupang: '쿠팡',
-  smartstore: '스마트스토어',
-  auction: '옥션',
-  gmarket: '지마켓',
-  '11st': '11번가',
-  interpark: '인터파크',
-  wemakeprice: '위메프',
-  tmon: '티몬',
-  kakao_gift: '카카오선물',
-  own_mall: '자사몰',
-  kakao_channel: '카카오채널',
-  instagram: '인스타그램',
-  other: '기타',
-}
+const MARKETPLACE_LABEL: Record<string, string> = Object.fromEntries(
+  MARKETPLACES.map((m) => [m.value, m.label]),
+)
 
 const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'all', label: '전체' },

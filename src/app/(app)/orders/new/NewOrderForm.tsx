@@ -3,61 +3,12 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
-
-type Currency = 'USD' | 'JPY' | 'CNY' | 'EUR' | 'KRW' | 'GBP' | 'HKD'
-
-const CURRENCIES: { code: Currency; label: string }[] = [
-  { code: 'USD', label: 'USD ($)' },
-  { code: 'JPY', label: 'JPY (¥)' },
-  { code: 'CNY', label: 'CNY (¥)' },
-  { code: 'EUR', label: 'EUR (€)' },
-  { code: 'GBP', label: 'GBP (£)' },
-  { code: 'HKD', label: 'HKD (HK$)' },
-  { code: 'KRW', label: 'KRW (₩)' },
-]
-
-const MARKETPLACES: { value: string; label: string }[] = [
-  { value: 'coupang', label: '쿠팡' },
-  { value: 'smartstore', label: '스마트스토어' },
-  { value: 'auction', label: '옥션' },
-  { value: 'gmarket', label: '지마켓' },
-  { value: '11st', label: '11번가' },
-  { value: 'interpark', label: '인터파크' },
-  { value: 'wemakeprice', label: '위메프' },
-  { value: 'tmon', label: '티몬' },
-  { value: 'kakao_gift', label: '카카오 선물하기' },
-  { value: 'own_mall', label: '자사몰' },
-  { value: 'kakao_channel', label: '카카오 채널' },
-  { value: 'instagram', label: '인스타그램' },
-  { value: 'other', label: '기타' },
-]
-
-const SUPPLIER_SITES: { value: string; label: string }[] = [
-  { value: 'amazon_us', label: '미국 아마존' },
-  { value: 'amazon_jp', label: '일본 아마존' },
-  { value: 'amazon_de', label: '독일 아마존' },
-  { value: 'amazon_uk', label: '영국 아마존' },
-  { value: 'amazon_ca', label: '캐나다 아마존' },
-  { value: 'rakuten_jp', label: '라쿠텐' },
-  { value: 'yahoo_jp', label: '야후 재팬' },
-  { value: 'mercari_jp', label: '메루카리' },
-  { value: 'zozotown', label: 'ZOZOTOWN' },
-  { value: 'taobao', label: '타오바오' },
-  { value: 'tmall', label: '티몰' },
-  { value: 'aliexpress', label: '알리익스프레스' },
-  { value: 'jd', label: '징동(JD)' },
-  { value: 'pinduoduo', label: '핀둬둬' },
-  { value: 'ebay', label: 'eBay' },
-  { value: 'walmart', label: 'Walmart' },
-  { value: 'target', label: 'Target' },
-  { value: 'shopee', label: 'Shopee' },
-  { value: 'lazada', label: 'Lazada' },
-  { value: 'farfetch', label: 'Farfetch' },
-  { value: 'ssense', label: 'SSENSE' },
-  { value: 'matchesfashion', label: 'Matches Fashion' },
-  { value: 'mytheresa', label: 'Mytheresa' },
-  { value: 'other', label: '기타' },
-]
+import {
+  CURRENCIES,
+  MARKETPLACES,
+  SUPPLIER_SITES,
+  type Currency,
+} from '@/lib/b2b/order-options'
 
 function suggestOrderNumber(): string {
   const now = new Date()
@@ -290,28 +241,28 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
         <Section
           accent="emerald"
           title="② 마켓 구매자 (배송 수신자)"
-          description="33 배대지 양식의 수신자 칸에 자동으로 채워질 정보입니다."
+          description="33 배대지 양식 수신자 칸에 자동으로 채워집니다. ★ 표시는 양식 변환에 필요한 항목."
         >
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="이름" htmlFor="buyer_name">
+            <Field label="이름" htmlFor="buyer_name" required>
               <input id="buyer_name" type="text" maxLength={120} value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="예: 홍길동" className={inputCls} />
             </Field>
-            <Field label="전화번호" htmlFor="buyer_phone">
+            <Field label="전화번호" htmlFor="buyer_phone" required>
               <input id="buyer_phone" type="tel" maxLength={40} value={buyerPhone} onChange={(e) => setBuyerPhone(e.target.value)} placeholder="010-1234-5678" className={inputCls} />
             </Field>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-[120px_1fr] gap-4">
-            <Field label="우편번호" htmlFor="buyer_postal_code">
+            <Field label="우편번호" htmlFor="buyer_postal_code" required>
               <input id="buyer_postal_code" type="text" maxLength={16} value={buyerPostalCode} onChange={(e) => setBuyerPostalCode(e.target.value)} placeholder="06234" className={inputCls} />
             </Field>
-            <Field label="기본 주소" htmlFor="buyer_address">
+            <Field label="기본 주소" htmlFor="buyer_address" required>
               <input id="buyer_address" type="text" maxLength={300} value={buyerAddress} onChange={(e) => setBuyerAddress(e.target.value)} placeholder="서울 강남구 테헤란로 123" className={inputCls} />
             </Field>
           </div>
           <Field label="상세 주소" htmlFor="buyer_detail_address">
             <input id="buyer_detail_address" type="text" maxLength={200} value={buyerDetailAddress} onChange={(e) => setBuyerDetailAddress(e.target.value)} placeholder="동·호수 등" className={inputCls} />
           </Field>
-          <Field label="개인통관고유부호" htmlFor="buyer_customs_code" hint="P 로 시작하는 13자리. 해외직구 통관에 필수입니다.">
+          <Field label="개인통관고유부호" htmlFor="buyer_customs_code" required hint="P 로 시작하는 13자리. 해외직구 통관에 필수입니다.">
             <input id="buyer_customs_code" type="text" maxLength={32} value={buyerCustomsCode} onChange={(e) => setBuyerCustomsCode(e.target.value)} placeholder="P123456789012" className={`${inputCls} font-mono`} />
           </Field>
         </Section>

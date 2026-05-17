@@ -3,9 +3,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/auth/server'
 import OrderStatusSelector from '@/components/b2b/OrderStatusSelector'
+import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
 
 export const metadata: Metadata = {
-  title: '주문 상세 | 짐스캐너 B2B',
+  title: '주문 상세',
   robots: { index: false },
 }
 
@@ -81,48 +82,13 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   refunded:            { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
-const MARKETPLACE_LABEL: Record<string, string> = {
-  coupang: '쿠팡',
-  smartstore: '스마트스토어',
-  auction: '옥션',
-  gmarket: '지마켓',
-  '11st': '11번가',
-  interpark: '인터파크',
-  wemakeprice: '위메프',
-  tmon: '티몬',
-  kakao_gift: '카카오 선물하기',
-  own_mall: '자사몰',
-  kakao_channel: '카카오 채널',
-  instagram: '인스타그램',
-  other: '기타',
-}
+const MARKETPLACE_LABEL: Record<string, string> = Object.fromEntries(
+  MARKETPLACES.map((m) => [m.value, m.label]),
+)
 
-const SUPPLIER_LABEL: Record<string, string> = {
-  amazon_us: '미국 아마존',
-  amazon_jp: '일본 아마존',
-  amazon_de: '독일 아마존',
-  amazon_uk: '영국 아마존',
-  amazon_ca: '캐나다 아마존',
-  rakuten_jp: '라쿠텐',
-  yahoo_jp: '야후 재팬',
-  mercari_jp: '메루카리',
-  zozotown: 'ZOZOTOWN',
-  taobao: '타오바오',
-  tmall: '티몰',
-  aliexpress: '알리익스프레스',
-  jd: '징동',
-  pinduoduo: '핀둬둬',
-  ebay: 'eBay',
-  walmart: 'Walmart',
-  target: 'Target',
-  shopee: 'Shopee',
-  lazada: 'Lazada',
-  farfetch: 'Farfetch',
-  ssense: 'SSENSE',
-  matchesfashion: 'Matches Fashion',
-  mytheresa: 'Mytheresa',
-  other: '기타',
-}
+const SUPPLIER_LABEL: Record<string, string> = Object.fromEntries(
+  SUPPLIER_SITES.map((s) => [s.value, s.label]),
+)
 
 const SOURCE_LABEL: Record<string, string> = {
   manual: '수동 입력',
@@ -519,14 +485,15 @@ export default async function OrderDetailPage({
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">비용</p>
             <dl className="text-sm">
-              <InfoRow label="예상 금액">{formatKRW(order.estimated_cost_krw)}</InfoRow>
-              <InfoRow label="실제 금액">{formatKRW(order.actual_cost_krw)}</InfoRow>
+              <InfoRow label="예상 매입 KRW">{formatKRW(order.estimated_cost_krw)}</InfoRow>
+              <InfoRow label="실 결제 KRW">{formatKRW(order.actual_cost_krw)}</InfoRow>
               <InfoRow label="총 판매가">
                 {totalSale != null ? (
                   <span className="font-semibold text-emerald-700">{formatKRW(totalSale)}</span>
                 ) : '—'}
               </InfoRow>
             </dl>
+            <p className="mt-2 text-[10px] text-slate-400">환율 적용·실제 비용 입력은 v0.5 예정</p>
           </section>
 
           {/* 메타 */}
