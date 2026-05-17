@@ -53,19 +53,47 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   const [buyerDetailAddress, setBuyerDetailAddress] = useState('')
   const [buyerCustomsCode, setBuyerCustomsCode] = useState('')
 
-  // 해외 매입 (라인 — MVP 1건)
-  const [productId, setProductId] = useState<string | null>(null)
-  const [productSku, setProductSku] = useState<string | null>(null)
-  const [supplierSite, setSupplierSite] = useState('')
-  const [supplierOrderNumber, setSupplierOrderNumber] = useState('')
-  const [productName, setProductName] = useState('')
-  const [productUrl, setProductUrl] = useState('')
-  const [marketOption, setMarketOption] = useState('')
-  const [quantity, setQuantity] = useState('1')
-  const [currency, setCurrency] = useState<Currency>('USD')
-  const [unitPrice, setUnitPrice] = useState('')
-  const [weightKg, setWeightKg] = useState('')
-  const [salePriceKrw, setSalePriceKrw] = useState('')
+  // 해외 매입 (라인 — N건)
+  type LineItem = {
+    productId: string | null
+    productSku: string | null
+    supplierSite: string
+    supplierOrderNumber: string
+    productName: string
+    productUrl: string
+    marketOption: string
+    quantity: string
+    currency: Currency
+    unitPrice: string
+    weightKg: string
+    salePriceKrw: string
+  }
+  function blankLine(): LineItem {
+    return {
+      productId: null,
+      productSku: null,
+      supplierSite: '',
+      supplierOrderNumber: '',
+      productName: '',
+      productUrl: '',
+      marketOption: '',
+      quantity: '1',
+      currency: 'USD',
+      unitPrice: '',
+      weightKg: '',
+      salePriceKrw: '',
+    }
+  }
+  const [lines, setLines] = useState<LineItem[]>([blankLine()])
+  function patchLine(i: number, p: Partial<LineItem>) {
+    setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...p } : l)))
+  }
+  function addLine() {
+    setLines((p) => [...p, blankLine()])
+  }
+  function removeLine(i: number) {
+    setLines((p) => (p.length <= 1 ? p : p.filter((_, idx) => idx !== i)))
+  }
 
   // 배대지
   const [forwarderId, setForwarderId] = useState('')
@@ -96,28 +124,45 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
       .catch(() => {/* fallback: 마진 비활성 */})
   }, [])
 
-  const totalForeign = useMemo(() => {
-    const q = Number(quantity)
-    const p = Number(unitPrice)
-    if (!Number.isFinite(q) || !Number.isFinite(p) || q <= 0 || p <= 0) return null
-    return q * p
-  }, [quantity, unitPrice])
+  // 라인별 KRW 환산 + 모든 라인 합계
+  const purchaseKrwTotal = useMemo(() => {
+    let sum = 0
+    let any = false
+    for (const l of lines) {
+      const q = Number(l.quantity)
+      const p = Number(l.unitPrice)
+      if (!Number.isFinite(q) || !Number.isFinite(p) || q <= 0 || p <= 0) continue
+      const totalF = q * p
+      let krw: number
+      if (l.currency === 'KRW') {
+        krw = totalF
+      } else {
+        const r = rates?.[l.currency]
+        if (!r) continue
+        krw = Math.round((totalF * r.rate) / (r.unit || 1))
+      }
+      sum += krw
+      any = true
+    }
+    return any ? sum : null
+  }, [lines, rates])
 
-  // 매입 KRW = 외화 합계 * (환율 / 단위) — KRW 면 그대로
-  const purchaseKrw = useMemo(() => {
-    if (totalForeign == null) return null
-    if (currency === 'KRW') return totalForeign
-    const r = rates?.[currency]
-    if (!r) return null
-    return Math.round((totalForeign * r.rate) / (r.unit || 1))
-  }, [totalForeign, currency, rates])
+  const saleKrwTotal = useMemo(() => {
+    let sum = 0
+    let any = false
+    for (const l of lines) {
+      const n = Number(l.salePriceKrw)
+      if (!Number.isFinite(n) || n <= 0) continue
+      sum += n
+      any = true
+    }
+    return any ? sum : null
+  }, [lines])
 
   const marginKrw = useMemo(() => {
-    const sale = Number(salePriceKrw)
-    if (!Number.isFinite(sale) || sale <= 0) return null
-    if (purchaseKrw == null) return null
-    return sale - purchaseKrw
-  }, [salePriceKrw, purchaseKrw])
+    if (saleKrwTotal == null || purchaseKrwTotal == null) return null
+    return saleKrwTotal - purchaseKrwTotal
+  }, [saleKrwTotal, purchaseKrwTotal])
 
   // 검증
   const customsValid =
@@ -125,30 +170,37 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   const postalValid =
     !buyerPostalCode.trim() || /^\d{5}$/.test(buyerPostalCode.trim())
 
-  function onPickProduct(p: PickedProduct) {
-    setProductId(p.id)
-    setProductSku(p.seller_sku)
-    setProductName(p.display_name)
-    if (p.default_supplier_site) setSupplierSite(p.default_supplier_site)
-    if (p.default_currency) setCurrency(p.default_currency as Currency)
+  function onPickProduct(i: number, p: PickedProduct) {
+    const patch: Partial<LineItem> = {
+      productId: p.id,
+      productSku: p.seller_sku,
+      productName: p.display_name,
+    }
+    if (p.default_supplier_site) patch.supplierSite = p.default_supplier_site
+    if (p.default_currency) patch.currency = p.default_currency as Currency
     if (p.default_unit_price != null && String(p.default_unit_price).length > 0) {
-      setUnitPrice(String(p.default_unit_price))
+      patch.unitPrice = String(p.default_unit_price)
     }
     if (p.default_weight_kg != null && String(p.default_weight_kg).length > 0) {
-      setWeightKg(String(p.default_weight_kg))
+      patch.weightKg = String(p.default_weight_kg)
     }
-    if (p.default_forwarder_id) setForwarderId(p.default_forwarder_id)
-    if (p.default_forwarder_country) setForwarderCountry(p.default_forwarder_country)
+    patchLine(i, patch)
+    // 배대지 default 는 주문 단위 — 라인 0 일 때만 적용
+    if (i === 0) {
+      if (p.default_forwarder_id) setForwarderId(p.default_forwarder_id)
+      if (p.default_forwarder_country) setForwarderCountry(p.default_forwarder_country)
+    }
   }
-  function onClearProduct() {
-    setProductId(null)
-    setProductSku(null)
+  function onClearProduct(i: number) {
+    patchLine(i, { productId: null, productSku: null })
   }
 
+  const allLinesValid = lines.every(
+    (l) => l.productName.trim().length > 0 && Number(l.quantity) > 0,
+  )
   const canSubmit =
     orderNumber.trim().length > 0 &&
-    productName.trim().length > 0 &&
-    Number(quantity) > 0 &&
+    allLinesValid &&
     customsValid &&
     postalValid &&
     !submitting
@@ -177,21 +229,19 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           forwarder_id: forwarderId || null,
           forwarder_country: forwarderCountry || null,
           request_notes: requestNotes.trim() || null,
-          items: [
-            {
-              product_id: productId,
-              product_name: productName.trim(),
-              product_url: productUrl.trim() || null,
-              quantity: Number(quantity),
-              currency,
-              unit_price_foreign: Number(unitPrice) > 0 ? Number(unitPrice) : null,
-              weight_kg: Number(weightKg) > 0 ? Number(weightKg) : null,
-              supplier_site: supplierSite || null,
-              supplier_order_number: supplierOrderNumber.trim() || null,
-              sale_price_krw: Number(salePriceKrw) > 0 ? Number(salePriceKrw) : null,
-              market_option: marketOption.trim() || null,
-            },
-          ],
+          items: lines.map((l) => ({
+            product_id: l.productId,
+            product_name: l.productName.trim(),
+            product_url: l.productUrl.trim() || null,
+            quantity: Number(l.quantity),
+            currency: l.currency,
+            unit_price_foreign: Number(l.unitPrice) > 0 ? Number(l.unitPrice) : null,
+            weight_kg: Number(l.weightKg) > 0 ? Number(l.weightKg) : null,
+            supplier_site: l.supplierSite || null,
+            supplier_order_number: l.supplierOrderNumber.trim() || null,
+            sale_price_krw: Number(l.salePriceKrw) > 0 ? Number(l.salePriceKrw) : null,
+            market_option: l.marketOption.trim() || null,
+          })),
         }),
       })
 
@@ -348,95 +398,134 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           </Field>
         </Section>
 
-        {/* 3. 해외 매입 (라인 — MVP 1건) */}
+        {/* 3. 해외 매입 (N 라인) */}
         <Section
           accent="sky"
           title="③ 해외 매입 정보"
-          description="어떤 해외 사이트에서 어떤 상품을 매입했는지 기록합니다."
-          rightChip="MVP — 상품 1건"
+          description="한 마켓 주문에 N개 상품을 매입한 경우 라인을 추가합니다."
+          rightChip={`${lines.length} 라인`}
         >
-          <div className="pb-2 border-b border-slate-100">
-            <ProductPicker
-              selectedId={productId}
-              selectedLabel={productSku}
-              onPick={onPickProduct}
-              onClear={onClearProduct}
-            />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="해외 사이트" htmlFor="supplier_site">
-              <select id="supplier_site" value={supplierSite} onChange={(e) => setSupplierSite(e.target.value)} className={inputCls}>
-                <option value="">선택하지 않음</option>
-                {SUPPLIER_SITES.map((s) => (
-                  <option key={s.value} value={s.value}>{s.label}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="해외 주문번호" htmlFor="supplier_order_number" hint="해외 쇼핑몰에서 받은 주문번호 (없으면 비워두세요)">
-              <input id="supplier_order_number" type="text" maxLength={128} value={supplierOrderNumber} onChange={(e) => setSupplierOrderNumber(e.target.value)} placeholder="예: 113-1234567-7654321" className={inputCls} />
-            </Field>
-          </div>
-          <Field label="상품명" htmlFor="product_name" required>
-            <input id="product_name" type="text" required maxLength={300} value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="예: Nike Air Force 1 Low '07" className={inputCls} />
-          </Field>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <Field label="해외 사이트 상품 URL" htmlFor="product_url">
-              <input id="product_url" type="url" maxLength={500} value={productUrl} onChange={(e) => setProductUrl(e.target.value)} placeholder="https://" className={inputCls} />
-            </Field>
-            <Field label="마켓 옵션" htmlFor="market_option" hint="구매자가 선택한 색상·사이즈 등">
-              <input id="market_option" type="text" maxLength={200} value={marketOption} onChange={(e) => setMarketOption(e.target.value)} placeholder="화이트 / 270mm" className={inputCls} />
-            </Field>
-          </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Field label="수량" htmlFor="quantity" required>
-              <input id="quantity" type="number" required min={1} max={9999} step={1} value={quantity} onChange={(e) => setQuantity(e.target.value)} className={inputCls} />
-            </Field>
-            <Field label="매입 통화" htmlFor="currency">
-              <select id="currency" value={currency} onChange={(e) => setCurrency(e.target.value as Currency)} className={inputCls}>
-                {CURRENCIES.map((c) => (
-                  <option key={c.code} value={c.code}>{c.label}</option>
-                ))}
-              </select>
-            </Field>
-            <Field label="매입 단가" htmlFor="unit_price">
-              <input id="unit_price" type="number" min={0} step="0.01" value={unitPrice} onChange={(e) => setUnitPrice(e.target.value)} placeholder="0.00" className={`${inputCls} text-right tabular-nums`} />
-            </Field>
-            <Field label="중량 (kg)" htmlFor="weight">
-              <input id="weight" type="number" min={0} step="0.001" value={weightKg} onChange={(e) => setWeightKg(e.target.value)} placeholder="0.000" className={`${inputCls} text-right tabular-nums`} />
-            </Field>
-          </div>
-          <Field label="마켓 판매가 (KRW)" htmlFor="sale_price_krw" hint="구매자에게 받은 금액 — 마진 계산용. 비워두면 마진 표시 안 됨.">
-            <input id="sale_price_krw" type="number" min={0} step={100} value={salePriceKrw} onChange={(e) => setSalePriceKrw(e.target.value)} placeholder="0" className={`${inputCls} text-right tabular-nums`} />
-          </Field>
-          {totalForeign !== null && (
-            <div className="flex items-center justify-end gap-2 text-xs text-slate-600 pt-2 border-t border-slate-100 flex-wrap">
-              <span>매입 합계 (외화)</span>
-              <span className="font-semibold text-slate-900 tabular-nums">
-                {new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(totalForeign)} {currency}
-              </span>
-              {purchaseKrw != null && currency !== 'KRW' && (
-                <>
-                  <span className="text-slate-300">·</span>
-                  <span className="text-slate-500">KRW 환산</span>
-                  <span className="font-semibold text-slate-800 tabular-nums">
-                    {new Intl.NumberFormat('ko-KR').format(purchaseKrw)}원
-                  </span>
-                </>
-              )}
-              {marginKrw != null && (
-                <>
-                  <span className="text-slate-300 mx-2">·</span>
-                  <span>예상 마진</span>
-                  <span className={`font-semibold tabular-nums ${marginKrw >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
-                    {new Intl.NumberFormat('ko-KR').format(marginKrw)}원
-                  </span>
-                </>
-              )}
-              {currency !== 'KRW' && !rates && (
-                <span className="text-[10px] text-slate-400 italic">환율 로딩 중…</span>
-              )}
+          {lines.map((line, i) => (
+            <div
+              key={i}
+              className={`space-y-4 ${i > 0 ? 'pt-4 border-t border-slate-200' : ''}`}
+            >
+              <div className="flex items-center justify-between flex-wrap gap-2">
+                <p className="text-xs font-semibold text-slate-700">
+                  라인 {i + 1}
+                </p>
+                <div className="flex items-center gap-2">
+                  <ProductPicker
+                    selectedId={line.productId}
+                    selectedLabel={line.productSku}
+                    onPick={(p) => onPickProduct(i, p)}
+                    onClear={() => onClearProduct(i)}
+                  />
+                  {lines.length > 1 && (
+                    <button
+                      type="button"
+                      onClick={() => removeLine(i)}
+                      className="text-xs text-slate-500 hover:text-rose-700 px-2 py-1 rounded hover:bg-rose-50"
+                      aria-label={`라인 ${i + 1} 제거`}
+                    >
+                      ✕ 라인 제거
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="해외 사이트" htmlFor={`supplier_site_${i}`}>
+                  <select id={`supplier_site_${i}`} value={line.supplierSite} onChange={(e) => patchLine(i, { supplierSite: e.target.value })} className={inputCls}>
+                    <option value="">선택하지 않음</option>
+                    {SUPPLIER_SITES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="해외 주문번호" htmlFor={`supplier_order_number_${i}`} hint="해외 쇼핑몰에서 받은 주문번호 (없으면 비워두세요)">
+                  <input id={`supplier_order_number_${i}`} type="text" maxLength={128} value={line.supplierOrderNumber} onChange={(e) => patchLine(i, { supplierOrderNumber: e.target.value })} placeholder="예: 113-1234567-7654321" className={inputCls} />
+                </Field>
+              </div>
+              <Field label="상품명" htmlFor={`product_name_${i}`} required>
+                <input id={`product_name_${i}`} type="text" required maxLength={300} value={line.productName} onChange={(e) => patchLine(i, { productName: e.target.value })} placeholder="예: Nike Air Force 1 Low '07" className={inputCls} />
+              </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label="해외 사이트 상품 URL" htmlFor={`product_url_${i}`}>
+                  <input id={`product_url_${i}`} type="url" maxLength={500} value={line.productUrl} onChange={(e) => patchLine(i, { productUrl: e.target.value })} placeholder="https://" className={inputCls} />
+                </Field>
+                <Field label="마켓 옵션" htmlFor={`market_option_${i}`} hint="구매자가 선택한 색상·사이즈 등">
+                  <input id={`market_option_${i}`} type="text" maxLength={200} value={line.marketOption} onChange={(e) => patchLine(i, { marketOption: e.target.value })} placeholder="화이트 / 270mm" className={inputCls} />
+                </Field>
+              </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                <Field label="수량" htmlFor={`quantity_${i}`} required>
+                  <input id={`quantity_${i}`} type="number" required min={1} max={9999} step={1} value={line.quantity} onChange={(e) => patchLine(i, { quantity: e.target.value })} className={inputCls} />
+                </Field>
+                <Field label="매입 통화" htmlFor={`currency_${i}`}>
+                  <select id={`currency_${i}`} value={line.currency} onChange={(e) => patchLine(i, { currency: e.target.value as Currency })} className={inputCls}>
+                    {CURRENCIES.map((c) => (
+                      <option key={c.code} value={c.code}>{c.label}</option>
+                    ))}
+                  </select>
+                </Field>
+                <Field label="매입 단가" htmlFor={`unit_price_${i}`}>
+                  <input id={`unit_price_${i}`} type="number" min={0} step="0.01" value={line.unitPrice} onChange={(e) => patchLine(i, { unitPrice: e.target.value })} placeholder="0.00" className={`${inputCls} text-right tabular-nums`} />
+                </Field>
+                <Field label="중량 (kg)" htmlFor={`weight_${i}`}>
+                  <input id={`weight_${i}`} type="number" min={0} step="0.001" value={line.weightKg} onChange={(e) => patchLine(i, { weightKg: e.target.value })} placeholder="0.000" className={`${inputCls} text-right tabular-nums`} />
+                </Field>
+              </div>
+              <Field label="마켓 판매가 (KRW)" htmlFor={`sale_price_krw_${i}`} hint="구매자에게 받은 금액 — 마진 계산용">
+                <input id={`sale_price_krw_${i}`} type="number" min={0} step={100} value={line.salePriceKrw} onChange={(e) => patchLine(i, { salePriceKrw: e.target.value })} placeholder="0" className={`${inputCls} text-right tabular-nums`} />
+              </Field>
             </div>
-          )}
+          ))}
+
+          <div className="flex items-center justify-between pt-3 border-t border-slate-200">
+            <button
+              type="button"
+              onClick={addLine}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:text-indigo-800 rounded border border-indigo-200 bg-indigo-50 hover:bg-indigo-100"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
+              </svg>
+              라인 추가
+            </button>
+            {(purchaseKrwTotal != null || saleKrwTotal != null) && (
+              <div className="flex items-center gap-2 text-xs text-slate-600 flex-wrap justify-end">
+                {purchaseKrwTotal != null && (
+                  <>
+                    <span className="text-slate-500">매입 합계 KRW</span>
+                    <span className="font-semibold text-slate-900 tabular-nums">
+                      {new Intl.NumberFormat('ko-KR').format(purchaseKrwTotal)}원
+                    </span>
+                  </>
+                )}
+                {saleKrwTotal != null && (
+                  <>
+                    <span className="text-slate-300">·</span>
+                    <span className="text-slate-500">판매 합계</span>
+                    <span className="font-semibold text-slate-800 tabular-nums">
+                      {new Intl.NumberFormat('ko-KR').format(saleKrwTotal)}원
+                    </span>
+                  </>
+                )}
+                {marginKrw != null && (
+                  <>
+                    <span className="text-slate-300 mx-2">·</span>
+                    <span>예상 마진</span>
+                    <span className={`font-semibold tabular-nums ${marginKrw >= 0 ? 'text-emerald-700' : 'text-rose-700'}`}>
+                      {new Intl.NumberFormat('ko-KR').format(marginKrw)}원
+                    </span>
+                  </>
+                )}
+                {!rates && lines.some((l) => l.currency !== 'KRW') && (
+                  <span className="text-[10px] text-slate-400 italic">환율 로딩 중…</span>
+                )}
+              </div>
+            )}
+          </div>
         </Section>
 
         {/* 4. 배대지 + 메모 */}
