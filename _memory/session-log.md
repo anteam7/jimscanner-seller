@@ -4,6 +4,44 @@
 
 ---
 
+## 2026-05-17 (세션 9 — 사용자 정의 양식 업로드)
+
+### 작업
+1. **사이드바 메뉴 활성**: "배대지 양식 (준비 중)" → `/templates` 링크 활성화
+2. **`/templates` 목록 페이지**: 공유 + 본인 양식 분리 표시, 양식별 시트명/크기/등록일, 본인 양식만 매핑 편집 진입
+3. **업로드 API** (`POST /api/form-templates`):
+   - FormData (file + name + forwarder_id + 옵션: data_sheet_name·data_start_row)
+   - xls/xlsx 모두 지원 (SheetJS 로 일단 파싱)
+   - xls 면 SheetJS 로 xlsx 변환 후 저장 (export API 가 exceljs 만 쓰므로)
+   - exceljs 로 sanity check (시트명 존재)
+   - Storage `user-templates/{account_id}/{template_id}/{filename}.xlsx` 업로드
+   - 헤더 자동 추출 → 26+ user_input 컬럼 자동 INSERT (column_letter 포함)
+   - 실패 시 Storage/DB rollback
+4. **매핑 편집** (`/templates/[id]` + `TemplateMappingEditor`):
+   - 메타 (name·forwarder) + 컬럼 표 편집
+   - 7개 source_kind 선택 (user_input / order_field / item_field / account_field / composite / constant / order_meta)
+   - source_path 는 enum dropdown (각 source_kind 별 사용 가능 필드 사전 정의 — order 12개, item 12개, account 2개, meta 2개)
+   - transform 9개 선택, required 체크박스
+   - user_input 은 라벨 + enum 옵션 (콤마 구분) + 기본값
+   - 저장/삭제 (메타 PATCH + columns PATCH 따로 호출)
+5. **API**:
+   - `GET /api/form-templates` (목록)
+   - `POST /api/form-templates` (업로드)
+   - `PATCH /api/form-templates/[id]` (메타)
+   - `DELETE /api/form-templates/[id]` (Storage + DB)
+   - `PATCH /api/form-templates/[id]/columns` (컬럼 매핑 일괄)
+6. **빌드 통과** — 빌드 출력에 신규 라우트 5개 정상 등록
+
+### 결정 (운영 모델)
+- 공유 템플릿은 짐패스 v1 1개로 운영
+- 추가 공유 템플릿은 슈퍼관리자 기능으로 별도 분리 (v0.5+, main repo 어드민)
+- 셀러는 자기 배대지 양식을 본인 계정에 업로드해서 사용
+
+### 직전 P1 dogfood fix
+- ForwarderExportModal: enum `['Y','']` 옵션 중복 (선택 안 함 + 빈 값) → filter 처리 (commit 9262767)
+
+---
+
 ## 2026-05-17 (세션 8 — P1 배대지 양식 변환 구현)
 
 ### 작업
