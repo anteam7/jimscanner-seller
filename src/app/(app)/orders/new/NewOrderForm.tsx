@@ -9,6 +9,7 @@ import {
   SUPPLIER_SITES,
   type Currency,
 } from '@/lib/b2b/order-options'
+import ProductPicker, { type PickedProduct } from '@/components/b2b/ProductPicker'
 
 function suggestOrderNumber(): string {
   const now = new Date()
@@ -53,6 +54,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   const [buyerCustomsCode, setBuyerCustomsCode] = useState('')
 
   // 해외 매입 (라인 — MVP 1건)
+  const [productId, setProductId] = useState<string | null>(null)
+  const [productSku, setProductSku] = useState<string | null>(null)
   const [supplierSite, setSupplierSite] = useState('')
   const [supplierOrderNumber, setSupplierOrderNumber] = useState('')
   const [productName, setProductName] = useState('')
@@ -122,6 +125,26 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   const postalValid =
     !buyerPostalCode.trim() || /^\d{5}$/.test(buyerPostalCode.trim())
 
+  function onPickProduct(p: PickedProduct) {
+    setProductId(p.id)
+    setProductSku(p.seller_sku)
+    setProductName(p.display_name)
+    if (p.default_supplier_site) setSupplierSite(p.default_supplier_site)
+    if (p.default_currency) setCurrency(p.default_currency as Currency)
+    if (p.default_unit_price != null && String(p.default_unit_price).length > 0) {
+      setUnitPrice(String(p.default_unit_price))
+    }
+    if (p.default_weight_kg != null && String(p.default_weight_kg).length > 0) {
+      setWeightKg(String(p.default_weight_kg))
+    }
+    if (p.default_forwarder_id) setForwarderId(p.default_forwarder_id)
+    if (p.default_forwarder_country) setForwarderCountry(p.default_forwarder_country)
+  }
+  function onClearProduct() {
+    setProductId(null)
+    setProductSku(null)
+  }
+
   const canSubmit =
     orderNumber.trim().length > 0 &&
     productName.trim().length > 0 &&
@@ -156,6 +179,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           request_notes: requestNotes.trim() || null,
           items: [
             {
+              product_id: productId,
               product_name: productName.trim(),
               product_url: productUrl.trim() || null,
               quantity: Number(quantity),
@@ -331,6 +355,14 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           description="어떤 해외 사이트에서 어떤 상품을 매입했는지 기록합니다."
           rightChip="MVP — 상품 1건"
         >
+          <div className="pb-2 border-b border-slate-100">
+            <ProductPicker
+              selectedId={productId}
+              selectedLabel={productSku}
+              onPick={onPickProduct}
+              onClear={onClearProduct}
+            />
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="해외 사이트" htmlFor="supplier_site">
               <select id="supplier_site" value={supplierSite} onChange={(e) => setSupplierSite(e.target.value)} className={inputCls}>
