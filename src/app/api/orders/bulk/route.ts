@@ -41,6 +41,7 @@ type BulkRowInput = {
   market_product_id?: unknown
   market_option?: unknown
   product_name?: unknown
+  product_id?: unknown
   quantity?: unknown
   supplier_site?: unknown
   product_url?: unknown
@@ -130,6 +131,7 @@ type NormalizedRow = {
   request_notes: string | null
   item: {
     product_name: string
+    product_id: string | null
     product_url: string | null
     quantity: number
     currency: string | null
@@ -213,6 +215,7 @@ function normalizeRow(row: BulkRowInput, idx: number): { ok: true; row: Normaliz
       request_notes: str(row.request_notes, 2000),
       item: {
         product_name: productName,
+        product_id: isUuid(row.product_id) ? (row.product_id as string) : null,
         product_url: str(row.product_url, 500),
         quantity,
         currency,

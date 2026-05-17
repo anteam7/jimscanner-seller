@@ -1,9 +1,22 @@
 'use client'
 
-import { useMemo, useState, useCallback } from 'react'
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MARKETPLACES, SUPPLIER_SITES, CURRENCIES } from '@/lib/b2b/order-options'
+
+type SkuLite = {
+  id: string
+  seller_sku: string
+  display_name: string
+  english_name: string | null
+  default_supplier_site: string | null
+  default_currency: string | null
+  default_unit_price: number | string | null
+  default_forwarder_id: string | null
+  default_forwarder_country: string | null
+  default_weight_kg: number | string | null
+}
 
 export type ForwarderOption = {
   id: string
@@ -164,6 +177,30 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
     setGlobalError(null)
   }, [])
 
+  const applySkuToRow = useCallback((rowIdx: number, p: SkuLite) => {
+    setRows((prev) => {
+      const next = prev.slice()
+      const cur = { ...next[rowIdx] }
+      cur.product_name = p.display_name
+      cur._sku_id = p.id
+      cur._sku_code = p.seller_sku
+      if (p.default_supplier_site && !cur.supplier_site) cur.supplier_site = p.default_supplier_site
+      if (p.default_currency && !cur.currency) cur.currency = p.default_currency
+      if (p.default_unit_price != null && !cur.unit_price_foreign) {
+        cur.unit_price_foreign = String(p.default_unit_price)
+      }
+      if (p.default_weight_kg != null && !cur.weight_kg) {
+        cur.weight_kg = String(p.default_weight_kg)
+      }
+      if (p.default_forwarder_id && !cur.forwarder_id) cur.forwarder_id = p.default_forwarder_id
+      if (p.default_forwarder_country && !cur.forwarder_country) {
+        cur.forwarder_country = p.default_forwarder_country
+      }
+      next[rowIdx] = cur
+      return next
+    })
+  }, [])
+
   // 헤더 라벨 → 컬럼 키 매핑 (paste 시 사용)
   const headerToKey = useMemo(() => {
     const map = new Map<string, string>()
@@ -292,6 +329,8 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
             out[c.key] = String(v).trim()
           }
         })
+        // SKU 적용된 행은 product_id 도 같이 전송
+        if (r._sku_id) out.product_id = String(r._sku_id)
         return out
       })
 
@@ -562,11 +601,30 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                           style={{ width: c.width, minWidth: c.width }}
                           className={`p-0 border-r border-slate-100 ${isMissing ? 'bg-rose-50' : ''}`}
                         >
-                          <Cell
-                            col={c}
-                            value={row[c.key] ?? ''}
-                            onChange={(v) => updateCell(ridx, c.key, v)}
-                          />
+                          {c.key === 'product_name' ? (
+                            <SkuPickerCell
+                              value={row[c.key] ?? ''}
+                              skuCode={row._sku_code ?? null}
+                              onChange={(v) => updateCell(ridx, c.key, v)}
+                              onPick={(p) => applySkuToRow(ridx, p)}
+                              onClearSku={() => {
+                                setRows((prev) => {
+                                  const next = prev.slice()
+                                  const cur = { ...next[ridx] }
+                                  delete cur._sku_id
+                                  delete cur._sku_code
+                                  next[ridx] = cur
+                                  return next
+                                })
+                              }}
+                            />
+                          ) : (
+                            <Cell
+                              col={c}
+                              value={row[c.key] ?? ''}
+                              onChange={(v) => updateCell(ridx, c.key, v)}
+                            />
+                          )}
                         </td>
                       )
                     })}
@@ -646,6 +704,160 @@ function Cell({ col, value, onChange }: { col: ColumnDef; value: string; onChang
       step={col.type === 'number' ? 'any' : undefined}
       className={`block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${col.type === 'number' ? 'text-right tabular-nums' : ''}`}
     />
+  )
+}
+
+// ─── SKU 픽커 셀 (product_name 컬럼 전용) ──────────────────────────────
+function SkuPickerCell({
+  value,
+  skuCode,
+  onChange,
+  onPick,
+  onClearSku,
+}: {
+  value: string
+  skuCode: string | null
+  onChange: (v: string) => void
+  onPick: (p: SkuLite) => void
+  onClearSku: () => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<SkuLite[]>([])
+  const [loading, setLoading] = useState(false)
+  const [highlight, setHighlight] = useState(0)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function onClick(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onClick)
+    return () => document.removeEventListener('mousedown', onClick)
+  }, [open])
+
+  useEffect(() => {
+    if (!open) return
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(async () => {
+      setLoading(true)
+      try {
+        const url = '/api/products?limit=10' + (query ? `&q=${encodeURIComponent(query)}` : '')
+        const res = await fetch(url)
+        const json = (await res.json().catch(() => ({}))) as { products?: SkuLite[] }
+        setResults(json.products ?? [])
+        setHighlight(0)
+      } catch {
+        setResults([])
+      } finally {
+        setLoading(false)
+      }
+    }, 200)
+    return () => {
+      if (debounceRef.current) clearTimeout(debounceRef.current)
+    }
+  }, [open, query])
+
+  function pick(p: SkuLite) {
+    onPick(p)
+    setOpen(false)
+    setQuery('')
+  }
+
+  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    if (!open) return
+    if (e.key === 'ArrowDown') {
+      e.preventDefault()
+      setHighlight((h) => Math.min(h + 1, results.length - 1))
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault()
+      setHighlight((h) => Math.max(h - 1, 0))
+    } else if (e.key === 'Enter' && results[highlight]) {
+      e.preventDefault()
+      pick(results[highlight])
+    } else if (e.key === 'Escape') {
+      setOpen(false)
+    }
+  }
+
+  return (
+    <div ref={wrapRef} className="relative flex items-center w-full">
+      {skuCode && (
+        <button
+          type="button"
+          onClick={onClearSku}
+          title="SKU 매핑 해제"
+          className="ml-1 mr-0.5 px-1 py-0 h-[18px] inline-flex items-center gap-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded hover:bg-indigo-100 hover:border-indigo-300 transition-colors whitespace-nowrap"
+        >
+          <svg className="w-2.5 h-2.5" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9.568 3H5.25A2.25 2.25 0 0 0 3 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a18.095 18.095 0 0 0 5.223-5.223c.542-.827.369-1.908-.33-2.607L11.16 3.66A2.25 2.25 0 0 0 9.568 3Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M6 6h.008v.008H6V6Z" />
+          </svg>
+          {skuCode}
+        </button>
+      )}
+      <input
+        type="text"
+        value={value}
+        onChange={(e) => {
+          onChange(e.target.value)
+          setQuery(e.target.value)
+          if (!open) setOpen(true)
+        }}
+        onFocus={() => {
+          setQuery(value)
+          setOpen(true)
+        }}
+        onKeyDown={onKeyDown}
+        placeholder="상품명 또는 SKU 검색"
+        className="block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white"
+      />
+      {open && (
+        <div className="absolute left-0 top-full mt-0.5 z-30 w-[320px] max-h-[280px] overflow-y-auto rounded-md border border-slate-200 bg-white shadow-lg">
+          {loading ? (
+            <div className="px-3 py-2 text-[11px] text-slate-500">검색 중…</div>
+          ) : results.length === 0 ? (
+            <div className="px-3 py-2 text-[11px] text-slate-500">
+              {query ? '일치하는 SKU 없음 — 직접 입력 가능' : '등록된 SKU 없음 — /products 에서 등록'}
+            </div>
+          ) : (
+            <ul className="py-1">
+              {results.map((p, i) => (
+                <li key={p.id}>
+                  <button
+                    type="button"
+                    onMouseEnter={() => setHighlight(i)}
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => pick(p)}
+                    className={`w-full text-left px-3 py-1.5 text-[11px] ${i === highlight ? 'bg-indigo-50' : 'hover:bg-slate-50'}`}
+                  >
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono font-semibold text-indigo-700 shrink-0">{p.seller_sku}</span>
+                      <span className="text-slate-900 truncate">{p.display_name}</span>
+                    </div>
+                    {(p.default_supplier_site || p.default_currency || p.default_unit_price != null) && (
+                      <div className="mt-0.5 text-[10px] text-slate-500 truncate">
+                        {[
+                          p.default_supplier_site,
+                          p.default_currency,
+                          p.default_unit_price != null ? `${p.default_unit_price}` : null,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </div>
+                    )}
+                  </button>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 
