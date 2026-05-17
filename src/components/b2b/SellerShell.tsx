@@ -199,6 +199,7 @@ export default function SellerShell({
               <div key={item.href}>
                 <Link
                   href={item.href}
+                  prefetch={false}
                   aria-current={isActive ? 'page' : undefined}
                   className={`flex items-center gap-3 px-3 py-2 rounded-md text-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-800
                     ${isActive
@@ -220,6 +221,7 @@ export default function SellerShell({
                         <Link
                           key={sub.href}
                           href={sub.href}
+                          prefetch={false}
                           aria-current={subActive ? 'page' : undefined}
                           className={`block px-3 py-1.5 rounded-md text-[13px] transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-1 focus-visible:ring-offset-slate-800
                             ${subActive
