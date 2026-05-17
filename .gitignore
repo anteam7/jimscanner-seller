@@ -16,3 +16,4 @@ dist
 .turbo
 *.tsbuildinfo
 next-env.d.ts
+.claude/
