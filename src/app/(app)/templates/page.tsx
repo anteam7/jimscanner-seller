@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import TemplateUploadModal from '@/components/b2b/TemplateUploadModal'
+import ForkTemplateButton from '@/components/b2b/ForkTemplateButton'
 
 export const metadata: Metadata = {
   title: '배대지 양식',
@@ -121,7 +122,10 @@ export default async function TemplatesPage() {
                     시트 “{t.data_sheet_name}” · {formatSize(t.source_file_size)} · 데이터 시작 행 {t.data_start_row}
                   </p>
                 </div>
-                <span className="text-[11px] text-slate-500 bg-white border border-slate-200 rounded px-2 py-0.5">읽기 전용</span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-[11px] text-slate-500 bg-white border border-slate-200 rounded px-2 py-0.5">읽기 전용</span>
+                  <ForkTemplateButton templateId={t.id} templateName={t.name} />
+                </div>
               </li>
             ))}
           </ul>
