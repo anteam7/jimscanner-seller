@@ -4,6 +4,30 @@
 
 ---
 
+## 2026-05-17 (세션 7 — dogfood A+B + 이슈 7건 fix + P1 설계)
+
+### 작업
+1. **사이드바 서브메뉴 분기**: "주문 관리" → 주문 목록 / 단건 등록 / 일괄 등록 3개 (SellerShell.tsx, /orders 경로 진입 시 자동 펼침)
+2. **트랙 A dogfood** (Chrome DevTools MCP, prod): /orders/new 4섹션 폼 → POST 201 → 목록·상세 → PATCH status 200 (세션 5 fix 검증 ✓)
+3. **트랙 B dogfood**: /orders/bulk 27 컬럼 그리드 → 2 행 입력 → POST bulk 201 → source='excel_upload' 배지 ✓
+4. **이슈 7건 fix**:
+   - title 중복 (8 페이지: `'X | 짐스캐너 B2B'` → `'X'`)
+   - `/api/announcements/active` 500 (테이블 미존재 graceful + plan_code join 수정)
+   - 마켓·매입처 라벨 3곳 불일치 → `src/lib/b2b/order-options.ts` 단일 source 만들고 4 파일 import 통일
+   - 상태 변경 옵션 `(으)로 변경` → `→ X`
+   - 사이드바 비용 `예상/실제 금액` → `예상 매입 KRW / 실 결제 KRW` + v0.5 예정 안내
+   - 구매자 5필드 중 4개 (이름·전화·우편·기본주소·통관코드) ★ 표시
+5. **P1 설계 문서**: `_memory/p1-forwarder-export-design.md` — DB schema (b2b_forwarder_form_specs) + API route + Modal UI + xlsx 라이브러리 선택 (exceljs) + source_path DSL + 시드 예시
+
+### prod 검증된 흐름
+- 단건: 마켓 쿠팡 + 김구매(통관코드) + Anker(US) + 몰테일 → pending → confirmed 전이 OK
+- 일괄: 스마트스토어(Nintendo, JPY)·옥션(Bose, USD) 2건 paste 등록 OK
+
+### 다음 세션
+P1 구현 시작 — `_memory/p1-forwarder-export-design.md` 참조. 사용자가 배대지 양식 spec 3~5개 수집 협업 필요.
+
+---
+
 ## 2026-05-15 (분리 + 디자인 v2.1)
 
 세션 1 — 메인 repo 에서 분리·셋업 (해당 작업 컨텍스트는 main repo `_memory/` 또는 사용자 메모리에 있음):
