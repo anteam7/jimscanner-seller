@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getExchangeRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
+import { getDashboardStats } from '@/lib/b2b/dashboard-data'
 import { createClient } from '@/lib/auth/server'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
@@ -357,87 +358,14 @@ export default async function SellerDashboardPage() {
 
   const displayName = account.business_name ?? account.email
 
-  // 이번 달 통계 — 현재 월 1일 00:00 KST 부터
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-  const now = new Date()
-  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
-
-  const [
-    { count: monthOrderCount },
-    { data: subRows },
-    { data: monthOrderItems },
-    { count: skuCount },
-    { data: recentOrdersRaw },
-    { data: statusRowsRaw },
-  ] = await Promise.all([
-    db
-      .from('b2b_orders')
-      .select('id', { count: 'exact', head: true })
-      .eq('account_id', account.id)
-      .is('deleted_at', null)
-      .gte('created_at', monthStart),
-    db
-      .from('b2b_subscriptions')
-      .select('plan_code, monthly_order_used, monthly_order_limit')
-      .eq('account_id', account.id)
-      .order('created_at', { ascending: false })
-      .limit(1),
-    db
-      .from('b2b_order_items')
-      .select('sale_price_krw, b2b_orders!inner(account_id, deleted_at, created_at)')
-      .eq('b2b_orders.account_id', account.id)
-      .is('b2b_orders.deleted_at', null)
-      .gte('b2b_orders.created_at', monthStart),
-    db
-      .from('b2b_products')
-      .select('id', { count: 'exact', head: true })
-      .eq('account_id', account.id)
-      .eq('is_active', true),
-    db
-      .from('b2b_orders')
-      .select('id, order_number, market_order_number, marketplace, status, buyer_name, created_at, b2b_order_items(product_name, sale_price_krw)')
-      .eq('account_id', account.id)
-      .is('deleted_at', null)
-      .order('created_at', { ascending: false })
-      .limit(5),
-    // status 별 카운트 — 이번 달
-    db
-      .from('b2b_orders')
-      .select('status')
-      .eq('account_id', account.id)
-      .is('deleted_at', null)
-      .gte('created_at', monthStart),
-  ])
-
-  type RecentOrder = {
-    id: string
-    order_number: string
-    market_order_number: string | null
-    marketplace: string | null
-    status: string
-    buyer_name: string | null
-    created_at: string
-    b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
-  }
-  const recentOrders = (recentOrdersRaw as RecentOrder[] | null) ?? []
-
-  type StatusRow = { status: string }
-  const statusCounts: Record<string, number> = {}
-  for (const r of (statusRowsRaw as StatusRow[] | null) ?? []) {
-    statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1
-  }
-
-  type Subscription = { plan_code: string; monthly_order_used: number; monthly_order_limit: number | null }
-  const sub: Subscription | null = (subRows as Subscription[] | null)?.[0] ?? null
-
-  type ItemRow = { sale_price_krw: number | string | null }
-  const monthSaleKrw = ((monthOrderItems as ItemRow[] | null) ?? []).reduce((acc, it) => {
-    const v = it.sale_price_krw
-    if (v == null || v === '') return acc
-    const n = typeof v === 'number' ? v : Number(v)
-    return Number.isFinite(n) ? acc + n : acc
-  }, 0)
+  // 이번 달 통계 — 60초 캐싱 (account_id 기준)
+  const stats = await getDashboardStats(account.id)
+  const monthOrderCount = stats.monthOrderCount
+  const monthSaleKrw = stats.monthSaleKrw
+  const skuCount = stats.skuCount
+  const sub = stats.subscription
+  const recentOrders = stats.recentOrders
+  const statusCounts = stats.statusCounts
 
   const ordersValue = (monthOrderCount ?? 0).toLocaleString('ko-KR') + '건'
   const saleValue =
