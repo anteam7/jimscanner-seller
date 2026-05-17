@@ -178,6 +178,36 @@ export default function BulkExportModal({
         </div>
 
         <div className="px-6 py-5 space-y-5 overflow-y-auto">
+          {/* 합배송 절감 추정 — 같은 수취인 묶을 때만 */}
+          {groupCount > 0 && groupCount < orderCount && (() => {
+            // 배대지 평균 1회 배송비를 ~6,000원으로 가정 (보수적)
+            // 절감 = (주문수 - 그룹수) × 6000
+            const PER_SHIPMENT_KRW = 6000
+            const savedShipments = orderCount - groupCount
+            const savedKrw = savedShipments * PER_SHIPMENT_KRW
+            const fmt = (n: number) => new Intl.NumberFormat('ko-KR').format(n)
+            return (
+              <div className="rounded-md border border-emerald-200 bg-gradient-to-r from-emerald-50 to-emerald-50/30 px-3 py-2.5">
+                <div className="flex items-start gap-2">
+                  <svg className="w-4 h-4 text-emerald-600 flex-shrink-0 mt-0.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 18 9 11.25l4.306 4.307a11.95 11.95 0 0 1 5.814-5.519l2.74-1.22m0 0-5.94-2.281m5.94 2.28-2.28 5.941" />
+                  </svg>
+                  <div className="flex-1 text-xs">
+                    <p className="font-semibold text-emerald-900">
+                      합배송 묶기로 약{' '}
+                      <span className="text-emerald-700 tabular-nums">{fmt(savedKrw)}원</span> 절감 추정
+                    </p>
+                    <p className="text-emerald-800 mt-0.5 leading-relaxed">
+                      {orderCount}건 → {groupCount}그룹으로 묶음 ·
+                      배송 횟수 {orderCount}회 → {groupCount}회 ·
+                      회당 ~{fmt(PER_SHIPMENT_KRW)}원 기준 (배대지·중량·국가별 변동)
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )
+          })()}
+
           {/* 누락 경고 */}
           {(() => {
             if (selectedOrders.length === 0) return null
