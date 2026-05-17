@@ -197,7 +197,72 @@ export default function CompliancePage() {
           )}
         </section>
       )}
+
+      {/* 부가세 자료 CSV 다운로드 */}
+      <TaxCsvExportSection />
     </div>
+  )
+}
+
+function TaxCsvExportSection() {
+  const now = new Date()
+  const thisMonth = now.toISOString().slice(0, 7) // YYYY-MM
+  const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+  const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, '0')}`
+
+  function rangeFor(ym: string): { from: string; to: string } {
+    const [y, m] = ym.split('-').map(Number)
+    const first = new Date(y, m - 1, 1)
+    const last = new Date(y, m, 0)
+    const fmt = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+    return { from: fmt(first), to: fmt(last) }
+  }
+
+  function downloadUrl(ym: string): string {
+    const r = rangeFor(ym)
+    return `/api/orders/export-csv?from=${r.from}&to=${r.to}`
+  }
+
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-emerald-500 bg-gradient-to-br from-emerald-50/30 to-white shadow-sm p-5 space-y-4">
+      <div>
+        <h2 className="text-base font-semibold text-slate-900">부가세·회계 자료 (CSV)</h2>
+        <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+          주문 데이터를 CSV 로 다운로드합니다. 한국수출입은행 환율로 KRW 환산·라인별 마진 포함.
+          엑셀에서 바로 열 수 있도록 UTF-8 BOM 포함.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <a
+          href={downloadUrl(thisMonth)}
+          className="group inline-flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors"
+        >
+          <div>
+            <p className="text-xs text-slate-500">이번 달</p>
+            <p className="text-sm font-semibold text-slate-900">{thisMonth} 자료</p>
+          </div>
+          <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </a>
+        <a
+          href={downloadUrl(lastMonth)}
+          className="group inline-flex items-center justify-between gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 hover:border-emerald-200 hover:bg-emerald-50/40 transition-colors"
+        >
+          <div>
+            <p className="text-xs text-slate-500">지난 달</p>
+            <p className="text-sm font-semibold text-slate-900">{lastMonth} 자료</p>
+          </div>
+          <svg className="w-4 h-4 text-emerald-600" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+        </a>
+      </div>
+      <p className="text-[11px] text-slate-500">
+        20 컬럼: 주문일·마켓·셀러번호·구매자 PII·통관코드·상품·매입가·환율 환산 KRW·판매가·마진.
+        부가세 신고용 보조 자료로 사용 가능 (홈택스 직접 업로드 양식은 v0.5 예정).
+      </p>
+    </section>
   )
 }
 
