@@ -49,18 +49,6 @@ function formatForeign(v: number | string | null | undefined, currency: string |
   return `${n.toLocaleString('ko-KR')} ${currency ?? ''}`.trim()
 }
 
-function buildSupplierUrl(source: string, orderNumber: string): string | null {
-  // 매입처별 정규화된 주문 상세 URL — DB 의 source_url 이 변형돼 있어 장바구니로
-  // redirect 되는 경우를 피해 항상 표준 형식으로 생성.
-  if (source === 'amazon_us') {
-    return `https://www.amazon.com/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
-  }
-  if (source === 'amazon_jp') {
-    return `https://www.amazon.co.jp/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
-  }
-  return null
-}
-
 function formatDate(iso: string | null): string {
   if (!iso) return '—'
   const d = new Date(iso)
@@ -161,23 +149,13 @@ export default async function ImportsPage() {
                         </span>
                       </td>
                       <td className="px-4 py-3">
-                        {(() => {
-                          const safeUrl =
-                            buildSupplierUrl(r.source, r.supplier_order_number) ?? r.source_url
-                          return safeUrl ? (
-                            <a
-                              href={safeUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="font-mono text-[11px] text-indigo-700 hover:text-indigo-800 hover:underline underline-offset-2"
-                              title="매입처 주문 상세 페이지 열기 (로그인 필요)"
-                            >
-                              {r.supplier_order_number}
-                            </a>
-                          ) : (
-                            <span className="font-mono text-[11px] text-slate-700">{r.supplier_order_number}</span>
-                          )
-                        })()}
+                        <Link
+                          href={`/imports/${r.id}`}
+                          className="font-mono text-[11px] text-indigo-700 hover:text-indigo-800 hover:underline underline-offset-2"
+                          title="짐스캐너에서 영수증 상세 보기"
+                        >
+                          {r.supplier_order_number}
+                        </Link>
                       </td>
                       <td className="px-4 py-3">
                         {first ? (
