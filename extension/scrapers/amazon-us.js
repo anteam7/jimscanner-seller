@@ -145,6 +145,12 @@
       }
     }
 
+    // 정규화된 source_url — Amazon 이 변형된 URL 에서 장바구니로 redirect 하는 경우가 있어
+    // orderID 만 가진 표준 형식으로 저장. 원본 URL 은 raw_meta 에 보존.
+    const normalizedUrl =
+      'https://www.amazon.com/gp/your-account/order-details?orderID=' +
+      encodeURIComponent(orderId)
+
     return {
       source: 'amazon_us',
       supplier_order_number: orderId,
@@ -155,11 +161,12 @@
       tax_foreign: taxForeign,
       total_foreign: totalForeign,
       items,
-      source_url: window.location.href.split('#')[0],
+      source_url: normalizedUrl,
       raw_meta: {
         items_count: items.length,
         scraped_at: new Date().toISOString(),
-        ua: 'amazon-us-v0.2.0',
+        ua: 'amazon-us-v0.3.0',
+        original_url: window.location.href.split('#')[0],
       },
     }
   }
