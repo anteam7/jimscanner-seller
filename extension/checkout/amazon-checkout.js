@@ -256,27 +256,75 @@
     renderList(addresses, country)
   }
 
-  function renderList(addresses, country) {
-    const items = addresses
-      .map(
-        (a) => `
-        <li data-id="${escapeHtml(a.id)}" style="border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background 120ms"
-            class="jsx-addr-item">
-          <div style="padding:10px 14px">
-            <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px">
-              <span style="font-weight:700;color:#0f172a">${escapeHtml(a.label)}</span>
-              ${a.forwarders?.name ? `<span style="font-size:10px;color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;padding:1px 5px;border-radius:3px">${escapeHtml(a.forwarders.name)}</span>` : ''}
-              ${a.is_official ? `<span style="font-size:10px;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;padding:1px 5px;border-radius:3px">공식</span>` : ''}
-              ${a.is_default ? `<span style="font-size:10px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:1px 5px;border-radius:3px">기본</span>` : ''}
-            </div>
-            <div style="font-size:11px;color:#475569">${escapeHtml(a.recipient_name)}</div>
-            <div style="font-size:10px;color:#94a3b8;margin-top:2px">
-              ${escapeHtml([a.address1, a.address2].filter(Boolean).join(', '))}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} ${escapeHtml(a.zip)} ${escapeHtml(a.country)}
-            </div>
+  function renderAddressItem(a) {
+    return `
+      <li data-id="${escapeHtml(a.id)}" style="border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background 120ms" class="jsx-addr-item">
+        <div style="padding:10px 14px">
+          <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">
+            <span style="font-weight:700;color:#0f172a">${escapeHtml(a.label)}</span>
+            ${a.forwarders?.name ? `<span style="font-size:10px;color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;padding:1px 5px;border-radius:3px">${escapeHtml(a.forwarders.name)}</span>` : ''}
+            ${a.is_default ? `<span style="font-size:10px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:1px 5px;border-radius:3px">기본</span>` : ''}
           </div>
-        </li>`,
-      )
-      .join('')
+          <div style="font-size:11px;color:#475569">${escapeHtml(a.recipient_name)}</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px">
+            ${escapeHtml([a.address1, a.address2].filter(Boolean).join(', '))}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} ${escapeHtml(a.zip)} ${escapeHtml(a.country)}
+          </div>
+        </div>
+      </li>`
+  }
+
+  function renderEmptyTab(tab, country) {
+    if (tab === 'mine') {
+      return `
+        <div style="padding:24px 16px;text-align:center;flex:1">
+          <div style="font-size:13px;color:#475569;font-weight:600;margin-bottom:6px">
+            등록된 내 주소가 없습니다.
+          </div>
+          <div style="font-size:11px;color:#94a3b8;line-height:1.6">
+            아래 [공용 주소] 탭에서 본인이 쓰는 배대지를 골라<br/>
+            [내 주소로 추가] 하거나, 짐스캐너 설정에서 직접 등록하세요.
+          </div>
+        </div>`
+    }
+    return `
+      <div style="padding:24px 16px;text-align:center;flex:1">
+        <div style="font-size:13px;color:#475569;font-weight:600;margin-bottom:6px">
+          ${country === 'JP' ? '🇯🇵 일본' : '🇺🇸 미국'} 공용 주소가 없습니다.
+        </div>
+      </div>`
+  }
+
+  // 활성 탭은 currentTab 클로저 변수로 관리
+  let currentTab = 'mine'
+  let allAddresses = []
+  let currentCountry = 'US'
+
+  function renderList(addresses, country) {
+    allAddresses = addresses
+    currentCountry = country
+    const mine = addresses.filter((a) => a.account_id != null)
+    const official = addresses.filter((a) => a.is_official === true)
+    // 첫 진입: 내 주소가 있으면 mine, 없으면 official
+    currentTab = mine.length > 0 ? 'mine' : 'official'
+    drawTabs(mine, official, country)
+  }
+
+  function drawTabs(mine, official, country) {
+    const activeList = currentTab === 'mine' ? mine : official
+    const itemsHtml =
+      activeList.length === 0
+        ? renderEmptyTab(currentTab, country)
+        : `<ul id="jsx-fill-list" style="margin:0;padding:0;list-style:none">${activeList.map(renderAddressItem).join('')}</ul>`
+
+    const tabBtn = (key, label, count) => `
+      <button data-tab="${key}" class="jsx-tab-btn" style="
+        flex:1;padding:8px 4px;border:none;background:transparent;
+        font-size:11px;font-weight:600;cursor:pointer;
+        color:${currentTab === key ? '#4f46e5' : '#64748b'};
+        border-bottom:2px solid ${currentTab === key ? '#4f46e5' : 'transparent'};
+        transition:color 120ms,border-color 120ms">
+        ${label} <span style="font-weight:500;color:${currentTab === key ? '#6366f1' : '#94a3b8'}">(${count})</span>
+      </button>`
 
     renderPanel(`
       <div style="padding:14px 16px;border-bottom:1px solid #f1f5f9">
@@ -285,21 +333,34 @@
           <button id="jsx-fill-close" style="font-size:18px;color:#94a3b8;background:none;border:none;cursor:pointer;line-height:1">×</button>
         </div>
         <div style="margin-top:4px;font-size:11px;color:#64748b">
-          ${country === 'JP' ? '🇯🇵 일본 배대지' : '🇺🇸 미국 배대지'} · ${addresses.length}건
+          ${country === 'JP' ? '🇯🇵 일본 배대지' : '🇺🇸 미국 배대지'}
         </div>
       </div>
-      <ul id="jsx-fill-list" style="margin:0;padding:0;list-style:none;flex:1;overflow-y:auto">${items}</ul>
+      <div style="display:flex;border-bottom:1px solid #e2e8f0;background:#f8fafc">
+        ${tabBtn('mine', '내 주소', mine.length)}
+        ${tabBtn('official', '공용 주소', official.length)}
+      </div>
+      <div id="jsx-tab-body" style="flex:1;overflow-y:auto">${itemsHtml}</div>
       <div style="padding:8px 16px;border-top:1px solid #f1f5f9;font-size:10px;color:#94a3b8;background:#f8fafc">
-        주소 추가/수정: <a href="${location.origin === 'https://jimscanner-seller.vercel.app' ? '' : 'https://jimscanner-seller.vercel.app'}/settings/forwarder-addresses" target="_blank" style="color:#4f46e5">/settings/forwarder-addresses</a>
+        주소 추가/수정: <a href="https://jimscanner-seller.vercel.app/settings/forwarder-addresses" target="_blank" style="color:#4f46e5">/settings/forwarder-addresses</a>
       </div>
     `)
     document.getElementById('jsx-fill-close')?.addEventListener('click', closePanel)
+    document.querySelectorAll('.jsx-tab-btn').forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const tab = btn.getAttribute('data-tab')
+        if (tab && tab !== currentTab) {
+          currentTab = tab
+          drawTabs(mine, official, country)
+        }
+      })
+    })
     document.querySelectorAll('.jsx-addr-item').forEach((li) => {
       li.addEventListener('mouseenter', () => (li.style.background = '#f8fafc'))
       li.addEventListener('mouseleave', () => (li.style.background = ''))
       li.addEventListener('click', () => {
         const id = li.getAttribute('data-id')
-        const picked = addresses.find((a) => a.id === id)
+        const picked = allAddresses.find((a) => a.id === id)
         if (picked) applyFill(picked)
       })
     })
