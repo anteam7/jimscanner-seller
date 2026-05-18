@@ -149,11 +149,36 @@ export default function ForwarderAddressManager({
     setEditingId(r.id)
     setAdding(true)
     setError(null)
-    // 폼이 페이지 상단 — 부드럽게 스크롤
     if (typeof window !== 'undefined') {
-      requestAnimationFrame(() => {
-        window.scrollTo({ top: 0, behavior: 'smooth' })
-      })
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
+    }
+  }
+
+  // 공용 주소를 본인 주소로 복사 (POST 새 row). placeholder 텍스트는 비워서
+  // 셀러가 영문이름/회원번호를 채우게 함.
+  function copyOfficialToMine(r: AddressRow) {
+    const placeholderLike = /\(.*입력 필요.*\)|회원번호|会員番号/i
+    const cleanRecipient = placeholderLike.test(r.recipient_name) ? '' : r.recipient_name
+    setForm({
+      forwarder_id: r.forwarder_id,
+      label: r.label.replace(/^[^\s]+\s/, '내 ') || '내 주소',
+      recipient_name: cleanRecipient,
+      phone: r.phone ?? '',
+      address1: r.address1,
+      address2: r.address2 ?? '',
+      city: r.city,
+      state: r.state,
+      zip: r.zip,
+      country: r.country,
+      member_no: '',
+      is_default: false,
+      notes: r.notes ? `(${r.label} 기반)` : '',
+    })
+    setEditingId(null) // POST 로 새 row
+    setAdding(true)
+    setError(null)
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => window.scrollTo({ top: 0, behavior: 'smooth' }))
     }
   }
 
@@ -402,7 +427,16 @@ export default function ForwarderAddressManager({
                   )}
                 </div>
                 <div className="flex flex-col items-end gap-1 shrink-0">
-                  {!r.is_official && r.account_id != null && (
+                  {r.is_official ? (
+                    <button
+                      type="button"
+                      onClick={() => copyOfficialToMine(r)}
+                      className="text-[10px] font-semibold text-indigo-700 hover:text-indigo-800 hover:underline underline-offset-2 whitespace-nowrap"
+                      title="이 주소를 기반으로 본인 주소를 추가합니다 (영문이름·회원번호만 채우세요)"
+                    >
+                      내 주소로 추가
+                    </button>
+                  ) : r.account_id != null ? (
                     <>
                       <button
                         type="button"
@@ -428,7 +462,7 @@ export default function ForwarderAddressManager({
                         삭제
                       </button>
                     </>
-                  )}
+                  ) : null}
                 </div>
               </div>
             </li>
