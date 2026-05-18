@@ -96,7 +96,7 @@ function fieldCls(
   const isValid = touched[name as keyof FormState] && !hasError
   return [
     'bg-white text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500 transition-colors',
-    hasError ? 'border-red-600 focus-visible:ring-red-500' : isValid ? 'border-green-600' : 'border-slate-300',
+    hasError ? 'border-rose-600 focus-visible:ring-rose-500' : isValid ? 'border-green-600' : 'border-slate-300',
     extra,
   ]
     .filter(Boolean)
@@ -106,7 +106,7 @@ function fieldCls(
 function FieldError({ id, message }: { id?: string; message: string | undefined }) {
   if (!message) return null
   return (
-    <p id={id} className="mt-1 text-xs text-red-600" role="alert">
+    <p id={id} className="mt-1 text-xs text-rose-700" role="alert">
       {message}
     </p>
   )
@@ -224,7 +224,7 @@ export default function SignupStep4Page() {
             {/* 사업자 유형 */}
             <fieldset>
               <legend className="block text-sm font-medium text-slate-500 mb-2">
-                사업자 유형 <span className="text-red-600">*</span>
+                사업자 유형 <span className="text-rose-700">*</span>
               </legend>
               <div className="flex gap-3">
                 {(['개인사업자', '법인사업자'] as const).map((type) => (
@@ -249,7 +249,7 @@ export default function SignupStep4Page() {
             {/* 사업자등록번호 */}
             <div>
               <label htmlFor="businessNo" className="block text-sm font-medium text-slate-500 mb-1.5">
-                사업자등록번호 <span className="text-red-600">*</span>
+                사업자등록번호 <span className="text-rose-700">*</span>
               </label>
               <Input
                 id="businessNo"
@@ -270,7 +270,7 @@ export default function SignupStep4Page() {
             {/* 상호 */}
             <div>
               <label htmlFor="businessName" className="block text-sm font-medium text-slate-500 mb-1.5">
-                상호 <span className="text-red-600">*</span>
+                상호 <span className="text-rose-700">*</span>
               </label>
               <Input
                 id="businessName"
@@ -289,7 +289,7 @@ export default function SignupStep4Page() {
             {/* 대표자명 */}
             <div>
               <label htmlFor="ceoName" className="block text-sm font-medium text-slate-500 mb-1.5">
-                대표자명 <span className="text-red-600">*</span>
+                대표자명 <span className="text-rose-700">*</span>
               </label>
               <Input
                 id="ceoName"
@@ -310,7 +310,7 @@ export default function SignupStep4Page() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="categoryMain" className="block text-sm font-medium text-slate-500 mb-1.5">
-                  업태 <span className="text-red-600">*</span>
+                  업태 <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   id="categoryMain"
@@ -327,7 +327,7 @@ export default function SignupStep4Page() {
               </div>
               <div>
                 <label htmlFor="categorySub" className="block text-sm font-medium text-slate-500 mb-1.5">
-                  종목 <span className="text-red-600">*</span>
+                  종목 <span className="text-rose-700">*</span>
                 </label>
                 <Input
                   id="categorySub"
@@ -347,7 +347,7 @@ export default function SignupStep4Page() {
             {/* 전화번호 */}
             <div>
               <label htmlFor="phone" className="block text-sm font-medium text-slate-500 mb-1.5">
-                사업장 전화번호 <span className="text-red-600">*</span>
+                사업장 전화번호 <span className="text-rose-700">*</span>
               </label>
               <Input
                 id="phone"
@@ -367,7 +367,7 @@ export default function SignupStep4Page() {
             {/* 주소 */}
             <div className="space-y-2">
               <label className="block text-sm font-medium text-slate-500">
-                사업장 주소 <span className="text-red-600">*</span>
+                사업장 주소 <span className="text-rose-700">*</span>
               </label>
               <div className="flex gap-2">
                 <Input
@@ -408,7 +408,7 @@ export default function SignupStep4Page() {
             </div>
 
             {submitError && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
+              <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700" role="alert">
                 {submitError}
               </div>
             )}

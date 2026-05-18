@@ -114,7 +114,7 @@ export default function SignupStep3Page() {
 
           {/* 오류 메시지 */}
           {error && (
-            <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700 mb-4">
+            <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700 mb-4">
               {error}
             </div>
           )}

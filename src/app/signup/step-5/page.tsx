@@ -247,14 +247,14 @@ function VerifyFailed({ reason, message }: { reason: FailReason; message: string
   }
   return (
     <div className="space-y-6">
-      <div className="rounded-xl border border-red-200 bg-red-50 p-6 flex flex-col items-center gap-3 text-center">
-        <div className="w-14 h-14 rounded-full bg-red-900/60 border border-red-200/50 flex items-center justify-center">
-          <svg className="w-7 h-7 text-red-600" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+      <div className="rounded-xl border border-rose-200 bg-rose-50 p-6 flex flex-col items-center gap-3 text-center">
+        <div className="w-14 h-14 rounded-full bg-rose-900/60 border border-rose-200/50 flex items-center justify-center">
+          <svg className="w-7 h-7 text-rose-700" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" />
           </svg>
         </div>
         <div>
-          <p className="text-base font-bold text-red-700">
+          <p className="text-base font-bold text-rose-700">
             {reason ? labels[reason] : '확인 실패'}
           </p>
           <p className="text-sm text-slate-400 mt-2 leading-relaxed">{message}</p>

@@ -260,7 +260,7 @@ export default function SignupStep6Page() {
                     ) : (
                       <div className="w-16 h-16 rounded-lg bg-slate-100 border border-slate-300 flex items-center justify-center flex-shrink-0">
                         <svg
-                          className="w-8 h-8 text-red-600"
+                          className="w-8 h-8 text-rose-700"
                           fill="none"
                           viewBox="0 0 24 24"
                           strokeWidth={1.5}
@@ -302,7 +302,7 @@ export default function SignupStep6Page() {
               </div>
 
               {validationError && (
-                <p className="mt-2 text-xs text-red-600 flex items-center gap-1.5">
+                <p className="mt-2 text-xs text-rose-700 flex items-center gap-1.5">
                   <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
                     <path
                       fillRule="evenodd"
@@ -315,7 +315,7 @@ export default function SignupStep6Page() {
               )}
 
               {uploadError && (
-                <div className="mt-3 rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700">
+                <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
                   {uploadError}
                 </div>
               )}

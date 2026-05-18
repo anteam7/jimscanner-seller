@@ -108,14 +108,14 @@ export default function AccountDeletePage() {
       {step === 'warning' && (
         <div className="space-y-4">
           {/* 탈퇴 안내 */}
-          <div className="rounded-xl border border-red-200/60 bg-red-50 p-5 space-y-3">
+          <div className="rounded-xl border border-rose-200/60 bg-rose-50 p-5 space-y-3">
             <div className="flex items-center gap-2">
-              <svg className="w-5 h-5 text-red-600 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg className="w-5 h-5 text-rose-700 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126Z" />
               </svg>
-              <h2 className="text-base font-semibold text-red-700">탈퇴 전 반드시 확인해 주세요</h2>
+              <h2 className="text-base font-semibold text-rose-700">탈퇴 전 반드시 확인해 주세요</h2>
             </div>
-            <ul className="space-y-2 text-sm text-red-700/80 list-disc list-inside pl-1">
+            <ul className="space-y-2 text-sm text-rose-700/80 list-disc list-inside pl-1">
               <li>모든 주문·의뢰자·설정 데이터가 영구 삭제됩니다</li>
               <li>동일 사업자등록번호로 재가입은 <strong>30일 후</strong>부터 가능합니다</li>
               <li>탈퇴 후에는 계정 복구가 불가능합니다</li>
@@ -150,7 +150,7 @@ export default function AccountDeletePage() {
             <Button
               onClick={() => setStep('confirm')}
               variant="destructive"
-              className="flex-1 bg-red-700 hover:bg-red-600 text-white"
+              className="flex-1 bg-rose-700 hover:bg-rose-600 text-white"
             >
               계속 진행
             </Button>
@@ -202,7 +202,7 @@ export default function AccountDeletePage() {
                 </button>
               </div>
               {error && (
-                <p id="delete-error" role="alert" className="text-xs text-red-600">
+                <p id="delete-error" role="alert" className="text-xs text-rose-700">
                   {error}
                 </p>
               )}
@@ -221,7 +221,7 @@ export default function AccountDeletePage() {
               onClick={handleDelete}
               disabled={submitting || !password.trim()}
               variant="destructive"
-              className="flex-1 bg-red-700 hover:bg-red-600 text-white disabled:opacity-50"
+              className="flex-1 bg-rose-700 hover:bg-rose-600 text-white disabled:opacity-50"
             >
               {submitting ? (
                 <span className="flex items-center gap-2">

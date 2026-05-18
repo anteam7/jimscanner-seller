@@ -180,7 +180,7 @@ export default function SecuritySettingsPage() {
             </div>
           </div>
           {error && (
-            <p role="alert" className="text-sm text-red-600 bg-red-50 border border-red-200/50 rounded-lg px-4 py-2.5">
+            <p role="alert" className="text-sm text-rose-700 bg-rose-50 border border-rose-200/50 rounded-lg px-4 py-2.5">
               {error}
             </p>
           )}
@@ -264,7 +264,7 @@ export default function SecuritySettingsPage() {
                 aria-invalid={!!error}
               />
               {error && (
-                <p id="verify-error" role="alert" className="text-sm text-red-600">
+                <p id="verify-error" role="alert" className="text-sm text-rose-700">
                   {error}
                 </p>
               )}
@@ -329,7 +329,7 @@ export default function SecuritySettingsPage() {
               setDisableCode('')
               setError(null)
             }}
-            className="border-red-200/60 text-red-600 hover:bg-red-50 hover:text-red-700 hover:border-red-200"
+            className="border-rose-200/60 text-rose-700 hover:bg-rose-50 hover:text-rose-700 hover:border-rose-200"
           >
             2단계 인증 비활성화
           </Button>
@@ -370,12 +370,12 @@ export default function SecuritySettingsPage() {
                   setError(null)
                 }}
                 autoComplete="one-time-code"
-                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-red-500 tracking-widest text-center text-lg font-mono"
+                className="bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-rose-500 tracking-widest text-center text-lg font-mono"
                 aria-describedby={error ? 'disable-error' : undefined}
                 aria-invalid={!!error}
               />
               {error && (
-                <p id="disable-error" role="alert" className="text-sm text-red-600">
+                <p id="disable-error" role="alert" className="text-sm text-rose-700">
                   {error}
                 </p>
               )}
@@ -384,7 +384,7 @@ export default function SecuritySettingsPage() {
               <Button
                 onClick={confirmDisable}
                 disabled={loading || disableCode.length !== 6}
-                className="flex-1 bg-red-700 hover:bg-red-600 text-white font-semibold disabled:opacity-50"
+                className="flex-1 bg-rose-700 hover:bg-rose-600 text-white font-semibold disabled:opacity-50"
               >
                 {loading ? '처리 중…' : '비활성화'}
               </Button>

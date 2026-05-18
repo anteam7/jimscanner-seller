@@ -21,7 +21,7 @@ function PasswordStrength({ password }: { password: string }) {
   const checks = PW_CHECKS.map((c) => ({ label: c.label, ok: c.test(password) }))
   const score = checks.filter((c) => c.ok).length
   const barColor =
-    score <= 1 ? 'bg-red-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
+    score <= 1 ? 'bg-rose-500' : score === 2 ? 'bg-amber-500' : score === 3 ? 'bg-blue-500' : 'bg-green-500'
 
   if (!password) return null
 
@@ -58,7 +58,7 @@ function validateEmail(email: string): string | null {
 
 function FieldError({ message }: { message: string | undefined }) {
   if (!message) return null
-  return <p className="mt-1 text-xs text-red-600" role="alert">{message}</p>
+  return <p className="mt-1 text-xs text-rose-700" role="alert">{message}</p>
 }
 
 export default function SignupStep1Page() {
@@ -136,7 +136,7 @@ export default function SignupStep1Page() {
             {/* 이메일 */}
             <div>
               <label htmlFor="email" className="block text-sm font-medium text-slate-500 mb-1.5">
-                이메일 <span className="text-red-600">*</span>
+                이메일 <span className="text-rose-700">*</span>
               </label>
               <Input
                 id="email"
@@ -150,7 +150,7 @@ export default function SignupStep1Page() {
                 aria-invalid={!!emailError}
                 aria-describedby={emailError ? 'email-error' : undefined}
                 className={`bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
-                  ${emailError ? 'border-red-600 focus-visible:ring-red-500' : emailTouched && !emailError ? 'border-green-600' : ''}`}
+                  ${emailError ? 'border-rose-600 focus-visible:ring-rose-500' : emailTouched && !emailError ? 'border-green-600' : ''}`}
               />
               <FieldError message={emailError ?? undefined} />
               {emailError && <span id="email-error" className="sr-only">{emailError}</span>}
@@ -159,7 +159,7 @@ export default function SignupStep1Page() {
             {/* 비밀번호 */}
             <div>
               <label htmlFor="password" className="block text-sm font-medium text-slate-500 mb-1.5">
-                비밀번호 <span className="text-red-600">*</span>
+                비밀번호 <span className="text-rose-700">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -174,7 +174,7 @@ export default function SignupStep1Page() {
                   aria-invalid={!!pwError}
                   aria-describedby={pwError ? 'pw-error' : undefined}
                   className={`pr-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
-                    ${pwError ? 'border-red-600 focus-visible:ring-red-500' : pwTouched && !pwError ? 'border-green-600' : ''}`}
+                    ${pwError ? 'border-rose-600 focus-visible:ring-rose-500' : pwTouched && !pwError ? 'border-green-600' : ''}`}
                 />
                 <button
                   type="button"
@@ -193,7 +193,7 @@ export default function SignupStep1Page() {
             {/* 비밀번호 확인 */}
             <div>
               <label htmlFor="confirm" className="block text-sm font-medium text-slate-500 mb-1.5">
-                비밀번호 확인 <span className="text-red-600">*</span>
+                비밀번호 확인 <span className="text-rose-700">*</span>
               </label>
               <div className="relative">
                 <Input
@@ -208,7 +208,7 @@ export default function SignupStep1Page() {
                   aria-invalid={!!confirmError}
                   aria-describedby={confirmError ? 'confirm-error' : undefined}
                   className={`pr-10 bg-white border-slate-300 text-slate-900 placeholder:text-slate-400 focus-visible:ring-indigo-500
-                    ${confirmMismatch ? 'border-red-600 focus-visible:ring-red-500' : confirmTouched && confirm && !confirmMismatch ? 'border-green-600' : ''}`}
+                    ${confirmMismatch ? 'border-rose-600 focus-visible:ring-rose-500' : confirmTouched && confirm && !confirmMismatch ? 'border-green-600' : ''}`}
                 />
                 <button
                   type="button"
@@ -220,14 +220,14 @@ export default function SignupStep1Page() {
                 </button>
               </div>
               {confirmMismatch && (
-                <p id="confirm-error" className="mt-1 text-xs text-red-600" role="alert">
+                <p id="confirm-error" className="mt-1 text-xs text-rose-700" role="alert">
                   비밀번호가 일치하지 않습니다.
                 </p>
               )}
             </div>
 
             {alreadyRegistered && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
+              <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700" role="alert">
                 이미 가입된 이메일입니다.{' '}
                 <Link href="/login" className="underline text-indigo-600 hover:text-indigo-700">
                   로그인
@@ -240,7 +240,7 @@ export default function SignupStep1Page() {
               </div>
             )}
             {submitError && (
-              <div className="rounded-lg bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-700" role="alert">
+              <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700" role="alert">
                 {submitError}
               </div>
             )}

@@ -32,7 +32,7 @@ function Toast({ toast, onClose }: { toast: ToastState; onClose: () => void }) {
       className={`fixed bottom-6 right-6 z-50 flex items-center gap-3 px-4 py-3 rounded-xl border text-sm font-medium shadow-lg transition-all ${
         toast.type === 'success'
           ? 'bg-emerald-50 border-emerald-200 text-emerald-700'
-          : 'bg-red-50 border-red-200 text-red-700'
+          : 'bg-rose-50 border-rose-200 text-rose-700'
       }`}
     >
       {toast.type === 'success' ? (
@@ -173,7 +173,7 @@ export default function AccountSettingsPage() {
   if (loadError) {
     return (
       <div className="p-8 max-w-3xl">
-        <p className="text-sm text-red-600">{loadError}</p>
+        <p className="text-sm text-rose-700">{loadError}</p>
         <button
           type="button"
           onClick={loadAccount}
@@ -270,7 +270,7 @@ export default function AccountSettingsPage() {
             />
           </div>
           {infoError && (
-            <p id="info-error" role="alert" className="text-xs text-red-600">{infoError}</p>
+            <p id="info-error" role="alert" className="text-xs text-rose-700">{infoError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -308,7 +308,7 @@ export default function AccountSettingsPage() {
             />
           </div>
           {emailError && (
-            <p id="email-error" role="alert" className="text-xs text-red-600">{emailError}</p>
+            <p id="email-error" role="alert" className="text-xs text-rose-700">{emailError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -404,17 +404,17 @@ export default function AccountSettingsPage() {
               onChange={(e) => { setConfirmPw(e.target.value); setPwError(null) }}
               autoComplete="new-password"
               className={`bg-slate-100 border-slate-300 text-slate-900 focus:border-indigo-500 focus:ring-indigo-500/20 ${
-                confirmPw.length > 0 && newPw !== confirmPw ? 'border-red-500 focus:border-red-500' : ''
+                confirmPw.length > 0 && newPw !== confirmPw ? 'border-rose-500 focus:border-rose-500' : ''
               }`}
               aria-invalid={confirmPw.length > 0 && newPw !== confirmPw ? true : undefined}
               aria-describedby={confirmPw.length > 0 && newPw !== confirmPw ? 'confirm-pw-error' : undefined}
             />
             {confirmPw.length > 0 && newPw !== confirmPw && (
-              <p id="confirm-pw-error" role="alert" className="text-xs text-red-600">비밀번호가 일치하지 않습니다.</p>
+              <p id="confirm-pw-error" role="alert" className="text-xs text-rose-700">비밀번호가 일치하지 않습니다.</p>
             )}
           </div>
           {pwError && (
-            <p id="pw-error" role="alert" className="text-xs text-red-600">{pwError}</p>
+            <p id="pw-error" role="alert" className="text-xs text-rose-700">{pwError}</p>
           )}
           <div className="flex justify-end pt-1">
             <Button
@@ -429,14 +429,14 @@ export default function AccountSettingsPage() {
       </section>
 
       {/* 계정 탈퇴 */}
-      <section className="rounded-xl border border-red-900/40 bg-red-50 p-6 space-y-3">
+      <section className="rounded-xl border border-rose-900/40 bg-rose-50 p-6 space-y-3">
         <div>
-          <h2 className="text-sm font-semibold text-red-700">계정 탈퇴</h2>
+          <h2 className="text-sm font-semibold text-rose-700">계정 탈퇴</h2>
           <p className="text-xs text-slate-400 mt-0.5">탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
         </div>
         <a
           href="/settings/account/delete"
-          className="inline-flex items-center gap-2 text-sm text-red-600 hover:text-red-700 transition-colors border border-red-200/50 hover:border-red-200 rounded-lg px-4 py-2"
+          className="inline-flex items-center gap-2 text-sm text-rose-700 hover:text-rose-700 transition-colors border border-rose-200/50 hover:border-rose-200 rounded-lg px-4 py-2"
         >
           <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 9V5.25A2.25 2.25 0 0 0 13.5 3h-6a2.25 2.25 0 0 0-2.25 2.25v13.5A2.25 2.25 0 0 0 7.5 21h6a2.25 2.25 0 0 0 2.25-2.25V15M12 9l-3 3m0 0 3 3m-3-3h12.75" />
