@@ -54,18 +54,28 @@ async function handleImport(payload) {
   const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])
   if (!token) throw new Error('토큰이 설정되지 않았습니다. 확장 popup 에서 저장하세요.')
   const base = (apiUrl || DEFAULT_API_URL).replace(/\/$/, '')
+  const url = base + '/api/imports/supplier-orders'
 
-  const res = await fetch(base + '/api/imports/supplier-orders', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: 'Bearer ' + token,
-    },
-    body: JSON.stringify(payload),
-  })
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: 'Bearer ' + token,
+      },
+      body: JSON.stringify(payload),
+    })
+  } catch (err) {
+    throw new Error(
+      'fetch 실패 [' + url + ']: ' +
+      (err && err.message ? err.message : String(err)) +
+      ' — 확장 새로고침 / host_permissions / Vercel Deployment Protection 확인',
+    )
+  }
   const body = await res.json().catch(() => ({}))
   if (!res.ok) {
-    throw new Error(body.error || `HTTP ${res.status}`)
+    throw new Error(body.error || `HTTP ${res.status} [${url}]`)
   }
   return body
 }
