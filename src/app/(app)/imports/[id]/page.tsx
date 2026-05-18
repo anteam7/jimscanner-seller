@@ -4,6 +4,7 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
+import DeleteButton from './DeleteButton'
 
 export const dynamic = 'force-dynamic'
 
@@ -139,8 +140,9 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
-      <header>
+      <header className="flex items-center justify-between">
         <Link href="/imports" className="text-xs text-slate-500 hover:text-slate-700">← 매입 영수증</Link>
+        <DeleteButton id={row.id} label={row.supplier_order_number} />
       </header>
 
       {/* 상단 요약 */}

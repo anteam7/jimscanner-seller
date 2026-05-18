@@ -61,10 +61,72 @@
     return Array.from(seen.values())
   }
 
+  // 추천/관련 상품 영역 — 명시적으로 제외해야 할 컨테이너 selector 들.
+  // 아마존이 자주 신/구 마크업을 섞기 때문에 후보를 폭넓게 둠.
+  const EXCLUDE_SELECTORS = [
+    '.a-carousel',
+    '.a-carousel-container',
+    '.a-carousel-card',
+    '[data-component="recommendations"]',
+    '[data-component="related-purchases"]',
+    '[data-component="buy-again"]',
+    '[data-component="related-products"]',
+    '[id*="sims"]',
+    '[id*="similarities"]',
+    '[id*="p13n"]',
+    '[id*="recommendations"]',
+    '[id*="related"]',
+    '[id*="buyAgain"]',
+    '[aria-label*="ecommend"]',
+    '[aria-label*="elated"]',
+    '[aria-label*="uy it again"]',
+    '.recommendations',
+    '.RelatedProducts',
+  ].join(',')
+
+  // 실제 주문 상품이 들어있는 "shipment" / "order details" 컨테이너 selector 들.
+  // 하나라도 매치되면 그 안의 ASIN 만 수집.
+  const SHIPMENT_SELECTORS = [
+    '#orderDetails',
+    '[data-component="shipments"]',
+    '[data-component="purchasedItems"]',
+    '[data-component="shipment"]',
+    '.shipment',
+    '.a-box-group .shipment',
+    '#od-shipments',
+    '.yohtmlc-shipment-level-connections',
+  ]
+
+  function findShipmentRoots() {
+    const found = new Set()
+    for (const sel of SHIPMENT_SELECTORS) {
+      document.querySelectorAll(sel).forEach((el) => found.add(el))
+    }
+    return Array.from(found)
+  }
+
+  function isInsideExcluded(anchor) {
+    return !!anchor.closest(EXCLUDE_SELECTORS)
+  }
+
   function scrapeItems() {
-    // 1) ASIN 패턴 anchor 모두 수집 (썸네일 링크 + 제목 링크가 중복으로 들어오므로 ASIN 기준 dedup).
-    const anchors = Array.from(document.querySelectorAll('a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/gp/aw/d/"]'))
-      .filter((a) => ASIN_RE.test(a.getAttribute('href') || ''))
+    // 1) 실제 주문 라인이 들어있는 shipment 컨테이너 안의 ASIN anchor 만 수집.
+    //    찾지 못하면 전체 페이지에서 수집하되 추천 영역은 명시 제외 (fallback).
+    const roots = findShipmentRoots()
+    const searchRoots = roots.length > 0 ? roots : [document]
+
+    const anchors = []
+    for (const root of searchRoots) {
+      const found = (root === document
+        ? document.querySelectorAll('a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/gp/aw/d/"]')
+        : root.querySelectorAll('a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/gp/aw/d/"]'))
+      for (const a of found) {
+        const href = a.getAttribute('href') || ''
+        if (!ASIN_RE.test(href)) continue
+        if (isInsideExcluded(a)) continue
+        anchors.push(a)
+      }
+    }
 
     const items = []
     for (const a of anchors) {
@@ -124,6 +186,7 @@
       if (!Number.isNaN(d)) purchasedAt = new Date(d).toISOString()
     }
 
+    const shipmentRoots = findShipmentRoots()
     const items = scrapeItems()
 
     // 합계
@@ -164,8 +227,9 @@
       source_url: normalizedUrl,
       raw_meta: {
         items_count: items.length,
+        shipment_roots_found: shipmentRoots.length,
         scraped_at: new Date().toISOString(),
-        ua: 'amazon-us-v0.3.0',
+        ua: 'amazon-us-v0.4.0',
         original_url: window.location.href.split('#')[0],
       },
     }
