@@ -2,6 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
+import { SUPPLIER_SITES } from '@/lib/b2b/order-options'
+
+const SUPPLIER_LABEL = new Map(SUPPLIER_SITES.map((s) => [s.value, s.label]))
 
 export const metadata: Metadata = {
   title: '매출·마진 분석',
@@ -17,6 +20,7 @@ type OrderItem = {
   currency: string | null
   unit_price_foreign: number | string | null
   sale_price_krw: number | string | null
+  supplier_site: string | null
 }
 
 type OrderRow = {
@@ -58,7 +62,7 @@ export default async function AnalyticsPage() {
 
   const { data: orderRows } = await db
     .from('b2b_orders')
-    .select('id, created_at, b2b_order_items(product_id, product_name, quantity, currency, unit_price_foreign, sale_price_krw)')
+    .select('id, created_at, b2b_order_items(product_id, product_name, quantity, currency, unit_price_foreign, sale_price_krw, supplier_site)')
     .eq('account_id', account.id)
     .is('deleted_at', null)
     .gte('created_at', sixMonthsAgo.toISOString())
@@ -173,6 +177,50 @@ export default async function AnalyticsPage() {
     .map((s) => ({ ...s, marginKrw: s.saleKrw - s.purchaseKrw }))
     .sort((a, b) => b.marginKrw - a.marginKrw)
     .slice(0, 20)
+
+  // 본인 supplier_site 별 평균 판매가 (마켓 비교용)
+  type SupplierStat = { supplierSite: string; lineCount: number; saleKrwSum: number; avgSaleKrw: number }
+  const supplierMap = new Map<string, { lineCount: number; saleKrwSum: number }>()
+  for (const o of orders) {
+    for (const it of o.b2b_order_items ?? []) {
+      if (!it.supplier_site) continue
+      const sale = Number(it.sale_price_krw)
+      if (!Number.isFinite(sale) || sale <= 0) continue
+      const cur = supplierMap.get(it.supplier_site) ?? { lineCount: 0, saleKrwSum: 0 }
+      cur.lineCount++
+      cur.saleKrwSum += sale
+      supplierMap.set(it.supplier_site, cur)
+    }
+  }
+  const mySupplierStats: SupplierStat[] = Array.from(supplierMap.entries()).map(([s, v]) => ({
+    supplierSite: s,
+    lineCount: v.lineCount,
+    saleKrwSum: v.saleKrwSum,
+    avgSaleKrw: Math.round(v.saleKrwSum / v.lineCount),
+  }))
+
+  // 익명 전체 셀러 평균 (SECURITY DEFINER RPC)
+  type MarketStat = {
+    supplier_site: string
+    line_count: number
+    avg_sale_krw: number
+    median_sale_krw: number
+    avg_qty: number
+  }
+  let marketStats: MarketStat[] = []
+  try {
+    const { data: mw } = await db.rpc('b2b_marketwide_supplier_stats', { p_min_lines: 20 })
+    marketStats = ((mw as MarketStat[] | null) ?? []).map((r) => ({
+      supplier_site: r.supplier_site,
+      line_count: Number(r.line_count),
+      avg_sale_krw: Number(r.avg_sale_krw),
+      median_sale_krw: Number(r.median_sale_krw),
+      avg_qty: Number(r.avg_qty),
+    }))
+  } catch {
+    marketStats = []
+  }
+  const marketByKey = new Map(marketStats.map((m) => [m.supplier_site, m]))
 
   // 전체 6개월 합계
   const totalSale = months.reduce((acc, m) => acc + m.saleKrw, 0)
@@ -318,6 +366,77 @@ export default async function AnalyticsPage() {
             </table>
           </div>
         )}
+      </section>
+
+      {/* H1 — 익명 전체 셀러 평균 비교 */}
+      <section className="rounded-xl bg-white shadow-sm border border-slate-200 border-l-[3px] border-l-amber-500 overflow-hidden">
+        <div className="px-5 py-4 border-b border-slate-100 bg-gradient-to-r from-amber-50/60 to-white">
+          <h2 className="text-base font-bold text-slate-900">📊 매입처별 전체 셀러 평균과 비교</h2>
+          <p className="mt-0.5 text-xs text-slate-600">
+            본인 평균 판매가가 전체 셀러 평균과 어떻게 차이나는지. 매입처당 최소 20라인 이상인 경우만 익명 노출 (k-anonymity).
+          </p>
+        </div>
+        {marketStats.length === 0 ? (
+          <div className="px-5 py-8 text-center text-xs text-slate-500">
+            전체 셀러 통계가 아직 부족합니다. 매입처당 20라인 이상 누적되면 표시됩니다.
+          </div>
+        ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-semibold">
+                <tr>
+                  <th className="px-3 py-2 text-left">매입처</th>
+                  <th className="px-3 py-2 text-right">내 라인</th>
+                  <th className="px-3 py-2 text-right">내 평균 판매가</th>
+                  <th className="px-3 py-2 text-right">시장 평균 (n=라인수)</th>
+                  <th className="px-3 py-2 text-right">시장 중간값</th>
+                  <th className="px-3 py-2 text-right">차이</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {marketStats.map((m) => {
+                  const mine = mySupplierStats.find((x) => x.supplierSite === m.supplier_site)
+                  const diff = mine ? mine.avgSaleKrw - m.avg_sale_krw : null
+                  const diffPct = mine && m.avg_sale_krw > 0 ? Math.round((diff! / m.avg_sale_krw) * 1000) / 10 : null
+                  return (
+                    <tr key={m.supplier_site} className="hover:bg-slate-50/70">
+                      <td className="px-3 py-2 font-medium text-slate-900">
+                        {SUPPLIER_LABEL.get(m.supplier_site) ?? m.supplier_site}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                        {mine ? mine.lineCount : <span className="text-slate-400">—</span>}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-900">
+                        {mine ? formatKRW(mine.avgSaleKrw) : <span className="text-slate-400">데이터 없음</span>}
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-700">
+                        {formatKRW(m.avg_sale_krw)} <span className="text-[10px] text-slate-400">(n={m.line_count.toLocaleString('ko-KR')})</span>
+                      </td>
+                      <td className="px-3 py-2 text-right tabular-nums text-slate-600">{formatKRW(m.median_sale_krw)}</td>
+                      <td className="px-3 py-2 text-right tabular-nums">
+                        {diff == null ? (
+                          <span className="text-slate-400">—</span>
+                        ) : diff >= 0 ? (
+                          <span className="font-semibold text-emerald-700">
+                            +{formatKRW(diff)} <span className="text-[10px]">(+{diffPct}%)</span>
+                          </span>
+                        ) : (
+                          <span className="font-semibold text-rose-700">
+                            {formatKRW(diff)} <span className="text-[10px]">({diffPct}%)</span>
+                          </span>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
+          </div>
+        )}
+        <div className="px-5 py-2.5 text-[10px] text-slate-500 bg-slate-50 border-t border-slate-100 leading-relaxed">
+          💡 시장 평균보다 높으면 프리미엄 포지셔닝 — 마진 좋음. 낮으면 가격 경쟁이 치열한 카테고리 — 회전율로 승부.
+          본인 데이터 없는 매입처는 신규 진입 기회로 검토.
+        </div>
       </section>
     </div>
   )
