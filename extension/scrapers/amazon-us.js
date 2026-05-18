@@ -23,12 +23,25 @@
     return el ? (el.textContent || '').replace(/\s+/g, ' ').trim() : ''
   }
 
-  function parseUSDLike(s) {
+  // 통화 기호와 천단위 콤마/공백/쉼표를 모두 제거하고 숫자만 추출.
+  // KRW 는 정수, USD/JPY 는 소수 모두 대응.
+  function parseAmount(s) {
     if (!s) return null
-    const m = String(s).replace(/[, ]/g, '').match(/-?\$?(\d+(?:\.\d+)?)/)
+    const clean = String(s).replace(/[₩$¥€£]|KRW|USD|JPY|EUR|GBP/gi, '').replace(/[,\s]/g, '')
+    const m = clean.match(/-?\d+(?:\.\d+)?/)
     if (!m) return null
-    const n = parseFloat(m[1])
+    const n = parseFloat(m[0])
     return Number.isFinite(n) ? n : null
+  }
+
+  // 텍스트에서 통화 코드 추론. KRW > JPY > USD 순.
+  // amazon.com 도 한국 결제자에게는 ₩ 또는 KRW 로 표시 (Amazon Currency Converter).
+  function detectCurrencyInText(text) {
+    if (!text) return null
+    if (/₩|\bKRW\b/i.test(text)) return 'KRW'
+    if (/¥|\bJPY\b/i.test(text)) return 'JPY'
+    if (/\$|\bUSD\b/i.test(text)) return 'USD'
+    return null
   }
 
   // 한 anchor 를 라인 컨테이너로 확장: ASIN 링크의 가장 가까운 "라인 박스" 찾기.
@@ -154,7 +167,7 @@
         container.querySelector('.a-color-price') ||
         container.querySelector('[class*="price"]') ||
         null
-      const unitPrice = parseUSDLike(text(priceEl))
+      const unitPrice = parseAmount(text(priceEl))
 
       // 수량
       const containerText = container.textContent || ''
@@ -189,23 +202,38 @@
     const shipmentRoots = findShipmentRoots()
     const items = scrapeItems()
 
-    // 합계
+    // 합계 + 통화 추론
     const subtotalsBox = document.querySelector('#od-subtotals, [class*="subtotal"]')
     let totalForeign = null
     let subtotalForeign = null
     let shippingForeign = null
     let taxForeign = null
+    let detectedCurrency = null
+    let totalRowText = ''
     if (subtotalsBox) {
       const rows = subtotalsBox.querySelectorAll('.a-row, tr, li')
       for (const r of rows) {
         const t = text(r)
-        const price = parseUSDLike(t)
+        const price = parseAmount(t)
         if (price == null) continue
-        if (/grand total|order total/i.test(t)) totalForeign = price
-        else if (/item.*subtotal|^subtotal/i.test(t) && subtotalForeign == null) subtotalForeign = price
-        else if (/shipping/i.test(t) && shippingForeign == null) shippingForeign = price
-        else if (/tax/i.test(t) && taxForeign == null) taxForeign = price
+        if (/grand total|order total/i.test(t)) {
+          totalForeign = price
+          totalRowText = t
+        } else if (/item.*subtotal|^subtotal/i.test(t) && subtotalForeign == null) {
+          subtotalForeign = price
+        } else if (/shipping/i.test(t) && shippingForeign == null) {
+          shippingForeign = price
+        } else if (/tax/i.test(t) && taxForeign == null) {
+          taxForeign = price
+        }
       }
+      // Grand Total 행의 텍스트에서 통화 우선 추론, 그게 안 잡히면 박스 전체 텍스트.
+      detectedCurrency =
+        detectCurrencyInText(totalRowText) || detectCurrencyInText(text(subtotalsBox))
+    }
+    // 합계 박스가 없을 때 fallback: 페이지 전체 텍스트에서 한 번만 추론
+    if (!detectedCurrency) {
+      detectedCurrency = detectCurrencyInText(document.body.textContent || '') || 'USD'
     }
 
     // 정규화된 source_url — Amazon 이 변형된 URL 에서 장바구니로 redirect 하는 경우가 있어
@@ -218,7 +246,7 @@
       source: 'amazon_us',
       supplier_order_number: orderId,
       purchased_at: purchasedAt,
-      currency: 'USD',
+      currency: detectedCurrency,
       subtotal_foreign: subtotalForeign,
       shipping_foreign: shippingForeign,
       tax_foreign: taxForeign,
@@ -229,8 +257,10 @@
         items_count: items.length,
         shipment_roots_found: shipmentRoots.length,
         scraped_at: new Date().toISOString(),
-        ua: 'amazon-us-v0.4.0',
+        ua: 'amazon-us-v0.5.0',
         original_url: window.location.href.split('#')[0],
+        detected_currency: detectedCurrency,
+        total_row_text: totalRowText || null,
       },
     }
   }

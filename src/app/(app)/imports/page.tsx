@@ -44,6 +44,7 @@ function formatForeign(v: number | string | null | undefined, currency: string |
   if (v == null) return '—'
   const n = typeof v === 'number' ? v : Number(v)
   if (!Number.isFinite(n)) return '—'
+  if (currency === 'KRW') return `₩${Math.round(n).toLocaleString('ko-KR')}`
   if (currency === 'JPY') return `¥${n.toLocaleString('ko-KR')}`
   if (currency === 'USD') return `$${n.toFixed(2)}`
   return `${n.toLocaleString('ko-KR')} ${currency ?? ''}`.trim()

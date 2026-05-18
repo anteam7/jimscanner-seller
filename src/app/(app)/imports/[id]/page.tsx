@@ -56,6 +56,7 @@ function num(v: number | string | null | undefined): number | null {
 function formatForeign(v: number | string | null | undefined, currency: string | null): string {
   const n = num(v)
   if (n == null) return '—'
+  if (currency === 'KRW') return `₩${Math.round(n).toLocaleString('ko-KR')}`
   if (currency === 'JPY') return `¥${n.toLocaleString('ko-KR')}`
   if (currency === 'USD') return `$${n.toFixed(2)}`
   return `${n.toLocaleString('ko-KR')} ${currency ?? ''}`.trim()
@@ -130,6 +131,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   }
   function toKrw(amount: number | null): number | null {
     if (amount == null) return null
+    if (row.currency === 'KRW') return Math.round(amount) // 이미 원화 — 환산 불필요
     if (!rate) return null
     return Math.round((amount * rate.rate) / (rate.unit || 1))
   }
@@ -173,7 +175,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
             <p className="mt-0.5 text-2xl font-bold text-slate-900 tabular-nums">
               {formatForeign(row.total_foreign, row.currency)}
             </p>
-            {totalKrw != null && (
+            {totalKrw != null && row.currency !== 'KRW' && (
               <p className="text-[11px] text-indigo-700 font-semibold tabular-nums">≈ {formatKRW(totalKrw)}</p>
             )}
           </div>
@@ -268,7 +270,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
                         ? formatForeign((it.unit_price ?? 0) * (it.qty ?? 1), row.currency)
                         : '—'}
                     </p>
-                    {lineKrw != null && (
+                    {lineKrw != null && row.currency !== 'KRW' && (
                       <p className="text-[11px] text-indigo-700 tabular-nums">≈ {formatKRW(lineKrw)}</p>
                     )}
                   </div>
