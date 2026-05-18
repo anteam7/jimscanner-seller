@@ -236,7 +236,7 @@ export default async function AnalyticsPage() {
   )
 
   return (
-    <div className="p-8 space-y-6 max-w-6xl">
+    <div className="p-4 md:p-8 space-y-6 max-w-6xl">
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">매출·마진 분석</h1>

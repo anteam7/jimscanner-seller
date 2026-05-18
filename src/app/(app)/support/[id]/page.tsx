@@ -79,7 +79,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   const canReply = ticket.status !== 'closed'
 
   return (
-    <div className="max-w-3xl mx-auto p-8 space-y-6">
+    <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
       <Link href="/support" className="text-xs text-slate-500 hover:text-slate-700">← 문의 목록</Link>
 
       <div className="rounded-lg bg-white shadow-sm border border-slate-200 px-6 py-5">

@@ -59,7 +59,7 @@ export default async function NotificationsPage() {
   const unreadCount = items.filter((n) => !n.read_at).length
 
   return (
-    <div className="max-w-3xl mx-auto p-8 space-y-6">
+    <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
           <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">알림</span>

@@ -414,7 +414,7 @@ export default async function SellerDashboardPage() {
   }
 
   return (
-    <div className="p-8 space-y-8 max-w-5xl">
+    <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-5xl">
       {/* 인사말 — B: 시각적 무게감 강화 */}
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>

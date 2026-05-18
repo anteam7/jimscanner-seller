@@ -1,5 +1,6 @@
 'use client'
 
+import { useEffect, useState } from 'react'
 import { usePathname, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -160,6 +161,27 @@ export default function SellerShell({
 }) {
   const pathname = usePathname()
   const router = useRouter()
+  const [mobileOpen, setMobileOpen] = useState(false)
+
+  // 경로 바뀌면 모바일 사이드바 닫기
+  useEffect(() => {
+    setMobileOpen(false)
+  }, [pathname])
+
+  // ESC 키로 닫기 + 열렸을 때 body scroll lock
+  useEffect(() => {
+    if (!mobileOpen) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setMobileOpen(false)
+    }
+    document.addEventListener('keydown', onKey)
+    const prev = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      document.body.style.overflow = prev
+    }
+  }, [mobileOpen])
 
   async function handleSignOut() {
     const supabase = createClient()
@@ -170,8 +192,24 @@ export default function SellerShell({
 
   return (
     <div className="h-screen flex bg-slate-50 text-slate-900 overflow-hidden">
-      {/* 사이드바 — 다크 톤 */}
-      <aside className="w-[220px] flex-shrink-0 flex flex-col bg-slate-800 text-slate-100">
+      {/* 모바일 백드롭 */}
+      {mobileOpen && (
+        <button
+          type="button"
+          aria-label="메뉴 닫기"
+          onClick={() => setMobileOpen(false)}
+          className="md:hidden fixed inset-0 z-30 bg-slate-900/50 backdrop-blur-[1px]"
+        />
+      )}
+
+      {/* 사이드바 — 다크 톤 (모바일은 슬라이드 인) */}
+      <aside
+        className={`w-[260px] md:w-[220px] flex-shrink-0 flex flex-col bg-slate-800 text-slate-100
+          fixed inset-y-0 left-0 z-40 md:relative md:translate-x-0
+          transition-transform duration-200 ease-out
+          ${mobileOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full md:translate-x-0'}`}
+        aria-hidden={!mobileOpen ? undefined : false}
+      >
         {/* 로고 — B2C 짐스캐너 로고 + SELLER 표기 */}
         <div className="px-5 py-4 border-b border-slate-700">
           <Link
@@ -303,8 +341,19 @@ export default function SellerShell({
       {/* 메인 영역 */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* 상단 헤더 — 라이트 */}
-        <header className="flex items-center justify-between px-6 h-14 bg-white border-b border-slate-200 flex-shrink-0">
-          <div />
+        <header className="flex items-center justify-between px-3 md:px-6 h-14 bg-white border-b border-slate-200 flex-shrink-0">
+          <button
+            type="button"
+            onClick={() => setMobileOpen(true)}
+            aria-label="메뉴 열기"
+            aria-expanded={mobileOpen}
+            className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+            </svg>
+          </button>
+          <div className="hidden md:block" />
           <div className="flex items-center gap-2">
             <VerificationBadge level={account.verification_level} />
             <NotificationBell />
