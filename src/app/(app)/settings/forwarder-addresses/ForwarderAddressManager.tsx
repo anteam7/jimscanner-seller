@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type ForwarderRef = { name: string | null; slug: string | null }
@@ -44,7 +44,24 @@ export default function ForwarderAddressManager({
 }) {
   const router = useRouter()
   const [rows, setRows] = useState(initialAddresses)
+
+  // router.refresh() 후 서버에서 새 props 받으면 client state 도 동기화
+  useEffect(() => {
+    setRows(initialAddresses)
+  }, [initialAddresses])
+
+  // POST/DELETE/PATCH 직후 즉시 반영 위한 직접 fetch
+  async function reload() {
+    try {
+      const res = await fetch('/api/forwarder-addresses', { cache: 'no-store' })
+      const json = (await res.json().catch(() => ({}))) as { addresses?: typeof initialAddresses }
+      if (Array.isArray(json.addresses)) setRows(json.addresses)
+    } catch {
+      // ignore
+    }
+  }
   const [adding, setAdding] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [form, setForm] = useState({
@@ -87,23 +104,56 @@ export default function ForwarderAddressManager({
     setBusy(true)
     setError(null)
     try {
-      const res = await fetch('/api/forwarder-addresses', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(form),
-      })
+      const isEdit = editingId != null
+      const res = await fetch(
+        isEdit ? `/api/forwarder-addresses/${editingId}` : '/api/forwarder-addresses',
+        {
+          method: isEdit ? 'PATCH' : 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form),
+        },
+      )
       const json = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string }
       if (!res.ok || !json.ok) {
-        setError(json.error ?? '저장 실패')
+        setError(json.error ?? (isEdit ? '수정 실패' : '저장 실패'))
         return
       }
       resetForm()
       setAdding(false)
+      setEditingId(null)
+      await reload()
       router.refresh()
     } catch {
       setError('네트워크 오류')
     } finally {
       setBusy(false)
+    }
+  }
+
+  function startEdit(r: AddressRow) {
+    setForm({
+      forwarder_id: r.forwarder_id,
+      label: r.label ?? '',
+      recipient_name: r.recipient_name ?? '',
+      phone: r.phone ?? '',
+      address1: r.address1 ?? '',
+      address2: r.address2 ?? '',
+      city: r.city ?? '',
+      state: r.state ?? '',
+      zip: r.zip ?? '',
+      country: r.country ?? 'US',
+      member_no: r.member_no ?? '',
+      is_default: r.is_default,
+      notes: r.notes ?? '',
+    })
+    setEditingId(r.id)
+    setAdding(true)
+    setError(null)
+    // 폼이 페이지 상단 — 부드럽게 스크롤
+    if (typeof window !== 'undefined') {
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+      })
     }
   }
 
@@ -113,12 +163,7 @@ export default function ForwarderAddressManager({
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ is_default: true }),
     })
-    setRows((prev) =>
-      prev.map((r) => ({
-        ...r,
-        is_default: r.id === id && r.account_id != null,
-      })),
-    )
+    await reload()
     router.refresh()
   }
 
@@ -130,7 +175,7 @@ export default function ForwarderAddressManager({
       alert(json.error ?? '실패')
       return
     }
-    setRows((prev) => prev.filter((r) => r.id !== id))
+    await reload()
     router.refresh()
   }
 
@@ -151,6 +196,9 @@ export default function ForwarderAddressManager({
 
       {adding && (
         <form onSubmit={onSubmit} className="rounded-lg bg-white shadow-sm border border-slate-200 p-5 space-y-3">
+          <div className="pb-2 mb-1 border-b border-slate-100 text-sm font-bold text-slate-900">
+            {editingId ? '주소 수정' : '새 주소 추가'}
+          </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <Field label="배대지" required>
               <select
@@ -286,6 +334,7 @@ export default function ForwarderAddressManager({
               type="button"
               onClick={() => {
                 setAdding(false)
+                setEditingId(null)
                 resetForm()
               }}
               disabled={busy}
@@ -298,7 +347,7 @@ export default function ForwarderAddressManager({
               disabled={busy}
               className="h-9 px-5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded"
             >
-              {busy ? '저장 중…' : '저장'}
+              {busy ? '저장 중…' : editingId ? '수정 저장' : '저장'}
             </button>
           </div>
         </form>
@@ -355,6 +404,13 @@ export default function ForwarderAddressManager({
                 <div className="flex flex-col items-end gap-1 shrink-0">
                   {!r.is_official && r.account_id != null && (
                     <>
+                      <button
+                        type="button"
+                        onClick={() => startEdit(r)}
+                        className="text-[10px] font-semibold text-indigo-700 hover:text-indigo-800 hover:underline underline-offset-2"
+                      >
+                        수정
+                      </button>
                       {!r.is_default && (
                         <button
                           type="button"
