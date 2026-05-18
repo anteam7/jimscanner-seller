@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="ko">
+  <head>
+    <meta charset="utf-8" />
+    <title>짐스캐너 SELLER</title>
+    <style>
+      :root { font-family: 'Pretendard Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif; }
+      body { width: 320px; margin: 0; padding: 14px 16px; color: #0f172a; background: #fff; }
+      h1 { font-size: 13px; margin: 0 0 4px; letter-spacing: -0.01em; }
+      .sub { font-size: 11px; color: #64748b; margin: 0 0 12px; }
+      label { display: block; font-size: 11px; font-weight: 600; color: #334155; margin-bottom: 4px; }
+      input[type="text"], input[type="password"], input[type="url"] {
+        display: block; width: 100%; box-sizing: border-box; height: 32px; padding: 0 8px;
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+        border: 1px solid #e2e8f0; border-radius: 6px; outline: none;
+      }
+      input:focus { border-color: #6366f1; box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.15); }
+      .row { margin-bottom: 10px; }
+      button {
+        height: 32px; padding: 0 14px; font-size: 12px; font-weight: 600;
+        border: none; border-radius: 6px; cursor: pointer; transition: background 120ms;
+      }
+      .primary { background: #4f46e5; color: white; }
+      .primary:hover { background: #4338ca; }
+      .primary:disabled { opacity: 0.5; cursor: default; }
+      .secondary { background: white; color: #475569; border: 1px solid #e2e8f0; }
+      .secondary:hover { background: #f8fafc; }
+      .status-ok { font-size: 11px; color: #047857; background: #ecfdf5; border: 1px solid #a7f3d0; padding: 6px 8px; border-radius: 6px; }
+      .status-err { font-size: 11px; color: #b91c1c; background: #fff1f2; border: 1px solid #fecdd3; padding: 6px 8px; border-radius: 6px; }
+      .actions { display: flex; gap: 6px; }
+      .footer { margin-top: 12px; padding-top: 10px; border-top: 1px solid #f1f5f9; font-size: 10px; color: #94a3b8; }
+      .footer a { color: #6366f1; text-decoration: none; }
+      .footer a:hover { text-decoration: underline; }
+      .badge { display: inline-block; font-size: 9px; font-weight: 700; letter-spacing: 0.08em;
+        text-transform: uppercase; color: #4338ca; background: #eef2ff; border: 1px solid #c7d2fe;
+        padding: 1px 5px; border-radius: 3px; margin-left: 6px; vertical-align: middle; }
+    </style>
+  </head>
+  <body>
+    <h1>짐스캐너 SELLER <span class="badge">US MVP</span></h1>
+    <p class="sub">아마존 주문 페이지를 열고 [짐스캐너로 가져오기] 를 누르세요.</p>
+
+    <div class="row">
+      <label for="api-url">API Base URL</label>
+      <input id="api-url" type="url" placeholder="https://seller.jimscanner.co.kr" />
+    </div>
+
+    <div class="row">
+      <label for="token">API 토큰</label>
+      <input id="token" type="password" placeholder="jsx_..." autocomplete="off" spellcheck="false" />
+    </div>
+
+    <div class="row actions">
+      <button id="save" class="primary">저장</button>
+      <button id="test" class="secondary">연결 확인</button>
+    </div>
+
+    <div id="status"></div>
+
+    <p class="footer">
+      토큰 발급: <a id="open-settings" href="#">/settings/extension</a><br />
+      수집 결과: <a id="open-imports" href="#">/imports</a>
+    </p>
+
+    <script src="popup.js"></script>
+  </body>
+</html>

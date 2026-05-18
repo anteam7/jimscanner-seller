@@ -1,0 +1,31 @@
+{
+  "manifest_version": 3,
+  "name": "짐스캐너 SELLER 수집기",
+  "version": "0.1.0",
+  "description": "아마존 등 해외 매입처 주문 페이지에서 영수증을 짐스캐너로 가져오기 (US MVP).",
+  "permissions": ["storage", "activeTab", "scripting"],
+  "host_permissions": [
+    "https://www.amazon.com/*",
+    "https://*.amazon.com/*"
+  ],
+  "action": {
+    "default_title": "짐스캐너 SELLER",
+    "default_popup": "popup.html"
+  },
+  "background": {
+    "service_worker": "background.js",
+    "type": "module"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "https://www.amazon.com/gp/your-account/order-details*",
+        "https://www.amazon.com/gp/your-account/order-history*",
+        "https://www.amazon.com/gp/css/order-history*",
+        "https://www.amazon.com/your-orders*"
+      ],
+      "js": ["scrapers/amazon-us.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
