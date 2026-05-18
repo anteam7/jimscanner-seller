@@ -35,6 +35,18 @@ const COUNTRIES = [
   { value: 'UK', label: '영국 UK' },
 ]
 
+const COUNTRY_BADGE: Record<string, { flag: string; label: string }> = {
+  US: { flag: '🇺🇸', label: '미국' },
+  JP: { flag: '🇯🇵', label: '일본' },
+  CN: { flag: '🇨🇳', label: '중국' },
+  HK: { flag: '🇭🇰', label: '홍콩' },
+  DE: { flag: '🇩🇪', label: '독일' },
+  UK: { flag: '🇬🇧', label: '영국' },
+  GB: { flag: '🇬🇧', label: '영국' },
+  FR: { flag: '🇫🇷', label: '프랑스' },
+  EU: { flag: '🇪🇺', label: '유럽' },
+}
+
 export default function ForwarderAddressManager({
   initialAddresses,
   forwarders,
@@ -394,7 +406,19 @@ export default function ForwarderAddressManager({
             >
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 mb-1">
+                  <div className="flex items-center gap-2 mb-1 flex-wrap">
+                    {(() => {
+                      const cb = COUNTRY_BADGE[r.country] ?? { flag: '🌐', label: r.country }
+                      return (
+                        <span
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-slate-700 bg-slate-100 border border-slate-200 rounded"
+                          title={`${cb.label} (${r.country})`}
+                        >
+                          <span className="text-[11px] leading-none">{cb.flag}</span>
+                          {cb.label}
+                        </span>
+                      )
+                    })()}
                     <span className="text-sm font-semibold text-slate-900">{r.label}</span>
                     {r.forwarders?.name && (
                       <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded">
