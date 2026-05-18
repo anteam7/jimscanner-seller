@@ -7,6 +7,8 @@
   "host_permissions": [
     "https://www.amazon.com/*",
     "https://*.amazon.com/*",
+    "https://www.amazon.co.jp/*",
+    "https://*.amazon.co.jp/*",
     "https://seller.jimscanner.co.kr/*",
     "https://*.jimscanner.co.kr/*",
     "https://*.vercel.app/*",
@@ -29,6 +31,16 @@
         "https://www.amazon.com/your-orders*"
       ],
       "js": ["scrapers/amazon-us.js"],
+      "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.amazon.co.jp/gp/your-account/order-details*",
+        "https://www.amazon.co.jp/gp/your-account/order-history*",
+        "https://www.amazon.co.jp/gp/css/order-history*",
+        "https://www.amazon.co.jp/your-orders*"
+      ],
+      "js": ["scrapers/amazon-jp.js"],
       "run_at": "document_idle"
     }
   ]
