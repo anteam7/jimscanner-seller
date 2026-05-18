@@ -264,7 +264,7 @@ export default function ForwarderAddressManager({
                 type="text"
                 value={form.recipient_name}
                 onChange={(e) => setForm({ ...form, recipient_name: e.target.value })}
-                placeholder="JOHN DOE / JIMPASS123"
+                placeholder="JOHN DOE"
                 className={inputCls}
               />
             </Field>
@@ -291,7 +291,7 @@ export default function ForwarderAddressManager({
                 type="text"
                 value={form.address2}
                 onChange={(e) => setForm({ ...form, address2: e.target.value })}
-                placeholder="Suite 100 / 회원번호 JIMPASS123"
+                placeholder="Suite 100 / 회원번호 JIMSCANNER123"
                 className={inputCls}
               />
             </Field>
@@ -340,7 +340,7 @@ export default function ForwarderAddressManager({
                 type="text"
                 value={form.member_no}
                 onChange={(e) => setForm({ ...form, member_no: e.target.value })}
-                placeholder="JIMPASS123"
+                placeholder="JIMSCANNER123"
                 className={inputCls}
               />
             </Field>
