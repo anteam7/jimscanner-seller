@@ -1,5 +1,8 @@
 # 자동 진행 큐 (cron 30분 간격)
 
+> **상태 (2026-05-18):** 31/31 모두 완료, cron job `5cbb6b5c` 삭제됨. 이후 세션 12 에서
+> 새 도메인 (브라우저 확장 + 매입처 영수증) 진행 — 그건 [`next-steps.md`](next-steps.md) 참고.
+
 cron 이 매 30분 fire → 첫 `pending` 항목 1개 처리 → commit + push → `done` 마킹.
 모두 done 이면 cron 자동 종료.
 

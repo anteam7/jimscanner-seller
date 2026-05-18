@@ -4,6 +4,49 @@
 
 ---
 
+## 2026-05-18 (세션 12 — 브라우저 확장 + 매입처 영수증 + 배대지 주소)
+
+세션 11 후반에 cron 큐 31항목 모두 소진. 사용자가 새 도메인 시작 — "아마존 US/JP·라쿠텐·야후
+주문 페이지에서 매입 정보를 수집하는 브라우저 확장".
+
+### 작업 (commit hash 순서)
+
+**Phase 1 — 영수증 수집 인프라**
+1. **`7f5b381`** feat: 매입 영수증 수집 (Phase 1) — DB(b2b_supplier_purchases + b2b_seller_tokens) + API + /settings/extension + /imports + extension/ Manifest V3 + amazon-us.js
+2. **`35c2aa7`** fix(extension): ASIN-link 기반 스크래퍼 + host_permissions 도메인 추가
+3. **`cce8d01`** fix(extension): handleImport fetch 에러에 URL+원인 명시
+4. **`491518a`** fix(amazon-us): source_url 정규화 + /imports 클릭 시 정규 URL 사용
+5. **`2b94051`** feat: /imports/[id] 영수증 상세 페이지 (짐스캐너 내부, 환율 환산)
+6. **`a96fb3c`** fix(amazon-us): 추천 영역 제외, shipment 컨테이너 안 ASIN 만 수집 + DELETE API
+7. **`d297653`** fix(amazon-us): KRW/USD/JPY 통화 동적 감지 + 표시 포맷
+
+**Phase 2 — amazon JP 확장**
+8. **`edffe69`** feat(extension): amazon.co.jp 스크래퍼 추가 (일본어 라벨)
+
+**Phase 3 — 배대지 주소 + checkout 자동입력**
+9. **`fc2754d`** feat: 배대지 영문 주소 (공용 시드 + 셀러 커스텀) — DB + CRUD API + /settings/forwarder-addresses
+10. **`a88bac5`** feat(extension): amazon checkout 배대지 주소 자동입력 (country 필터)
+11. **`4d9c77c`** fix(forwarder-addresses): 목록 즉시 갱신 + 수정 기능 추가
+12. **`d77ee77`** feat: 공용 배대지 주소 시드 (centers 변환) + '내 주소로 추가' 액션
+13. **`e6ef674`** ui(forwarder-addresses): 국가 배지 추가 (🇺🇸 🇯🇵 🇨🇳)
+14. **`0b544b0`** ui: placeholder 정리 — 수신자명에서 JIMPASS123 제거, 회원번호 JIMSCANNER123
+15. **`a8ddb9e`** feat(checkout): popup 에 '내 주소 / 공용 주소' 탭 분리
+
+### 검증된 e2e
+- amazon.com order details → 📦 → /imports → 1건 정확히 수집 (22→1 fix 완료)
+- KRW/USD 결제 통화 자동 감지
+- /settings/forwarder-addresses 공용 시드 57건 (US 40 + JP 17) 노출
+
+### Vercel deployment protection
+- 사용자가 직접 disable 함 → `https://jimscanner-seller.vercel.app` prod URL 사용 가능
+- `seller.jimscanner.co.kr` 도메인 매핑은 여전히 안 됨
+
+### 다음 세션
+- [`next-steps.md`](next-steps.md) 의 1순위 항목 확인
+- 자세한 확장 아키텍처: [`extension-architecture.md`](extension-architecture.md)
+
+---
+
 ## 2026-05-17 (세션 10 — 자동 진행 배치 8건)
 
 사용자가 "이제 묻지 말고 추천 방법으로 자동 진행" 지시 → 우선순위 큐의
