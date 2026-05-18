@@ -16,7 +16,7 @@ function setStatus(kind, message) {
     return
   }
   el.textContent = message
-  el.className = kind === 'ok' ? 'status-ok' : 'status-err'
+  el.className = kind === 'ok' ? 'status-ok' : kind === 'info' ? 'status-info' : 'status-err'
 }
 
 async function save() {
@@ -31,24 +31,22 @@ async function save() {
 async function test() {
   const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])
   if (!apiUrl || !token) return setStatus('err', '먼저 저장하세요.')
-  setStatus('ok', '확인 중…')
+  setStatus('info', '확인 중…')
+  // background 를 통해 fetch — host_permissions 가 적용된 service worker 에서 호출.
   try {
-    // 비어 있는 POST 로 인증만 검증 (400 반환이 정상 — 토큰은 OK).
-    const res = await fetch(apiUrl + '/api/imports/supplier-orders', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: 'Bearer ' + token,
-      },
-      body: JSON.stringify({}),
-    })
-    if (res.status === 401) {
-      setStatus('err', '토큰이 거부됐습니다 (401).')
+    const result = await chrome.runtime.sendMessage({ type: 'JIMSCANNER_PING' })
+    if (!result) {
+      setStatus('err', 'background 응답 없음 — 확장을 다시 로드해 보세요.')
       return
     }
-    setStatus('ok', `연결 OK (status ${res.status})`)
+    if (result.ok === false) {
+      setStatus('err', '오류: ' + (result.error || '알 수 없음') + (result.status ? ` (HTTP ${result.status})` : ''))
+      return
+    }
+    // ok === true: 인증 통과 (HTTP 400 — body 비어서) — 또는 다른 정상 응답
+    setStatus('ok', `연결 OK (HTTP ${result.status})`)
   } catch (err) {
-    setStatus('err', '네트워크 오류: ' + (err && err.message ? err.message : err))
+    setStatus('err', '메시지 전송 실패: ' + (err && err.message ? err.message : err))
   }
 }
 

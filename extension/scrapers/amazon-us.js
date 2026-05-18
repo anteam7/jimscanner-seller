@@ -1,6 +1,6 @@
-// Amazon US order detail / order history 페이지 스크래퍼.
-// 가장 안정적인 시점은 "Order details" 페이지 (URL 에 orderID 파라미터 포함).
-// 페이지 우측 하단에 floating 버튼을 삽입.
+// Amazon US order detail 페이지 스크래퍼.
+// 견고성 전략: ASIN 패턴(/dp/XXXXXXXXXX) 을 가진 anchor 를 기준으로 라인 추출.
+// .a-fixed-left-grid 같은 클래스 셀렉터는 Amazon 가 자주 변경하므로 fallback 으로만 사용.
 
 ;(function () {
   if (window.__JIMSCANNER_INJECTED__) return
@@ -8,6 +8,7 @@
 
   const BUTTON_ID = 'jimscanner-import-btn'
   const PANEL_ID = 'jimscanner-import-panel'
+  const ASIN_RE = /\/(?:dp|gp\/product|gp\/aw\/d)\/([A-Z0-9]{10})/
 
   function getOrderIdFromUrl() {
     try {
@@ -24,19 +25,95 @@
 
   function parseUSDLike(s) {
     if (!s) return null
-    const m = String(s).replace(/[, ]/g, '').match(/(-?\$?\d+(?:\.\d+)?)/)
+    const m = String(s).replace(/[, ]/g, '').match(/-?\$?(\d+(?:\.\d+)?)/)
     if (!m) return null
-    const n = parseFloat(m[1].replace('$', ''))
+    const n = parseFloat(m[1])
     return Number.isFinite(n) ? n : null
   }
 
-  // Order details 페이지의 라인 아이템 추출.
-  // 셀렉터는 Amazon 가 자주 변경하므로 여러 후보를 차례로 시도.
+  // 한 anchor 를 라인 컨테이너로 확장: ASIN 링크의 가장 가까운 "라인 박스" 찾기.
+  // 후보 selector 를 순서대로 시도, 없으면 그냥 anchor 의 .parentElement 사용.
+  function findLineContainer(anchor) {
+    const selectors = [
+      '[data-component="orderCard"]',
+      '[data-component="line-item"]',
+      '[data-component="purchasedItems"] .a-row',
+      '.a-fixed-left-grid',
+      '.yohtmlc-item',
+      '.shipment-top-row',
+      '.a-box-inner',
+    ]
+    for (const sel of selectors) {
+      const c = anchor.closest(sel)
+      if (c) return c
+    }
+    // fallback: 가장 가까운 div
+    return anchor.closest('div') || anchor.parentElement
+  }
+
+  function uniqueByAsin(items) {
+    const seen = new Map()
+    for (const it of items) {
+      const key = it.asin || (it.product_url || it.name)
+      if (!key) continue
+      if (!seen.has(key)) seen.set(key, it)
+    }
+    return Array.from(seen.values())
+  }
+
+  function scrapeItems() {
+    // 1) ASIN 패턴 anchor 모두 수집 (썸네일 링크 + 제목 링크가 중복으로 들어오므로 ASIN 기준 dedup).
+    const anchors = Array.from(document.querySelectorAll('a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/gp/aw/d/"]'))
+      .filter((a) => ASIN_RE.test(a.getAttribute('href') || ''))
+
+    const items = []
+    for (const a of anchors) {
+      const href = a.getAttribute('href') || ''
+      const m = href.match(ASIN_RE)
+      if (!m) continue
+      const asin = m[1]
+      let productUrl = null
+      try {
+        productUrl = new URL(href, 'https://www.amazon.com').toString().split('#')[0]
+      } catch {
+        productUrl = null
+      }
+
+      // anchor 자체의 텍스트가 비어있을 수 있음 (썸네일 링크) — 라인 컨테이너에서 제목 anchor 찾기
+      const container = findLineContainer(a)
+      const titleA = container.querySelector(
+        'a[href*="/dp/"], a[href*="/gp/product/"], a[href*="/gp/aw/d/"]',
+      )
+      const candidates = [text(a), text(titleA)].filter(Boolean)
+      const name = candidates.find((s) => s.length > 3) || candidates[0] || asin
+
+      // 가격
+      const priceEl =
+        container.querySelector('.a-color-price') ||
+        container.querySelector('[class*="price"]') ||
+        null
+      const unitPrice = parseUSDLike(text(priceEl))
+
+      // 수량
+      const containerText = container.textContent || ''
+      const qtyMatch = containerText.match(/Qty\s*[:：]?\s*(\d+)/i) || containerText.match(/Quantity[:：]?\s*(\d+)/i)
+      const qty = qtyMatch ? Number(qtyMatch[1]) || 1 : 1
+
+      // 이미지
+      const imgEl = container.querySelector('img')
+      const imageUrl = imgEl ? imgEl.getAttribute('src') : null
+
+      items.push({ name, qty, unit_price: unitPrice, asin, image_url: imageUrl, product_url: productUrl })
+    }
+
+    return uniqueByAsin(items)
+  }
+
   function scrapeOrderDetails() {
     const orderId = getOrderIdFromUrl()
     if (!orderId) return null
 
-    // 주문일 — "Order placed: January 15, 2026" 형식
+    // 주문일
     const dateLabel = Array.from(document.querySelectorAll('.order-date-invoice-item, .a-row .a-color-secondary'))
       .map(text)
       .find((t) => /Order placed/i.test(t) || /注文日/.test(t))
@@ -47,49 +124,22 @@
       if (!Number.isNaN(d)) purchasedAt = new Date(d).toISOString()
     }
 
-    // 상품 라인 — Amazon 의 detail 페이지는 .a-fixed-left-grid 안에 product 정보 포함
-    const itemRows = Array.from(document.querySelectorAll('.a-fixed-left-grid, [data-component="item-row"]'))
-    const items = []
-    for (const row of itemRows) {
-      const nameEl = row.querySelector('.a-link-normal[href*="/gp/product"], .a-link-normal[href*="/dp/"]')
-      const name = text(nameEl)
-      if (!name) continue
-      const href = nameEl.getAttribute('href') || ''
-      let productUrl = null
-      try {
-        productUrl = new URL(href, 'https://www.amazon.com').toString()
-      } catch {
-        productUrl = null
-      }
-      // ASIN 추출 (/dp/XXXXXXXXXX or /gp/product/XXXXXXXXXX)
-      const asinMatch = href.match(/\/(?:dp|gp\/product)\/([A-Z0-9]{10})/)
-      const asin = asinMatch ? asinMatch[1] : null
-      // 가격
-      const priceEl = row.querySelector('.a-color-price')
-      const unitPrice = parseUSDLike(text(priceEl))
-      // 수량 — "Qty: 2" 같은 텍스트
-      const qtyText = (row.textContent || '').match(/Qty\s*[:：]?\s*(\d+)/i)
-      const qty = qtyText ? Number(qtyText[1]) || 1 : 1
-      // 이미지
-      const imgEl = row.querySelector('img')
-      const imageUrl = imgEl ? imgEl.getAttribute('src') : null
+    const items = scrapeItems()
 
-      items.push({ name, qty, unit_price: unitPrice, asin, image_url: imageUrl, product_url: productUrl })
-    }
-
-    // Order total — #od-subtotals 의 마지막 row "Grand Total"
-    const subtotalsBox = document.querySelector('#od-subtotals')
+    // 합계
+    const subtotalsBox = document.querySelector('#od-subtotals, [class*="subtotal"]')
     let totalForeign = null
     let subtotalForeign = null
     let shippingForeign = null
     let taxForeign = null
     if (subtotalsBox) {
-      const rows = subtotalsBox.querySelectorAll('.a-row')
+      const rows = subtotalsBox.querySelectorAll('.a-row, tr, li')
       for (const r of rows) {
         const t = text(r)
         const price = parseUSDLike(t)
+        if (price == null) continue
         if (/grand total|order total/i.test(t)) totalForeign = price
-        else if (/item.*subtotal|subtotal/i.test(t) && subtotalForeign == null) subtotalForeign = price
+        else if (/item.*subtotal|^subtotal/i.test(t) && subtotalForeign == null) subtotalForeign = price
         else if (/shipping/i.test(t) && shippingForeign == null) shippingForeign = price
         else if (/tax/i.test(t) && taxForeign == null) taxForeign = price
       }
@@ -106,7 +156,26 @@
       total_foreign: totalForeign,
       items,
       source_url: window.location.href.split('#')[0],
-      raw_meta: { items_count: items.length, scraped_at: new Date().toISOString(), ua: 'amazon-us-v0.1.0' },
+      raw_meta: {
+        items_count: items.length,
+        scraped_at: new Date().toISOString(),
+        ua: 'amazon-us-v0.2.0',
+      },
+    }
+  }
+
+  function buildDebugReport() {
+    const allAnchors = document.querySelectorAll('a[href*="/dp/"], a[href*="/gp/product/"]')
+    const matched = Array.from(allAnchors).filter((a) =>
+      ASIN_RE.test(a.getAttribute('href') || ''),
+    )
+    return {
+      url: window.location.href,
+      anchors_dp_or_gp_product: allAnchors.length,
+      anchors_matching_asin_pattern: matched.length,
+      sample_hrefs: Array.from(allAnchors).slice(0, 5).map((a) => a.getAttribute('href')),
+      first_5_h2: Array.from(document.querySelectorAll('h2')).slice(0, 5).map((h) => text(h)),
+      page_title: document.title,
     }
   }
 
@@ -115,7 +184,7 @@
     panel.id = PANEL_ID
     panel.style.cssText = [
       'position:fixed', 'bottom:90px', 'right:20px', 'z-index:2147483646',
-      'width:300px', 'padding:12px 14px', 'border-radius:10px',
+      'width:320px', 'padding:12px 14px', 'border-radius:10px',
       'background:white', 'border:1px solid #e2e8f0', 'box-shadow:0 10px 30px rgba(15,23,42,0.18)',
       'font-family:-apple-system,BlinkMacSystemFont,system-ui,sans-serif', 'color:#0f172a',
       'font-size:12px', 'line-height:1.5', 'display:none',
@@ -168,12 +237,29 @@
       if (btn) btn.disabled = false
       return
     }
+
     if (payload.items.length === 0) {
+      const dbg = buildDebugReport()
+      console.warn('[Jimscanner] 상품 라인 인식 실패. 디버그 정보:', dbg)
+      const dbgStr = JSON.stringify({ payload, dbg }, null, 2)
       showPanel(
         '<b>상품 라인을 인식하지 못했습니다.</b><br/>' +
-        '페이지가 완전히 로드된 뒤 다시 눌러 보세요. 계속 문제가 있으면 짐스캐너 운영팀에 알려 주세요.',
+        'Amazon 페이지 구조가 예상과 다릅니다. 아래 디버그 정보를 운영팀에 전달해 주세요.<br/>' +
+        '<button id="jsx-copy-dbg" style="margin-top:6px;padding:4px 10px;font-size:11px;border:1px solid #cbd5e1;background:white;border-radius:4px;cursor:pointer;color:#334155">디버그 복사</button> ' +
+        '<span style="font-size:11px;color:#94a3b8">또는 F12 → Console 탭 확인</span>',
         'err',
       )
+      const copyBtn = document.getElementById('jsx-copy-dbg')
+      if (copyBtn) {
+        copyBtn.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(dbgStr)
+            copyBtn.textContent = '복사됨'
+          } catch {
+            copyBtn.textContent = '실패 — 콘솔 보세요'
+          }
+        })
+      }
       if (btn) btn.disabled = false
       return
     }
@@ -205,14 +291,12 @@
     }
   }
 
-  // Order details 페이지에서만 floating 버튼 표시.
   function init() {
     if (getOrderIdFromUrl()) {
       createButton()
     }
   }
 
-  // SPA-like nav 대응: history 변경 후에도 한 번 재확인.
   init()
   let lastUrl = window.location.href
   setInterval(() => {
