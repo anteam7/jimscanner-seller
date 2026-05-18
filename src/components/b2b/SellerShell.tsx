@@ -5,6 +5,7 @@ import Link from 'next/link'
 import Image from 'next/image'
 import { createClient } from '@/lib/auth/client'
 import AnnouncementBanner from '@/components/b2b/AnnouncementBanner'
+import NotificationBell from '@/components/b2b/NotificationBell'
 
 export type SellerAccount = {
   id: string
@@ -284,8 +285,9 @@ export default function SellerShell({
         {/* 상단 헤더 — 라이트 */}
         <header className="flex items-center justify-between px-6 h-14 bg-white border-b border-slate-200 flex-shrink-0">
           <div />
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <VerificationBadge level={account.verification_level} />
+            <NotificationBell />
             <div
               aria-hidden="true"
               className="w-7 h-7 rounded-full bg-indigo-600 flex items-center justify-center text-xs font-bold text-white"
