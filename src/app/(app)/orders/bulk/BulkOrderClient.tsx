@@ -814,6 +814,11 @@ function SkuPickerCell({
         }}
         onKeyDown={onKeyDown}
         placeholder="상품명 또는 SKU 검색"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls="sku-picker-list"
+        aria-activedescendant={open && results[highlight] ? `sku-opt-${results[highlight].id}` : undefined}
         className="block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white"
       />
       {open && (
@@ -825,9 +830,9 @@ function SkuPickerCell({
               {query ? '일치하는 SKU 없음 — 직접 입력 가능' : '등록된 SKU 없음 — /products 에서 등록'}
             </div>
           ) : (
-            <ul className="py-1">
+            <ul id="sku-picker-list" role="listbox" className="py-1">
               {results.map((p, i) => (
-                <li key={p.id}>
+                <li key={p.id} id={`sku-opt-${p.id}`} role="option" aria-selected={i === highlight}>
                   <button
                     type="button"
                     onMouseEnter={() => setHighlight(i)}

@@ -763,15 +763,19 @@ function MarginLossBanner({ alerts }: { alerts: MarginLossAlert[] }) {
   const top = alerts.slice(0, 5)
   const totalLoss = alerts.reduce((acc, a) => acc + a.loss_per_unit_krw, 0)
   return (
-    <section className="rounded-xl border border-rose-200 border-l-[3px] border-l-rose-500 bg-gradient-to-br from-rose-50 to-white shadow-sm overflow-hidden">
+    <section
+      role="region"
+      aria-labelledby="margin-loss-title"
+      className="rounded-xl border border-rose-200 border-l-[3px] border-l-rose-500 bg-gradient-to-br from-rose-50 to-white shadow-sm overflow-hidden"
+    >
       <div className="px-5 py-3.5 border-b border-rose-100 flex items-start gap-3">
-        <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/30">
+        <div aria-hidden="true" className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/30">
           <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
           </svg>
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-rose-900">
+          <p id="margin-loss-title" className="text-sm font-bold text-rose-900">
             마진 손실 위험 SKU {alerts.length}건
           </p>
           <p className="mt-0.5 text-xs text-rose-800">

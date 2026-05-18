@@ -64,7 +64,7 @@ export default function NotificationBell() {
     return () => clearInterval(t)
   }, [refresh])
 
-  // 바깥 클릭 닫기
+  // 바깥 클릭 / ESC 키 닫기
   useEffect(() => {
     if (!open) return
     function onClick(e: MouseEvent) {
@@ -72,8 +72,15 @@ export default function NotificationBell() {
         setOpen(false)
       }
     }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
     document.addEventListener('mousedown', onClick)
-    return () => document.removeEventListener('mousedown', onClick)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onClick)
+      document.removeEventListener('keydown', onKey)
+    }
   }, [open])
 
   async function markAllRead() {
@@ -107,9 +114,12 @@ export default function NotificationBell() {
       <button
         type="button"
         onClick={() => setOpen((v) => !v)}
-        aria-label="알림"
+        aria-label={unread > 0 ? `알림 (안 읽음 ${unread}건)` : '알림'}
         title="알림"
-        className="relative inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 text-slate-600 hover:text-slate-900 transition-colors"
+        aria-haspopup="dialog"
+        aria-expanded={open}
+        aria-controls="notification-dropdown"
+        className="relative inline-flex items-center justify-center w-9 h-9 rounded-md hover:bg-slate-100 text-slate-600 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 transition-colors"
       >
         <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 0 0 5.454-1.31A8.967 8.967 0 0 1 18 9.75V9A6 6 0 0 0 6 9v.75a8.967 8.967 0 0 1-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 0 1-5.714 0m5.714 0a3 3 0 1 1-5.714 0" />
@@ -122,7 +132,12 @@ export default function NotificationBell() {
       </button>
 
       {open && (
-        <div className="absolute right-0 mt-2 w-[360px] z-40 rounded-lg border border-slate-200 bg-white shadow-xl overflow-hidden">
+        <div
+          id="notification-dropdown"
+          role="dialog"
+          aria-label="알림 목록"
+          className="absolute right-0 mt-2 w-[360px] z-40 rounded-lg border border-slate-200 bg-white shadow-xl overflow-hidden"
+        >
           <div className="px-4 py-2.5 border-b border-slate-100 flex items-center justify-between">
             <p className="text-sm font-bold text-slate-900">알림</p>
             <div className="flex items-center gap-2">

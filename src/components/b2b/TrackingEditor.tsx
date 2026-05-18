@@ -89,7 +89,8 @@ export function TrackingEditor({
         <button
           type="button"
           onClick={() => setOpen(false)}
-          className="text-[11px] text-slate-500 hover:text-slate-700"
+          aria-label="운송장 입력 폼 닫기"
+          className="text-[11px] text-slate-500 hover:text-slate-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500 rounded"
         >
           닫기
         </button>
