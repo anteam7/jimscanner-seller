@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { getExchangeRates, getYesterdayRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
 import { getDashboardStats } from '@/lib/b2b/dashboard-data'
+import { getMarginLossAlerts, type MarginLossAlert } from '@/lib/b2b/margin-loss'
 import { createClient } from '@/lib/auth/server'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
@@ -398,6 +399,20 @@ export default async function SellerDashboardPage() {
     rates = null
   }
 
+  // H3 — 마진 손실 SKU (환율이 있어야 계산 가능)
+  let marginLossAlerts: MarginLossAlert[] = []
+  if (rates) {
+    const ratesMap: Record<string, { rate: number; unit: number }> = {}
+    for (const [k, v] of Object.entries(rates.rates)) {
+      ratesMap[k] = { rate: v.rate, unit: v.unit }
+    }
+    try {
+      marginLossAlerts = await getMarginLossAlerts(account.id, ratesMap)
+    } catch {
+      marginLossAlerts = []
+    }
+  }
+
   return (
     <div className="p-8 space-y-8 max-w-5xl">
       {/* 인사말 — B: 시각적 무게감 강화 */}
@@ -425,6 +440,9 @@ export default async function SellerDashboardPage() {
 
       {/* 빈 상태 onboarding — 신규 셀러 전용 */}
       {isNewSeller && <OnboardingGuide />}
+
+      {/* H3 — 마진 손실 알림 */}
+      {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
 
       {/* 빠른 작업 — D: 보조 색 + 새로운 entry */}
       <section>
@@ -737,6 +755,69 @@ function RecentOrdersCard({
           })}
         </ul>
       </div>
+    </section>
+  )
+}
+
+function MarginLossBanner({ alerts }: { alerts: MarginLossAlert[] }) {
+  const top = alerts.slice(0, 5)
+  const totalLoss = alerts.reduce((acc, a) => acc + a.loss_per_unit_krw, 0)
+  return (
+    <section className="rounded-xl border border-rose-200 border-l-[3px] border-l-rose-500 bg-gradient-to-br from-rose-50 to-white shadow-sm overflow-hidden">
+      <div className="px-5 py-3.5 border-b border-rose-100 flex items-start gap-3">
+        <div className="w-8 h-8 rounded-full bg-rose-500 flex items-center justify-center shrink-0 shadow-sm shadow-rose-500/30">
+          <svg className="w-4 h-4 text-white" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+          </svg>
+        </div>
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-bold text-rose-900">
+            마진 손실 위험 SKU {alerts.length}건
+          </p>
+          <p className="mt-0.5 text-xs text-rose-800">
+            현 환율 기준 매입가 + 배대지비가 최근 30일 평균 판매가보다 큽니다 — 단가 조정 또는 매입처 변경을 검토하세요.
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] text-rose-700 uppercase tracking-wider font-semibold">건당 손실</p>
+          <p className="text-sm font-bold text-rose-900 tabular-nums">
+            평균 ₩{Math.round(totalLoss / alerts.length).toLocaleString('ko-KR')}
+          </p>
+        </div>
+      </div>
+      <ul className="divide-y divide-rose-100">
+        {top.map((a) => (
+          <li key={a.product_id}>
+            <Link
+              href={`/products/${a.product_id}`}
+              className="block px-5 py-2.5 hover:bg-rose-50/60 transition-colors"
+            >
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-mono text-[11px] font-bold text-rose-700 shrink-0">{a.seller_sku}</span>
+                    <span className="text-sm text-slate-900 truncate">{a.product_name}</span>
+                  </div>
+                  <p className="text-[11px] text-slate-600 mt-0.5">
+                    매입가 환산 <span className="font-semibold tabular-nums">₩{a.default_unit_price_krw.toLocaleString('ko-KR')}</span> + 배송 ₩6,000
+                    {' · '}
+                    최근 평균 판매 <span className="font-semibold tabular-nums">₩{a.recent_avg_sale_krw.toLocaleString('ko-KR')}</span>
+                    {' '}({a.recent_order_count}건)
+                  </p>
+                </div>
+                <span className="text-sm font-bold text-rose-700 tabular-nums shrink-0">
+                  −₩{a.loss_per_unit_krw.toLocaleString('ko-KR')}/개
+                </span>
+              </div>
+            </Link>
+          </li>
+        ))}
+      </ul>
+      {alerts.length > top.length && (
+        <p className="px-5 py-2 text-[11px] text-rose-700 bg-rose-50/40 border-t border-rose-100 text-center">
+          외 {alerts.length - top.length}건 더 — <Link href="/analytics" className="font-semibold underline underline-offset-2">매출·마진 분석 →</Link>
+        </p>
+      )}
     </section>
   )
 }
