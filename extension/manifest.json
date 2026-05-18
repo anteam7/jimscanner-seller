@@ -42,6 +42,16 @@
       ],
       "js": ["scrapers/amazon-jp.js"],
       "run_at": "document_idle"
+    },
+    {
+      "matches": [
+        "https://www.amazon.com/checkout/*",
+        "https://www.amazon.com/gp/buy/*",
+        "https://www.amazon.co.jp/checkout/*",
+        "https://www.amazon.co.jp/gp/buy/*"
+      ],
+      "js": ["checkout/amazon-checkout.js"],
+      "run_at": "document_idle"
     }
   ]
 }

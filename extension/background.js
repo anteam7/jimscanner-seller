@@ -16,8 +16,31 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .catch((err) => sendResponse({ ok: false, error: String(err && err.message ? err.message : err) }))
     return true
   }
+  if (msg && msg.type === 'JIMSCANNER_FETCH_ADDRESSES') {
+    handleFetchAddresses(msg.country)
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch((err) => sendResponse({ ok: false, error: String(err && err.message ? err.message : err) }))
+    return true
+  }
   return false
 })
+
+async function handleFetchAddresses(country) {
+  const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])
+  if (!token) throw new Error('토큰이 설정되지 않았습니다.')
+  const base = (apiUrl || DEFAULT_API_URL).replace(/\/$/, '')
+  const qs = country ? `?country=${encodeURIComponent(country)}` : ''
+  const url = base + '/api/extension/addresses' + qs
+  let res
+  try {
+    res = await fetch(url, { headers: { Authorization: 'Bearer ' + token } })
+  } catch (err) {
+    throw new Error('fetch 실패 [' + url + ']: ' + (err && err.message ? err.message : err))
+  }
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
+  return body
+}
 
 async function handlePing() {
   const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])

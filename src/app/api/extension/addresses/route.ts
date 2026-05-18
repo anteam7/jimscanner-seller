@@ -30,14 +30,21 @@ export async function GET(request: Request) {
     )
   }
 
+  const url = new URL(request.url)
+  const country = url.searchParams.get('country')?.toUpperCase().slice(0, 2) || null
+
   const admin = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data, error } = await (admin as any)
+  let q = (admin as any)
     .from('b2b_forwarder_addresses')
     .select(
       'id, account_id, forwarder_id, label, recipient_name, phone, address1, address2, city, state, zip, country, member_no, is_official, is_default, notes, forwarders(name, slug)',
     )
     .or(`account_id.is.null,account_id.eq.${auth.account_id}`)
+
+  if (country) q = q.eq('country', country)
+
+  const { data, error } = await q
     .order('is_default', { ascending: false })
     .order('is_official', { ascending: true })
     .order('label', { ascending: true })
@@ -49,5 +56,5 @@ export async function GET(request: Request) {
     )
   }
 
-  return NextResponse.json({ addresses: data ?? [] }, { headers: CORS_HEADERS })
+  return NextResponse.json({ addresses: data ?? [], filter: { country } }, { headers: CORS_HEADERS })
 }
