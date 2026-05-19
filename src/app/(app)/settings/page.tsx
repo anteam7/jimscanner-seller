@@ -119,6 +119,47 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
     ],
   },
   {
+    heading: '브라우저 확장',
+    accent: 'sky',
+    cards: [
+      {
+        title: '확장 토큰 발급',
+        description: '크롬 확장이 짐스캐너 API 를 호출할 때 쓰는 Bearer 토큰 발급·폐기',
+        href: '/settings/extension',
+        available: true,
+        icon: (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M3.75 12c0-1.232.046-2.453.138-3.662a4.006 4.006 0 0 1 3.7-3.7 48.678 48.678 0 0 1 7.324 0 4.006 4.006 0 0 1 3.7 3.7c.017.22.032.441.046.662M19.5 12c0 1.232-.046 2.453-.138 3.662a4.006 4.006 0 0 1-3.7 3.7 48.657 48.657 0 0 1-7.324 0 4.006 4.006 0 0 1-3.7-3.7c-.017-.22-.032-.441-.046-.662" />
+          </svg>
+        ),
+      },
+      {
+        title: '배대지 영문 주소',
+        description: '공용 시드 + 셀러 본인 커스텀 주소. amazon checkout 자동입력 source',
+        href: '/settings/forwarder-addresses',
+        available: true,
+        icon: (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M15 10.5a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1 1 15 0Z" />
+          </svg>
+        ),
+      },
+      {
+        title: '배송신청서 캡쳐',
+        description: '배대지 신청서 페이지에서 [📋] 클릭 → HTML 자동 수집 → 자동입력 매핑 작성용',
+        href: '/settings/forwarder-forms',
+        available: true,
+        badge: '신규',
+        icon: (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 0 0 2.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 0 0-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 0 0 .75-.75 2.25 2.25 0 0 0-.1-.664m-5.8 0A2.251 2.251 0 0 1 13.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25ZM6.75 12h.008v.008H6.75V12Zm0 3h.008v.008H6.75V15Zm0 3h.008v.008H6.75V18Z" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
     heading: '법규·컴플라이언스',
     accent: 'amber',
     cards: [
