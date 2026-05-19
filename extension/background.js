@@ -22,8 +22,34 @@ chrome.runtime.onMessage.addListener((msg, _sender, sendResponse) => {
       .catch((err) => sendResponse({ ok: false, error: String(err && err.message ? err.message : err) }))
     return true
   }
+  if (msg && msg.type === 'JIMSCANNER_FORM_SNAPSHOT') {
+    handleFormSnapshot(msg.payload)
+      .then((result) => sendResponse({ ok: true, ...result }))
+      .catch((err) => sendResponse({ ok: false, error: String(err && err.message ? err.message : err) }))
+    return true
+  }
   return false
 })
+
+async function handleFormSnapshot(payload) {
+  const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])
+  if (!token) throw new Error('토큰이 설정되지 않았습니다. 확장 popup 에서 저장하세요.')
+  const base = (apiUrl || DEFAULT_API_URL).replace(/\/$/, '')
+  const url = base + '/api/extension/form-snapshot'
+  let res
+  try {
+    res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token },
+      body: JSON.stringify(payload),
+    })
+  } catch (err) {
+    throw new Error('fetch 실패 [' + url + ']: ' + (err && err.message ? err.message : err))
+  }
+  const body = await res.json().catch(() => ({}))
+  if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`)
+  return body
+}
 
 async function handleFetchAddresses(country) {
   const { apiUrl, token } = await chrome.storage.local.get(['apiUrl', 'token'])
