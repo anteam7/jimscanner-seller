@@ -1,5 +1,6 @@
 -- 2026-05-18: 공용 배대지 주소 시드 — main repo 의 centers 테이블에서 변환.
--- US 40개 (표준 'street, city, state zip' 정규식 파싱) + JP 17개 (일본어 주소 통째로).
+-- US 40개 (표준 'street, city, state zip' 정규식 파싱) + JP 17개 (일본어 주소 통째로)
+-- + CN 16개 (중국어 주소 통째로, 省/市/区 정규식 파싱 — 2026-05-20 추가).
 -- 멱등 실행 가능 (기존 is_official=true 시드 삭제 후 재삽입).
 
 DELETE FROM public.b2b_forwarder_addresses WHERE account_id IS NULL AND is_official = true;
@@ -49,4 +50,25 @@ SELECT
 FROM public.centers c
 JOIN public.forwarders f ON f.id = c.forwarder_id
 WHERE c.country = 'JP'
+  AND c.address IS NOT NULL AND c.address != '';
+
+INSERT INTO public.b2b_forwarder_addresses (
+  account_id, forwarder_id, label, recipient_name, phone, address1, city, state, zip, country, is_official, notes
+)
+SELECT
+  NULL,
+  c.forwarder_id,
+  f.name || ' ' || COALESCE(c.center_name, c.country_name || ' 센터'),
+  '(셀러 中文이름 + 会员号 입력 필요)',
+  COALESCE(c.default_phone, f.default_phone),
+  c.address,
+  COALESCE(substring(c.address from '([^省]+?市)'), ''),
+  COALESCE(substring(c.address from '^([^市]+?省)'), ''),
+  '',
+  'CN',
+  true,
+  '타오바오/1688 결제 시 邮编(우편번호) 은 본인이 별도 입력. 중국어 주소 전체가 address1 에 들어있음.'
+FROM public.centers c
+JOIN public.forwarders f ON f.id = c.forwarder_id
+WHERE c.country = 'CN'
   AND c.address IS NOT NULL AND c.address != '';
