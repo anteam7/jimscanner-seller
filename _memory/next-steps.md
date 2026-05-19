@@ -58,7 +58,7 @@
 | `NTS_BUSINESS_API_KEY` 발급 (data.go.kr) | signup step-5 사업자 진위확인 |
 | Supabase Auth redirect URL 새 도메인 추가 | 도메인 매핑 후 |
 | main repo `bfa487f` push + types/supabase.ts sync | DB 공유라 두 repo 동기화 |
-| **main repo 어드민 `/admin/forwarders` 에 `default_phone` 입력 필드 추가** | `forwarders.default_phone` 컬럼 (2026-05-20 추가). 채운 후 `supabase/b2b_forwarder_addresses_seed_from_centers.sql` 재실행하면 공용 시드 phone 자동 반영 (amazon checkout 자동입력 활용) |
+| **main repo 어드민 `/admin/forwarders` + `/admin/centers` 에 `default_phone` 입력 필드 추가** | `forwarders.default_phone` + `centers.default_phone` 컬럼 (2026-05-20 추가). 시드는 `COALESCE(c.default_phone, f.default_phone)` 우선. 공개 phone 36/57 자동 수집 완료 (US 30/40, JP 6/17). 남은 21개 (호야USA·훗타운 JP/DE·비드팟·유니옥션·엘덱스 JP 등) 는 어드민에서 셀러 로그인 정보 보고 채워야 함 |
 
 ---
 

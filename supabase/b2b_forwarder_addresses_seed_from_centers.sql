@@ -12,7 +12,7 @@ SELECT
   c.forwarder_id,
   f.name || ' ' || COALESCE(c.center_name, c.country_name || ' 센터'),
   '(셀러 영문이름 + 회원번호 입력 필요)',
-  f.default_phone,
+  COALESCE(c.default_phone, f.default_phone),
   regexp_replace(c.address, '^(.+),\s*[^,]+,\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?\s*$', '\1'),
   regexp_replace(c.address, '^.+,\s*([^,]+),\s*[A-Z]{2}\s+\d{5}(?:-\d{4})?\s*$', '\1'),
   substring(c.address from '([A-Z]{2})\s+\d{5}(?:-\d{4})?\s*$'),
@@ -34,7 +34,7 @@ SELECT
   c.forwarder_id,
   f.name || ' ' || COALESCE(c.center_name, c.country_name || ' 센터'),
   '(셀러 영문이름 + 会員番号 입력 필요)',
-  f.default_phone,
+  COALESCE(c.default_phone, f.default_phone),
   c.address,
   '',
   COALESCE(
