@@ -47,8 +47,25 @@
     return null
   }
 
+  // 한국 010-XXXX-XXXX 같은 phone 을 amazon US/JP checkout 에 맞게 정규화.
+  // 미국 form: +82-10-1234-5678 또는 0101234-5678 그대로
+  // 일본 form: 일본 amazon 은 한국 phone 도 받음 (국제 형식)
+  function normalizeSellerPhone(raw, country) {
+    if (!raw) return null
+    const cleaned = String(raw).trim().replace(/\s+/g, '')
+    if (!cleaned) return null
+    // 이미 국가코드 있으면 그대로
+    if (cleaned.startsWith('+')) return cleaned
+    // 한국 010, 02, 070 등으로 시작하면 +82 붙임 (carrier 가 국제호출 가능)
+    if (/^0\d/.test(cleaned)) {
+      const stripped = cleaned.replace(/^0/, '').replace(/-/g, '')
+      return country === 'US' || country === 'JP' ? '+82' + stripped : cleaned
+    }
+    return cleaned
+  }
+
   // amazon checkout 의 form 필드를 찾고 채움
-  function fillAddress(addr) {
+  function fillAddress(addr, sellerPhone) {
     const fields = {
       fullName: pick(
         '[name="enterAddressFullName"]',
@@ -103,9 +120,17 @@
     // address2 가 비어있고 회원번호가 있으면 회원번호를 address2 에 넣어줌
     const addr2 = addr.address2 || (addr.member_no ? `Member # ${addr.member_no}` : null)
 
+    // phone: 공용 주소 phone NULL 이면 셀러 본인 phone 으로 fallback
+    let phoneToFill = addr.phone
+    let phoneFallbackUsed = false
+    if (!phoneToFill && sellerPhone) {
+      phoneToFill = normalizeSellerPhone(sellerPhone, addr.country)
+      phoneFallbackUsed = true
+    }
+
     const map = {
       fullName: addr.recipient_name,
-      phone: addr.phone,
+      phone: phoneToFill,
       address1: addr.address1,
       address2: addr2,
       city: addr.city,
@@ -146,7 +171,7 @@
       }
     }
 
-    return { filled, missing }
+    return { filled, missing, phoneFallbackUsed }
   }
 
   // ─── UI ────────────────────────────────────────────────────────────────
@@ -246,6 +271,7 @@
       return
     }
     const addresses = result.addresses || []
+    sellerInfo = result.seller || null
     if (addresses.length === 0) {
       renderError(
         `${country} 배대지 주소가 등록되어 있지 않습니다.`,
@@ -298,6 +324,7 @@
   let currentTab = 'mine'
   let allAddresses = []
   let currentCountry = 'US'
+  let sellerInfo = null // { phone, business_name }
 
   function renderList(addresses, country) {
     allAddresses = addresses
@@ -367,15 +394,20 @@
   }
 
   function applyFill(addr) {
-    const result = fillAddress(addr)
+    const sellerPhone = sellerInfo && sellerInfo.phone ? sellerInfo.phone : null
+    const result = fillAddress(addr, sellerPhone)
     const okCount = Object.values(result.filled).filter((v) => v === 'ok').length
     const missingMsg = result.missing.length
       ? `<div style="margin-top:6px;font-size:11px;color:#b91c1c">못 채운 필드: ${result.missing.join(', ')}</div>`
+      : ''
+    const fallbackMsg = result.phoneFallbackUsed
+      ? `<div style="margin-top:4px;font-size:11px;color:#0369a1;background:#f0f9ff;border:1px solid #bae6fd;border-radius:4px;padding:4px 8px">📞 phone 은 셀러 본인 번호로 자동 채움 (공용 주소에 phone 없어서)</div>`
       : ''
     renderPanel(`
       <div style="padding:14px 16px;background:#ecfdf5;border-bottom:1px solid #a7f3d0;color:#047857">
         <b>✓ ${escapeHtml(addr.label)} 적용</b>
         <div style="margin-top:4px;font-size:11px">${okCount}개 필드 채움</div>
+        ${fallbackMsg}
         ${missingMsg}
       </div>
       <div style="padding:14px 16px;color:#475569;flex:1;font-size:11px">

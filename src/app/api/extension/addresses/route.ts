@@ -56,5 +56,22 @@ export async function GET(request: Request) {
     )
   }
 
-  return NextResponse.json({ addresses: data ?? [], filter: { country } }, { headers: CORS_HEADERS })
+  // 셀러 본인 정보 — 공용 주소에 phone NULL 일 때 fallback 용
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: seller } = await (admin as any)
+    .from('b2b_accounts')
+    .select('phone, business_name')
+    .eq('id', auth.account_id)
+    .single()
+
+  return NextResponse.json(
+    {
+      addresses: data ?? [],
+      filter: { country },
+      seller: seller
+        ? { phone: seller.phone ?? null, business_name: seller.business_name ?? null }
+        : null,
+    },
+    { headers: CORS_HEADERS },
+  )
 }
