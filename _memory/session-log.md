@@ -4,6 +4,32 @@
 
 ---
 
+## 2026-05-20 (세션 13 — phone 수집 + /imports 매칭 + fallback)
+
+세션 12 후속. 사용자가 amazon checkout 자동입력 시 phone 안 채워지는 거 발견.
+
+### 작업
+1. **`30822bd`** feat(forwarders): default_phone 컬럼 + 시드에 phone 매핑 (forwarder-level)
+2. **`15120ae`** feat(centers): default_phone 컬럼 + 46개 창고 phone 웹 수집 + 시드 COALESCE
+   - 몰테일·지니집·아이포터·오마이집 전부 / 짐패스 OR(503-848-8600)·NJ(201-840-5355)·JP-Osaka / 포스트고·훗타운·가지다·세븐존·예스쉽·투패스츠·직구직구·이지타오 등
+   - 시드 결과: US 40/40 중 30 (75%) + JP 17/17 중 6 (35%) phone 채워짐
+3. **`367706d`** feat: CN 공용 시드 16개 추가 (US 40 + JP 17 + CN 16 = 73개)
+4. **`466e68f`** feat(imports): 영수증 ↔ b2b_orders 매칭 heuristic + 인라인 매칭/해제 UI
+   - import-matcher.ts (통화/날짜/금액 스코어링), PATCH endpoint, ImportMatchAction client
+5. **`dcbe0e6`** feat(extension): 공용 주소 phone NULL 시 셀러 본인 phone 자동 fallback
+   - /api/extension/addresses 응답에 seller {phone} 포함, normalizeSellerPhone 으로 +82 변환
+
+### 자율 작업 트리거
+- 사용자가 "배대지 배송신청서 HTML 자동입력" 큰 목표 던졌으나 직접 가입·HTML 수집 시간 없음 → 보류
+- 대신 자율 가능한 3개 작업 (CN 시드 / /imports 매칭 / phone fallback) 진행
+
+### 다음 (사용자 시간 날 때)
+- 배대지 배송신청서 HTML 수집 (보류된 큰 목표)
+- main repo `/admin/forwarders` + `/admin/centers` 어드민에 default_phone 입력 UI
+- 남은 21개 NULL phone 채우면 시드 재실행만으로 자동 반영
+
+---
+
 ## 2026-05-18 (세션 12 — 브라우저 확장 + 매입처 영수증 + 배대지 주소)
 
 세션 11 후반에 cron 큐 31항목 모두 소진. 사용자가 새 도메인 시작 — "아마존 US/JP·라쿠텐·야후
