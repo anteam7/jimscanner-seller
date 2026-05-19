@@ -1,6 +1,12 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
+import {
+  findCandidates,
+  type OrderForMatching,
+  type ReceiptForMatching,
+} from '@/lib/b2b/import-matcher'
+import { ImportMatchAction } from './ImportMatchAction'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +21,23 @@ const SOURCE_LABEL: Record<string, string> = {
   amazon_jp: '아마존 JP',
   rakuten: '라쿠텐',
   yahoo: '야후',
+}
+
+const MARKETPLACE_LABEL: Record<string, string> = {
+  coupang: '쿠팡',
+  smartstore: '스마트스토어',
+  auction: '옥션',
+  gmarket: '지마켓',
+  '11st': '11번가',
+  wemakeprice: '위메프',
+  tmon: '티몬',
+  interpark: '인터파크',
+  ssg: 'SSG',
+  lotte_on: '롯데온',
+  kakao: '카카오',
+  naver: '네이버',
+  self: '자사몰',
+  other: '기타',
 }
 
 type Item = {
@@ -59,6 +82,12 @@ function formatDate(iso: string | null): string {
   return `${yy}.${mm}.${dd}`
 }
 
+function orderDisplayLabel(o: { market_order_number: string | null; order_number: string | null; marketplace: string | null }): string {
+  const num = o.market_order_number || o.order_number || '주문'
+  const mk = o.marketplace ? MARKETPLACE_LABEL[o.marketplace] ?? o.marketplace : ''
+  return mk ? `${mk} ${num}` : num
+}
+
 export default async function ImportsPage() {
   const sb = await createClient()
   const {
@@ -87,6 +116,71 @@ export default async function ImportsPage() {
   const rows = (rowsRaw ?? []) as Row[]
   const total = rows.length
   const unmatched = rows.filter((r) => !r.matched_order_id).length
+  const matched = total - unmatched
+
+  // 매칭 후보 계산: 최근 60일 주문 + line items 로딩
+  // 매칭된 주문 ID 도 알아야 페널티 적용 + matched 영수증의 주문 라벨 표시
+  type OrderRow = {
+    id: string
+    order_number: string | null
+    market_order_number: string | null
+    marketplace: string | null
+    created_at: string
+    b2b_order_items: {
+      supplier_site: string | null
+      currency: string | null
+      qty: number | null
+      unit_price_foreign: number | string | null
+    }[]
+  }
+
+  const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
+  const { data: ordersRaw } = await db
+    .from('b2b_orders')
+    .select(
+      'id, order_number, market_order_number, marketplace, created_at, b2b_order_items(supplier_site, currency, qty, unit_price_foreign)',
+    )
+    .eq('account_id', account.id)
+    .gte('created_at', sixtyDaysAgo)
+    .order('created_at', { ascending: false })
+    .limit(300)
+
+  const orders = (ordersRaw ?? []) as OrderRow[]
+  const matchedOrderIds = new Set(
+    rows.filter((r) => r.matched_order_id).map((r) => r.matched_order_id!),
+  )
+  const orderLabelById = new Map<string, string>()
+  for (const o of orders) orderLabelById.set(o.id, orderDisplayLabel(o))
+
+  const orderCandidates: OrderForMatching[] = orders.map((o) => ({
+    id: o.id,
+    order_number: o.order_number,
+    market_order_number: o.market_order_number,
+    marketplace: o.marketplace,
+    created_at: o.created_at,
+    has_matched_receipt: matchedOrderIds.has(o.id),
+    items: o.b2b_order_items ?? [],
+  }))
+
+  function topCandidate(row: Row): { orderId: string; label: string; score: number; reasons: string[] } | null {
+    if (row.matched_order_id) return null
+    const receipt: ReceiptForMatching = {
+      id: row.id,
+      source: row.source,
+      purchased_at: row.purchased_at,
+      currency: row.currency,
+      total_foreign: row.total_foreign,
+    }
+    const cands = findCandidates(receipt, orderCandidates, 1)
+    if (cands.length === 0) return null
+    const c = cands[0]
+    return {
+      orderId: c.order.id,
+      label: orderDisplayLabel(c.order),
+      score: c.score,
+      reasons: c.reasons,
+    }
+  }
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
@@ -99,15 +193,20 @@ export default async function ImportsPage() {
         </p>
       </header>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-indigo-500 px-5 py-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">전체 수집</p>
           <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{total.toLocaleString('ko-KR')}건</p>
         </div>
+        <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-emerald-500 px-5 py-4">
+          <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">매칭됨</p>
+          <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{matched.toLocaleString('ko-KR')}건</p>
+          <p className="mt-0.5 text-[11px] text-emerald-700">짐스캐너 주문에 연결됨</p>
+        </div>
         <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-amber-500 px-5 py-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">매칭 대기</p>
           <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{unmatched.toLocaleString('ko-KR')}건</p>
-          <p className="mt-0.5 text-[11px] text-amber-700">한국 마켓 주문과 연결 필요</p>
+          <p className="mt-0.5 text-[11px] text-amber-700">한국 마켓 주문 필요</p>
         </div>
       </div>
 
@@ -135,13 +234,17 @@ export default async function ImportsPage() {
                   <th className="px-4 py-2.5 text-left">상품</th>
                   <th className="px-4 py-2.5 text-right">합계</th>
                   <th className="px-4 py-2.5 text-left">매입일</th>
-                  <th className="px-4 py-2.5 text-left">상태</th>
+                  <th className="px-4 py-2.5 text-left">짐스캐너 주문 매칭</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {rows.map((r) => {
                   const first = r.items?.[0]
                   const moreCount = (r.items?.length ?? 0) - 1
+                  const rec = topCandidate(r)
+                  const matchedLabel = r.matched_order_id
+                    ? orderLabelById.get(r.matched_order_id) ?? '연결된 주문'
+                    : null
                   return (
                     <tr key={r.id} className="hover:bg-slate-50/60">
                       <td className="px-4 py-3">
@@ -177,15 +280,11 @@ export default async function ImportsPage() {
                         {formatDate(r.purchased_at ?? r.created_at)}
                       </td>
                       <td className="px-4 py-3">
-                        {r.matched_order_id ? (
-                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded">
-                            매칭됨
-                          </span>
-                        ) : (
-                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded">
-                            대기
-                          </span>
-                        )}
+                        <ImportMatchAction
+                          receiptId={r.id}
+                          recommendation={rec}
+                          matchedOrderLabel={matchedLabel}
+                        />
                       </td>
                     </tr>
                   )
@@ -197,7 +296,7 @@ export default async function ImportsPage() {
       </div>
 
       <p className="text-[11px] text-slate-400">
-        ※ 매칭 UI (한국 마켓 주문과 연결) 는 다음 단계로 작업 예정입니다. 현재는 영수증 수집 검증 목적의 목록 표시.
+        ※ 매칭 추천 점수: 통화·날짜·금액 일치도. 추천이 없는 영수증은 짐스캐너에 해당 마켓 주문이 아직 등록 안 됨. 정확하지 않으면 [해제] 후 재매칭하세요.
       </p>
     </div>
   )
