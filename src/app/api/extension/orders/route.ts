@@ -52,6 +52,28 @@ export async function GET(request: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adb = admin as any
 
+  // 1) 매칭된 영수증이 있는 order_id 들을 먼저 찾음
+  type MatchedRow = { matched_order_id: string | null }
+  const { data: matchedRows, error: matchedErr } = await adb
+    .from('b2b_supplier_purchases')
+    .select('matched_order_id')
+    .eq('account_id', auth.account_id)
+    .not('matched_order_id', 'is', null)
+  if (matchedErr) {
+    return NextResponse.json(
+      { error: '매칭 조회 실패', detail: matchedErr.message },
+      { status: 500, headers: CORS_HEADERS },
+    )
+  }
+  const matchedOrderIds = Array.from(
+    new Set(((matchedRows ?? []) as MatchedRow[]).map((r) => r.matched_order_id).filter((id): id is string => !!id)),
+  )
+
+  if (matchedOrderIds.length === 0) {
+    return NextResponse.json({ orders: [], note: '매입 영수증과 매칭된 주문이 없습니다. /imports 에서 먼저 매칭하세요.' }, { headers: CORS_HEADERS })
+  }
+
+  // 2) 매칭된 order_id 들 중 active status 인 주문만 가져옴
   const { data: ordersData, error } = await adb
     .from('b2b_orders')
     .select(
@@ -61,6 +83,7 @@ export async function GET(request: Request) {
        b2b_order_items(id, supplier_site, supplier_order_number, product_name, quantity, unit_price_foreign, currency, product_url, tracking_number_overseas, brand)`,
     )
     .eq('account_id', auth.account_id)
+    .in('id', matchedOrderIds)
     .in('status', ACTIVE_STATUS)
     .order('created_at', { ascending: false })
     .limit(50)

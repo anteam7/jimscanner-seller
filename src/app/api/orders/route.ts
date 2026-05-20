@@ -144,8 +144,10 @@ export async function GET(request: Request) {
   if (marketplace) qb = qb.eq('marketplace', marketplace)
   if (q) {
     const safe = q.replace(/[%,]/g, '')
-    // 셀러 내부 주문번호 또는 마켓 주문번호로 검색
-    qb = qb.or(`order_number.ilike.%${safe}%,market_order_number.ilike.%${safe}%`)
+    // 셀러 내부 주문번호 / 마켓 주문번호 / 구매자명 / 구매자 전화 OR 검색
+    qb = qb.or(
+      `order_number.ilike.%${safe}%,market_order_number.ilike.%${safe}%,buyer_name.ilike.%${safe}%,buyer_phone.ilike.%${safe}%`,
+    )
   }
 
   const { data, error } = await qb
