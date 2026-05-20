@@ -143,52 +143,85 @@ function VerificationProgress({ level }: { level: number }) {
   )
 }
 
-function OnboardingGuide() {
+type Progress = {
+  hasToken: boolean
+  hasMyAddress: boolean
+  hasProduct: boolean
+  hasOrder: boolean
+  hasMatchedReceipt: boolean
+}
+
+function OnboardingGuide({ progress }: { progress?: Progress }) {
+  const steps = [
+    { key: 'hasToken', title: '확장 토큰 발급', desc: '크롬 확장과 짐스캐너 연결. 영수증 자동 수집·자동 채우기 필수.', href: '/settings/extension', done: progress?.hasToken ?? false },
+    { key: 'hasMyAddress', title: '본인 배대지 주소 등록', desc: 'amazon 결제 시 배대지 자동 채움 (회원번호 필수).', href: '/settings/forwarder-addresses', done: progress?.hasMyAddress ?? false },
+    { key: 'hasProduct', title: '첫 해외 상품 (SKU)', desc: '반복 매입 상품 미리 등록. 자동 채움 활성.', href: '/products/new', done: progress?.hasProduct ?? false, optional: true },
+    { key: 'hasOrder', title: '첫 마켓 주문', desc: '마켓에서 받은 주문 등록. SKU 있으면 자동.', href: '/orders/new', done: progress?.hasOrder ?? false },
+    { key: 'hasMatchedReceipt', title: '첫 영수증 매칭', desc: '해외 매입 영수증과 마켓 주문 연결.', href: '/imports', done: progress?.hasMatchedReceipt ?? false },
+  ]
+  const doneCount = steps.filter((s) => s.done).length
+  const totalRequired = steps.filter((s) => !s.optional).length
+  const doneRequired = steps.filter((s) => !s.optional && s.done).length
+
   return (
     <section className="rounded-2xl border border-indigo-200 bg-gradient-to-br from-indigo-50 via-white to-sky-50 shadow-sm overflow-hidden">
-      <div className="px-6 pt-6 pb-2">
-        <span className="inline-flex items-center gap-1.5 mb-2 rounded-full bg-white border border-indigo-200 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
-          <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
-          START GUIDE
-        </span>
+      <div className="px-6 pt-6 pb-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap mb-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-white border border-indigo-200 px-2.5 py-0.5 text-[10px] font-semibold text-indigo-700">
+            <span className="w-1.5 h-1.5 rounded-full bg-indigo-500 animate-pulse" />
+            START CHECKLIST
+          </span>
+          <span className="text-[11px] font-bold text-indigo-700 tabular-nums">
+            진행 {doneCount}/{steps.length} ({doneRequired}/{totalRequired} 필수)
+          </span>
+        </div>
         <h2 className="text-lg font-bold text-slate-900 tracking-tight">
-          첫 주문 등록까지 3단계
+          첫 사용 5단계
         </h2>
         <p className="text-xs text-slate-600 mt-1">
-          한 번 셋업해 두면 다음 주문부터 모든 정보가 자동으로 채워집니다.
+          한 번 셋업해 두면 다음 주문부터 모든 흐름이 자동으로 됩니다.
         </p>
+        {/* 진행 바 */}
+        <div className="mt-3 h-1.5 rounded-full bg-indigo-100 overflow-hidden">
+          <div className="h-full bg-gradient-to-r from-indigo-500 to-emerald-500 transition-all duration-500"
+            style={{ width: `${Math.round((doneCount / steps.length) * 100)}%` }} />
+        </div>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 px-6 py-5">
-        <OnboardingStep
-          step="1"
-          color="emerald"
-          title="상품 SKU 등록"
-          desc="반복 주문되는 상품을 미리 등록. 매입처·단가·배대지 default 까지."
-          href="/products/new"
-          cta="SKU 등록"
-          optional
-        />
-        <OnboardingStep
-          step="2"
-          color="sky"
-          title="첫 주문 입력"
-          desc="마켓에서 받은 주문을 등록. SKU 가 있으면 자동 채움."
-          href="/orders/new"
-          cta="주문 등록 →"
-        />
-        <OnboardingStep
-          step="3"
-          color="indigo"
-          title="배대지 양식 변환"
-          desc="주문 상세에서 30+ 양식 중 선택 → xlsx 다운로드 → 배대지 제출."
-          href="/templates"
-          cta="양식 보기"
-          optional
-        />
+      <div className="space-y-2 px-6 py-4">
+        {steps.map((s, i) => (
+          <Link key={s.key} href={s.href}
+            className={`flex items-start gap-3 p-3 rounded-lg transition-colors border ${
+              s.done
+                ? 'bg-emerald-50/50 border-emerald-200'
+                : 'bg-white border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/30'
+            }`}>
+            <div className={`flex-shrink-0 w-7 h-7 rounded-full flex items-center justify-center text-sm font-bold ${
+              s.done
+                ? 'bg-emerald-500 text-white'
+                : 'bg-slate-100 text-slate-400 border border-slate-200'
+            }`}>
+              {s.done ? '✓' : i + 1}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <p className={`text-sm font-semibold ${s.done ? 'text-emerald-900 line-through' : 'text-slate-900'}`}>
+                  {s.title}
+                </p>
+                {s.optional && <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded">선택</span>}
+              </div>
+              <p className="text-[11px] text-slate-500 mt-0.5">{s.desc}</p>
+            </div>
+            {!s.done && (
+              <svg className="w-4 h-4 text-slate-400 flex-shrink-0 mt-1.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+              </svg>
+            )}
+          </Link>
+        ))}
       </div>
       <div className="px-6 pb-5">
         <p className="text-[11px] text-slate-500 text-center">
-          ※ 2번부터 시작해도 됩니다. 사용하면서 자주 등장하는 상품을 SKU 로 정리하는 게 효율적입니다.
+          순서대로 안 해도 됩니다. 필수 {totalRequired}개 ({steps.filter((s) => !s.optional).map((s) => s.title).join('·')}) 만 끝내면 핵심 흐름 작동.
         </p>
       </div>
     </section>
@@ -390,10 +423,17 @@ export default async function SellerDashboardPage() {
   // "오늘 행동 큐" — 셀러가 즉시 행동해야 하는 항목들
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes] = await Promise.all([
+  const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes,
+         tokenCountRes, myAddressCountRes, productCountRes, orderCountRes, matchedReceiptCountRes] = await Promise.all([
     db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'refund_requested'),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    // Progress 5단계
+    db.from('b2b_seller_tokens').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('revoked_at', null),
+    db.from('b2b_forwarder_addresses').select('id', { count: 'exact', head: true }).eq('account_id', account.id),
+    db.from('b2b_products').select('id', { count: 'exact', head: true }).eq('account_id', account.id).eq('is_active', true),
+    db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null),
+    db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).not('matched_order_id', 'is', null),
   ])
   const actionQueue = {
     unmatchedReceipts: unmatchedReceiptsRes.count ?? 0,
@@ -401,6 +441,15 @@ export default async function SellerDashboardPage() {
     oldPending: oldPendingRes.count ?? 0,
   }
   const totalActions = actionQueue.unmatchedReceipts + actionQueue.refundRequests + actionQueue.oldPending
+  const progress = {
+    hasToken: (tokenCountRes.count ?? 0) > 0,
+    hasMyAddress: (myAddressCountRes.count ?? 0) > 0,
+    hasProduct: (productCountRes.count ?? 0) > 0,
+    hasOrder: (orderCountRes.count ?? 0) > 0,
+    hasMatchedReceipt: (matchedReceiptCountRes.count ?? 0) > 0,
+  }
+  // checklist 미완료 단계 있으면 항상 표시
+  const showChecklist = !progress.hasToken || !progress.hasMyAddress || !progress.hasOrder || !progress.hasMatchedReceipt
 
   // 환율 (실패 시 null) + 전일 비교
   let rates: ExchangeRates | null = null
@@ -453,8 +502,8 @@ export default async function SellerDashboardPage() {
       {/* 인증 진행 현황 */}
       <VerificationProgress level={account.verification_level} />
 
-      {/* 빈 상태 onboarding — 신규 셀러 전용 */}
-      {isNewSeller && <OnboardingGuide />}
+      {/* Progressive checklist — 미완료 단계 있으면 항상 표시 */}
+      {showChecklist && <OnboardingGuide progress={progress} />}
 
       {/* H3 — 마진 손실 알림 */}
       {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}

@@ -284,6 +284,29 @@ export default function AccountSettingsPage() {
         </form>
       </section>
 
+      {/* 데이터 export */}
+      <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-3">
+        <div>
+          <h2 className="text-sm font-semibold text-slate-900">데이터 다운로드 (백업)</h2>
+          <p className="text-xs text-slate-500 mt-0.5">
+            본인 모든 데이터 (주문·라인·영수증·상품·매칭·배대지 주소) 를 JSON 한 파일로 백업. 정기 백업·이탈 대비.
+          </p>
+        </div>
+        <a
+          href="/api/settings/export"
+          download
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold text-slate-700 border border-slate-300 bg-white hover:bg-slate-50 transition-colors w-fit"
+        >
+          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+          </svg>
+          전체 데이터 JSON 다운로드
+        </a>
+        <p className="text-[11px] text-slate-400">
+          ※ 시스템 메타·확장 토큰·결제 정보는 제외. 다른 셀러 데이터 없음.
+        </p>
+      </section>
+
       {/* 이메일 변경 */}
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div>
