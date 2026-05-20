@@ -42,10 +42,10 @@ export async function GET(request: Request) {
   const { data, error } = await adb
     .from('b2b_orders')
     .select(
-      `id, order_number, market_order_number, marketplace, status, notes,
+      `id, order_number, market_order_number, marketplace, status, request_notes,
        buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code,
        forwarder_id, forwarders(name, slug),
-       b2b_order_items(id, supplier_site, supplier_order_number, product_name, qty, unit_price_foreign, currency, product_url, tracking_number_overseas)`,
+       b2b_order_items(id, supplier_site, supplier_order_number, product_name, quantity, unit_price_foreign, currency, product_url, tracking_number_overseas, brand)`,
     )
     .eq('account_id', auth.account_id)
     .in('status', ACTIVE_STATUS)
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     market_order_number: string | null
     marketplace: string | null
     status: string
-    notes: string | null
+    request_notes: string | null
     buyer_name: string | null
     buyer_phone: string | null
     buyer_postal_code: string | null
@@ -79,11 +79,12 @@ export async function GET(request: Request) {
       supplier_site: string | null
       supplier_order_number: string | null
       product_name: string | null
-      qty: number | null
+      quantity: number | null
       unit_price_foreign: number | string | null
       currency: string | null
       product_url: string | null
       tracking_number_overseas: string | null
+      brand: string | null
     }[]
   }
 
@@ -93,7 +94,7 @@ export async function GET(request: Request) {
     market_order_number: o.market_order_number,
     marketplace: o.marketplace,
     status: o.status,
-    notes: o.notes,
+    notes: o.request_notes,
     buyer_name: o.buyer_name,
     buyer_phone: o.buyer_phone,
     buyer_postal_code: o.buyer_postal_code,
@@ -109,11 +110,12 @@ export async function GET(request: Request) {
       supplier_site: it.supplier_site,
       supplier_order_number: it.supplier_order_number,
       product_name: it.product_name,
-      qty: it.qty,
+      qty: it.quantity,
       unit_price_foreign: it.unit_price_foreign,
       currency: it.currency,
       product_url: it.product_url,
       tracking_number_overseas: it.tracking_number_overseas,
+      brand: it.brand,
     })) ?? [],
   }))
 
