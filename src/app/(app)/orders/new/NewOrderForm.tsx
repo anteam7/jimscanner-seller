@@ -70,6 +70,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
     salePriceKrw: string
     imageUrl: string
     trackingNumberOverseas: string
+    forwarderId: string  // 라인별 배대지 (선택). 빈값이면 주문 forwarder 사용.
   }
   function blankLine(): LineItem {
     return {
@@ -87,6 +88,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
       salePriceKrw: '',
       imageUrl: '',
       trackingNumberOverseas: '',
+      forwarderId: '',
     }
   }
   const [lines, setLines] = useState<LineItem[]>([blankLine()])
@@ -256,6 +258,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
             market_option: l.marketOption.trim() || null,
             image_url: l.imageUrl.trim() || null,
             tracking_number_overseas: l.trackingNumberOverseas.trim() || null,
+            forwarder_id: l.forwarderId || null,
           })),
         }),
       })
@@ -449,7 +452,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
                   )}
                 </div>
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="해외 사이트" htmlFor={`supplier_site_${i}`}>
                   <select id={`supplier_site_${i}`} value={line.supplierSite} onChange={(e) => patchLine(i, { supplierSite: e.target.value })} className={inputCls}>
                     <option value="">선택하지 않음</option>
@@ -460,6 +463,14 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
                 </Field>
                 <Field label="해외 주문번호" htmlFor={`supplier_order_number_${i}`} hint="해외 쇼핑몰에서 받은 주문번호 (없으면 비워두세요)">
                   <input id={`supplier_order_number_${i}`} type="text" maxLength={128} value={line.supplierOrderNumber} onChange={(e) => patchLine(i, { supplierOrderNumber: e.target.value })} placeholder="예: 113-1234567-7654321" className={inputCls} />
+                </Field>
+                <Field label="이 라인 배대지" htmlFor={`line_forwarder_${i}`} hint="비우면 주문 배대지 사용. 다른 배대지 이용 시 선택.">
+                  <select id={`line_forwarder_${i}`} value={line.forwarderId} onChange={(e) => patchLine(i, { forwarderId: e.target.value })} className={inputCls}>
+                    <option value="">주문 배대지 사용</option>
+                    {forwarders.map((f) => (
+                      <option key={f.id} value={f.id}>{f.name}</option>
+                    ))}
+                  </select>
                 </Field>
               </div>
               <Field label="상품명" htmlFor={`product_name_${i}`} required>

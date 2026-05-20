@@ -38,6 +38,7 @@ type ItemInput = {
   product_id?: unknown
   image_url?: unknown
   tracking_number_overseas?: unknown
+  forwarder_id?: unknown
 }
 
 type CreateOrderBody = {
@@ -242,6 +243,7 @@ export async function POST(request: Request) {
       product_id: isUuid(it.product_id) ? it.product_id : null,
       image_url: str(it.image_url, 500),
       tracking_number_overseas: str(it.tracking_number_overseas, 128),
+      forwarder_id: isUuid(it.forwarder_id) ? it.forwarder_id : null,
     }
   })
 
