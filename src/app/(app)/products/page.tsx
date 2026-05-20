@@ -4,7 +4,7 @@ import { createClient } from '@/lib/auth/server'
 import { SUPPLIER_SITES } from '@/lib/b2b/order-options'
 
 export const metadata: Metadata = {
-  title: '상품 SKU',
+  title: '해외 상품관리',
   robots: { index: false },
 }
 
@@ -83,9 +83,9 @@ export default async function ProductsPage({
     <div className="p-8 space-y-6 max-w-6xl">
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">상품 SKU</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">해외 상품관리</h1>
           <p className="text-sm text-slate-600 mt-1">
-            반복 주문되는 상품을 한 번 등록하면 다음 주문부터 매입처·매입가·배대지가 자동 채워집니다.
+            해외 매입처에서 반복 매입하는 상품 마스터. 등록하면 주문 작성 시 매입처·매입가·배대지가 자동 채워집니다.
           </p>
         </div>
         <Link
@@ -131,11 +131,11 @@ export default async function ProductsPage({
             </svg>
           </div>
           <h2 className="text-base font-semibold text-slate-900">
-            {query ? '검색 결과가 없습니다' : '아직 등록된 SKU 가 없습니다'}
+            {query ? '검색 결과가 없습니다' : '아직 등록된 해외 상품이 없습니다'}
           </h2>
           {!query && (
             <p className="text-sm text-slate-500 mt-1.5 max-w-md mx-auto">
-              반복되는 상품을 SKU 로 한 번 등록하면 매번 같은 정보를 다시 입력할 필요가 없습니다.
+              반복 매입하는 해외 상품을 한 번 등록하면 매번 같은 정보를 다시 입력할 필요가 없습니다.
             </p>
           )}
           {!query && (
@@ -146,7 +146,7 @@ export default async function ProductsPage({
               <svg className="w-4 h-4" fill="none" viewBox="0 0 14 14" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M7 2v10M2 7h10" />
               </svg>
-              새 SKU 등록
+              새 해외 상품 등록
             </Link>
           )}
         </div>

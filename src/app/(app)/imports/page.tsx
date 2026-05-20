@@ -11,8 +11,8 @@ import { ImportMatchAction } from './ImportMatchAction'
 export const dynamic = 'force-dynamic'
 
 export const metadata: Metadata = {
-  title: '매입 영수증 · 짐스캐너 SELLER',
-  description: '브라우저 확장이 수집한 해외 매입처 주문 영수증.',
+  title: '해외 주문 목록 · 짐스캐너 SELLER',
+  description: '브라우저 확장이 수집한 해외 매입 (영수증) 목록.',
   robots: { index: false, follow: false },
 }
 
@@ -186,7 +186,7 @@ export default async function ImportsPage() {
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
       <header>
         <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">매입 영수증</span>
+          <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">해외 주문 목록</span>
         </h1>
         <p className="mt-1 text-sm text-slate-600">
           브라우저 확장이 수집한 해외 매입처 주문. 한국 마켓 주문과 매칭하면 짐스캐너 처리 흐름에 연결됩니다.
