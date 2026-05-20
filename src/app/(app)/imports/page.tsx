@@ -309,6 +309,9 @@ export default async function ImportsPage() {
       <p className="text-[11px] text-slate-400">
         ※ 매칭 추천 점수: 통화·날짜·금액 일치도. 추천이 없는 영수증은 짐스캐너에 해당 마켓 주문이 아직 등록 안 됨. 정확하지 않으면 [해제] 후 재매칭하세요.
       </p>
+      <p className="text-[11px] text-slate-400">
+        ⚡ amazon 주문이 여러 박스로 split 발송된 경우 영수증은 1건이지만 박스마다 도착합니다. 매칭 점수가 낮게 나오면 [🔍 검색] 으로 수동 매칭하세요.
+      </p>
     </div>
   )
 }

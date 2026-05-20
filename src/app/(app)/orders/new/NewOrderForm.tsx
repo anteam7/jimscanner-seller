@@ -10,6 +10,7 @@ import {
   type Currency,
 } from '@/lib/b2b/order-options'
 import ProductPicker, { type PickedProduct } from '@/components/b2b/ProductPicker'
+import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
 
 function suggestOrderNumber(): string {
   const now = new Date()
@@ -419,6 +420,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           description="한 마켓 주문에 N개 상품을 매입한 경우 라인을 추가합니다."
           rightChip={`${lines.length} 라인`}
         >
+          <CustomsGuidePanel />
           {lines.map((line, i) => (
             <div
               key={i}
