@@ -256,8 +256,9 @@
       raw_meta: {
         items_count: items.length,
         shipment_roots_found: shipmentRoots.length,
+        split_shipment: shipmentRoots.length > 1,
         scraped_at: new Date().toISOString(),
-        ua: 'amazon-jp-v0.1.0',
+        ua: 'amazon-jp-v0.1.1',
         original_url: window.location.href.split('#')[0],
         detected_currency: detectedCurrency,
         total_row_text: totalRowText || null,

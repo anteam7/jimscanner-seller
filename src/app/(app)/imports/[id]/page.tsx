@@ -118,6 +118,25 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   if (!rowRaw) notFound()
   const row = rowRaw as Row
 
+  // 매칭 audit log
+  type AuditRow = {
+    id: string
+    changed_at: string
+    field_name: string
+    old_value: string | null
+    new_value: string | null
+    reason: string | null
+  }
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const { data: auditRaw } = await (admin as any)
+    .from('b2b_supplier_purchases_audit')
+    .select('id, changed_at, field_name, old_value, new_value, reason')
+    .eq('receipt_id', id)
+    .eq('account_id', account.id)
+    .order('changed_at', { ascending: false })
+    .limit(20)
+  const auditLog = (auditRaw ?? []) as AuditRow[]
+
   // 환율 환산 (실패 시 fallback)
   let rate: { rate: number; unit: number } | null = null
   if (row.currency && row.currency !== 'KRW') {
@@ -300,9 +319,33 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
         </pre>
       </details>
 
-      <p className="text-[11px] text-slate-400">
-        ※ 한국 마켓 주문(b2b_orders) 과의 매칭 UI 는 다음 단계 작업입니다.
-      </p>
+      {/* 매칭 audit log */}
+      {auditLog.length > 0 && (
+        <section className="rounded-lg bg-white shadow-sm border border-slate-200 px-5 py-4">
+          <h2 className="text-sm font-bold text-slate-900 mb-3">📜 매칭 이력</h2>
+          <ul className="space-y-2">
+            {auditLog.map((a) => {
+              const d = new Date(a.changed_at)
+              const ts = d.toLocaleString('ko-KR', { year: '2-digit', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' })
+              const action =
+                a.reason === 'manual_link' ? '🔗 매칭'
+                : a.reason === 'manual_rematch' ? '🔄 재매칭'
+                : a.reason === 'manual_unlink' ? '✗ 해제'
+                : a.reason ?? '변경'
+              return (
+                <li key={a.id} className="flex items-start gap-3 text-xs">
+                  <span className="text-slate-400 tabular-nums shrink-0 mt-0.5">{ts}</span>
+                  <span className="font-semibold text-slate-700 shrink-0">{action}</span>
+                  <span className="text-slate-500 truncate">
+                    {a.old_value && <><span className="line-through text-slate-400">{a.old_value.slice(0, 8)}…</span> → </>}
+                    {a.new_value ? <span className="font-mono">{a.new_value.slice(0, 8)}…</span> : <span className="text-slate-400">null</span>}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+        </section>
+      )}
     </div>
   )
 }
