@@ -127,6 +127,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     .eq('account_id', auth.accountId)
     .is('matched_order_id', null)
 
+  // 자동 status 진행: 주문이 pending/confirmed 면 paid (해외 매입 완료) 로 변경
+  // 매칭됐다는 건 매입이 실제로 일어났다는 신호
+  const { data: ord } = await adb
+    .from('b2b_orders')
+    .select('status')
+    .eq('id', orderId)
+    .eq('account_id', auth.accountId)
+    .single()
+  if (ord && (ord.status === 'pending' || ord.status === 'confirmed')) {
+    await adb.from('b2b_orders')
+      .update({ status: 'paid', updated_at: new Date().toISOString() })
+      .eq('id', orderId)
+      .eq('account_id', auth.accountId)
+  }
+
   // Audit log
   await adb.from('b2b_supplier_purchases_audit').insert({
     receipt_id: id,

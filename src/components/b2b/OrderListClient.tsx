@@ -2,8 +2,61 @@
 
 import Link from 'next/link'
 import { useMemo, useState } from 'react'
+import { useRouter } from 'next/navigation'
 import BulkExportModal, { type SelectedOrderInfo } from './BulkExportModal'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
+
+const BULK_STATUS_OPTIONS = [
+  { value: 'confirmed', label: '매입 발주 완료' },
+  { value: 'paid', label: '해외 매입 완료' },
+  { value: 'forwarder_submitted', label: '배대지 입고' },
+  { value: 'in_transit', label: '운송 중' },
+  { value: 'arrived_korea', label: '한국 통관' },
+  { value: 'delivered', label: '구매자 수령' },
+  { value: 'completed', label: '구매 확정' },
+  { value: 'cancelled', label: '취소' },
+]
+
+function BulkStatusChange({ orderIds, onDone }: { orderIds: string[]; onDone: () => void }) {
+  const router = useRouter()
+  const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  async function apply(status: string) {
+    if (!confirm(`선택한 ${orderIds.length}건을 [${BULK_STATUS_OPTIONS.find((s) => s.value === status)?.label}] 로 변경합니다. 계속할까요?`)) return
+    setBusy(true)
+    setError(null)
+    let ok = 0, fail = 0
+    await Promise.all(orderIds.map(async (id) => {
+      try {
+        const res = await fetch(`/api/orders/${id}/status`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ status }),
+        })
+        if (res.ok) ok++; else fail++
+      } catch { fail++ }
+    }))
+    setBusy(false)
+    if (fail > 0) setError(`${ok}건 성공 / ${fail}건 실패 (전이 불가 등)`)
+    router.refresh()
+    if (fail === 0) onDone()
+  }
+  return (
+    <div className="flex items-center gap-1.5">
+      <select
+        disabled={busy}
+        onChange={(e) => { if (e.target.value) apply(e.target.value); e.target.value = '' }}
+        defaultValue=""
+        className="px-2.5 py-1.5 text-xs border border-slate-300 rounded-md bg-white text-slate-700 disabled:opacity-50"
+        title="선택한 주문 일괄 상태 변경"
+      >
+        <option value="">상태 변경…</option>
+        {BULK_STATUS_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
+      </select>
+      {error && <span className="text-[10px] text-rose-600 max-w-[200px] truncate" title={error}>{error}</span>}
+    </div>
+  )
+}
 
 export type OrderRow = {
   id: string
@@ -112,17 +165,23 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
               선택 해제
             </button>
           </div>
-          <button
-            type="button"
-            onClick={() => setBulkOpen(true)}
-            disabled={templates.length === 0}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
-          >
-            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
-            </svg>
-            선택한 {selected.size}건 양식 변환
-          </button>
+          <div className="flex items-center gap-2">
+            <BulkStatusChange
+              orderIds={Array.from(selected)}
+              onDone={() => setSelected(new Set())}
+            />
+            <button
+              type="button"
+              onClick={() => setBulkOpen(true)}
+              disabled={templates.length === 0}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+              </svg>
+              양식 변환
+            </button>
+          </div>
         </div>
       )}
 
