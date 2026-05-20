@@ -1,6 +1,38 @@
 # 다음 작업 우선순위 큐
 
-마지막 갱신: 2026-05-20 (세션 13 — phone 수집 + /imports 매칭 + phone fallback)
+마지막 갱신: 2026-05-21 (세션 14 — 시나리오 5 Part 분석 + 1-3주차 갭 일괄 구축)
+
+## 🆕 세션 14 구축 완료 (분석 기반)
+
+분석 문서 `scenarios-personas-gap-analysis.md` (3356줄) 의 1-3주차 갭 대부분 구축. 총 **13개 commit**:
+
+| commit | 갭 |
+|---|---|
+| `213b179` | F9 매칭 column · 통관코드 P+12 검증 |
+| `224d2a6` | F1·F2 메뉴 정합 · 매칭 confirm · status enum (refund/customs_denied/disputed) · 라쿠텐 수동 영수증 UI · audit log · 대시보드 행동 큐 |
+| `d2cc907` | H1 일괄 매칭 · 글로벌 검색 · 확장 panel [⭐ 내 주소로] |
+| `6fc7043` | M9 데이터 export · 분기/연간 부가세 · H7 progressive checklist |
+| `ecf9d56` | 카테고리별 통관 가이드 (11종) · amazon split flag |
+| `b6f89b5` | 17track 외부 link · /resources/customs-guide |
+| `bfde322` | 통관 메뉴 등록 · amazon-jp split flag · 매칭 audit log UI |
+| `73ebdee` | **F4 라인별 forwarder_id** (큰 모델 변경) |
+| `8b91903` | **F5 1:N 매칭** (b2b_supplier_purchase_matches + API + UI) |
+| `bdd07b6` | F5 역방향 view · supplier 외부 link 확장 · 7일+ 무매칭 알림 |
+| `ff9e3a4` | MK1 paste 헤더 정규화 (4 마켓 alias) |
+| `5f0202d` | /imports filter · 영수증↔라인 가격 변동 알림 |
+| `f0e4017` | /orders 일괄 status 변경 · 영수증 매칭 시 자동 'paid' 전이 |
+
+## 남은 큰 작업 (다음 세션)
+
+- **M2 다중 사용자·권한 분리** — DB·RLS·UI 큰 변경
+- **마켓 API 자동 import** (쿠팡·스마트스토어) — 큰 변경
+- **라쿠텐·야후·메루카리 확장 스크래퍼** — 사이트별 selector
+- **Papago 영문 번역** (H4) — env 키 필요
+- **17track API 양방향** (M3) — env 키
+- **카카오 알림톡** — env 키
+- **자사몰 API 연동** — 솔루션별
+- **도매 워크플로우 (P8)** — 자체 창고·재고
+- **고가품 메타 (P7)** — 시리얼·인증서·검수 사진
 
 ## 🆕 큰 목표 — 배대지 배송신청서 HTML 자동입력 (보류 중)
 사용자가 직접 각 배대지에 가입 + 배송신청서 페이지 HTML 공유해줘야 가능.
