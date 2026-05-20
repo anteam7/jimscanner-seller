@@ -17,3 +17,4 @@ dist
 *.tsbuildinfo
 next-env.d.ts
 .claude/
+.playwright-mcp/
