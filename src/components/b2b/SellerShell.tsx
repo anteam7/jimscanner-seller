@@ -41,7 +41,6 @@ const NAV_ITEMS = [
       { href: '/orders', label: '국내 주문 목록', exact: true },
       { href: '/orders/new', label: '국내 주문 단건 등록' },
       { href: '/orders/bulk', label: '국내 주문 일괄 등록' },
-      { href: '/imports', label: '해외 주문 목록' },
       { href: '/orders/matching', label: '주문매칭관리' },
     ],
   },

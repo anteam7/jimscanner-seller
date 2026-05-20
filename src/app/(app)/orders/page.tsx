@@ -40,7 +40,10 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   delivered:            { label: '구매자 수령', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   completed:            { label: '구매 확정', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   cancelled:            { label: '취소', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
-  refunded:             { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  refund_requested:     { label: '환불 신청', cls: 'bg-amber-50 text-amber-700 border-amber-200' },
+  refunded:             { label: '환불 완료', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  customs_denied:       { label: '통관 거부', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  disputed:             { label: '분쟁 중', cls: 'bg-purple-50 text-purple-700 border-purple-200' },
 }
 
 const MARKETPLACE_LABEL: Record<string, string> = Object.fromEntries(
@@ -56,6 +59,10 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'in_transit', label: '운송 중' },
   { value: 'completed', label: '구매 확정' },
   { value: 'cancelled', label: '취소' },
+  { value: 'refund_requested', label: '환불 신청' },
+  { value: 'refunded', label: '환불 완료' },
+  { value: 'customs_denied', label: '통관 거부' },
+  { value: 'disputed', label: '분쟁 중' },
 ]
 
 function StatusBadge({ status }: { status: string }) {

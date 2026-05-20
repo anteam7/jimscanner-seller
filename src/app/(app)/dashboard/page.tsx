@@ -387,6 +387,21 @@ export default async function SellerDashboardPage() {
 
   const isNewSeller = (monthOrderCount ?? 0) === 0 && (skuCount ?? 0) === 0
 
+  // "오늘 행동 큐" — 셀러가 즉시 행동해야 하는 항목들
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const db = supabase as any
+  const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes] = await Promise.all([
+    db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null),
+    db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'refund_requested'),
+    db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+  ])
+  const actionQueue = {
+    unmatchedReceipts: unmatchedReceiptsRes.count ?? 0,
+    refundRequests: refundRequestsRes.count ?? 0,
+    oldPending: oldPendingRes.count ?? 0,
+  }
+  const totalActions = actionQueue.unmatchedReceipts + actionQueue.refundRequests + actionQueue.oldPending
+
   // 환율 (실패 시 null) + 전일 비교
   let rates: ExchangeRates | null = null
   let yesterdayRates: ExchangeRates | null = null
@@ -443,6 +458,38 @@ export default async function SellerDashboardPage() {
 
       {/* H3 — 마진 손실 알림 */}
       {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
+
+      {/* 오늘 행동 큐 — 즉시 행동 필요 항목 */}
+      {totalActions > 0 && (
+        <section className="rounded-xl bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm p-5">
+          <h2 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-1.5">
+            <span>⚡</span> 오늘 행동 큐 ({totalActions}건)
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {actionQueue.unmatchedReceipts > 0 && (
+              <Link href="/imports" className="block rounded-lg bg-white border border-amber-200 px-4 py-3 hover:shadow-md transition-shadow">
+                <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold">매칭 대기 영수증</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.unmatchedReceipts}건</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">/imports 에서 매칭 →</p>
+              </Link>
+            )}
+            {actionQueue.refundRequests > 0 && (
+              <Link href="/orders?status=refund_requested" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
+                <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">환불 신청 주문</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.refundRequests}건</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">처리 필요 →</p>
+              </Link>
+            )}
+            {actionQueue.oldPending > 0 && (
+              <Link href="/orders?status=pending" className="block rounded-lg bg-white border border-slate-200 px-4 py-3 hover:shadow-md transition-shadow">
+                <p className="text-[11px] uppercase tracking-wider text-slate-700 font-semibold">매입 미진행 (1일+)</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">매입 발주 권장 →</p>
+              </Link>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 빠른 작업 — D: 보조 색 + 새로운 entry */}
       <section>

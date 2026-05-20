@@ -7,6 +7,7 @@ import {
   type ReceiptForMatching,
 } from '@/lib/b2b/import-matcher'
 import { ImportMatchAction } from './ImportMatchAction'
+import { ManualReceiptCreate } from './ManualReceiptCreate'
 
 export const dynamic = 'force-dynamic'
 
@@ -184,14 +185,24 @@ export default async function ImportsPage() {
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
-      <header>
-        <h1 className="text-2xl font-bold tracking-tight text-slate-900">
-          <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">해외 주문 목록</span>
-        </h1>
-        <p className="mt-1 text-sm text-slate-600">
-          브라우저 확장이 수집한 해외 매입처 주문. 한국 마켓 주문과 매칭하면 짐스캐너 처리 흐름에 연결됩니다.
-        </p>
+      <header className="flex items-start justify-between gap-4 flex-wrap">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-slate-900">
+            <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">해외 주문 목록</span>
+          </h1>
+          <p className="mt-1 text-sm text-slate-600">
+            브라우저 확장이 수집한 해외 매입 (영수증) 목록. <b>영수증 1건씩 인라인 매칭</b> — 한 번에 보려면 →
+          </p>
+        </div>
+        <Link
+          href="/orders/matching"
+          className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 transition-colors whitespace-nowrap"
+        >
+          📋 주문매칭관리 통합 뷰
+        </Link>
       </header>
+
+      <ManualReceiptCreate />
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-indigo-500 px-5 py-4">

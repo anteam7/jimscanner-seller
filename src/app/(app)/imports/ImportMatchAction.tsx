@@ -55,7 +55,10 @@ export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel
   const [error, setError] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  async function link(orderId: string | null) {
+  async function link(orderId: string | null, opts?: { confirmText?: string; skipConfirm?: boolean }) {
+    if (!opts?.skipConfirm && opts?.confirmText) {
+      if (!window.confirm(opts.confirmText)) return
+    }
     setBusy(true)
     setError(null)
     try {
@@ -76,6 +79,13 @@ export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel
       setError(String(e instanceof Error ? e.message : e))
       setBusy(false)
     }
+  }
+
+  // 추천 점수에 따라 confirm 문구 결정
+  function confirmTextFor(rec: NonNullable<Props['recommendation']>): string | undefined {
+    if (rec.score >= 90) return undefined // 높은 점수는 무난, confirm 안 함
+    const warn = rec.score < 70 ? '⚠️ 주의: 매칭 점수가 낮습니다.\n\n' : ''
+    return `${warn}이 영수증을 [${rec.label}] 주문에 매칭하시겠습니까?\n\n점수: ${rec.score}\n근거: ${rec.reasons.join(' · ')}\n\n매칭 후 [해제] 로 되돌릴 수 있습니다.`
   }
 
   if (matchedOrderLabel) {
@@ -120,9 +130,15 @@ export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel
         {recommendation ? (
           <button
             type="button"
-            onClick={() => link(recommendation.orderId)}
+            onClick={() => link(recommendation.orderId, { confirmText: confirmTextFor(recommendation) })}
             disabled={busy}
-            className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-300 rounded hover:bg-indigo-100 disabled:opacity-50 transition-colors"
+            className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold border rounded hover:opacity-80 disabled:opacity-50 transition-colors ${
+              recommendation.score >= 90
+                ? 'text-indigo-700 bg-indigo-50 border-indigo-300'
+                : recommendation.score >= 70
+                  ? 'text-amber-800 bg-amber-50 border-amber-300'
+                  : 'text-rose-800 bg-rose-50 border-rose-300'
+            }`}
             title={recommendation.reasons.join(' · ')}
           >
             🔗 {recommendation.label}

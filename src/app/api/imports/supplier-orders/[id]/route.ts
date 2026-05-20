@@ -104,6 +104,14 @@ export async function PATCH(
     }
   }
 
+  // 변경 전 값 가져오기 (audit log 용)
+  const { data: prev } = await adb
+    .from('b2b_supplier_purchases')
+    .select('matched_order_id')
+    .eq('id', id)
+    .eq('account_id', auth.account.id)
+    .maybeSingle()
+
   const { error } = await adb
     .from('b2b_supplier_purchases')
     .update({
@@ -116,5 +124,24 @@ export async function PATCH(
   if (error) {
     return NextResponse.json({ error: '매칭 저장 실패', detail: error.message }, { status: 500 })
   }
+
+  // Audit log — 매칭/해제 이력 (실패해도 본 작업은 성공 처리)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = await createClient() as any
+  const { data: { user: authUser } } = await sb.auth.getUser()
+  const oldValue = prev?.matched_order_id ?? null
+  const reason = matchedOrderId
+    ? (oldValue ? 'manual_rematch' : 'manual_link')
+    : 'manual_unlink'
+  await adb.from('b2b_supplier_purchases_audit').insert({
+    receipt_id: id,
+    account_id: auth.account.id,
+    changed_by_user_id: authUser?.id ?? null,
+    field_name: 'matched_order_id',
+    old_value: oldValue,
+    new_value: matchedOrderId,
+    reason,
+  })
+
   return NextResponse.json({ ok: true })
 }

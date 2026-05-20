@@ -9,18 +9,22 @@ export const dynamic = 'force-dynamic'
 const VALID_STATUSES = [
   'pending', 'confirmed', 'paid', 'forwarder_submitted',
   'in_transit', 'arrived_korea', 'delivered', 'completed',
-  'cancelled', 'refunded',
+  'cancelled', 'refund_requested', 'refunded',
+  'customs_denied', 'disputed',
 ]
 
 const VALID_TRANSITIONS: Record<string, string[]> = {
-  pending:             ['confirmed', 'cancelled'],
-  confirmed:           ['paid', 'cancelled'],
-  paid:                ['forwarder_submitted', 'cancelled', 'refunded'],
-  forwarder_submitted: ['in_transit', 'cancelled', 'refunded'],
-  in_transit:          ['arrived_korea', 'cancelled'],
-  arrived_korea:       ['delivered'],
-  delivered:           ['completed'],
-  completed:           [],
+  pending:             ['confirmed', 'cancelled', 'refund_requested'],
+  confirmed:           ['paid', 'cancelled', 'refund_requested'],
+  paid:                ['forwarder_submitted', 'cancelled', 'refund_requested', 'refunded'],
+  forwarder_submitted: ['in_transit', 'cancelled', 'refund_requested', 'refunded', 'customs_denied'],
+  in_transit:          ['arrived_korea', 'cancelled', 'customs_denied'],
+  arrived_korea:       ['delivered', 'customs_denied'],
+  delivered:           ['completed', 'refund_requested', 'disputed'],
+  completed:           ['refund_requested', 'disputed'],
+  refund_requested:    ['refunded', 'cancelled'],
+  customs_denied:      ['refunded', 'cancelled'],
+  disputed:            ['refunded', 'completed'],
   cancelled:           [],
   refunded:            [],
 }
