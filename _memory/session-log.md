@@ -4,6 +4,33 @@
 
 ---
 
+## 2026-05-21 (세션 14 — 시나리오 5 Part 분석 + 1-3주차 갭 일괄 구축)
+
+세션 13 후속. 사용자가 "시나리오 기반 페르소나 분석" 큰 목표 던짐.
+
+### 분석 문서 (`scenarios-personas-gap-analysis.md`)
+- **Part 1** (534줄): 페르소나 5명 (P1-P5) + cross-cutting + 1·2차 검토 + 갭 30개
+- **Part 2** (+592): 활용성 재검토 (사용 패턴·ROI·Best/Worst Day·신뢰성 위협·재우선순위)
+- **Part 3** (+678): P6-P8 추가 + 마이크로 시나리오 180+ + 시즌·multi-device·정책·NFR
+- **Part 4** (+627): narrative 16개 (시간·맥락·결과) + 신규 갭 35개
+- **Part 5** (+925): 감정 곡선 + 분기 트리 + 시나리오 체인 + DB-level trace + 시간 차원
+
+총 **3356줄**, 갭 **140+개** 도출.
+
+### 구축 (분석 기반, 13 commits)
+- F1·F2 메뉴 정합 / F4 라인별 forwarder / F5 영수증 1:N 매칭
+- status enum 확장 (환불·취소·통관거부·분쟁)
+- 라쿠텐·타오바오 수동 영수증 UI · 매칭 confirm · audit log
+- 일괄 매칭·일괄 status 변경·헤더 정규화
+- 대시보드 progressive checklist + 행동 큐 + 7일+ 무매칭 알림
+- 카테고리별 통관 가이드 (11종) · amazon split shipment flag
+- 셀러 데이터 export · 분기/연간 부가세 · 가격 변동 감지 · 17track link
+
+### 다음 세션
+- M2 다중 사용자 / 마켓 API import / 라쿠텐 스크래퍼 / env 키 필요한 외부 API
+
+---
+
 ## 2026-05-20 (세션 13 — phone 수집 + /imports 매칭 + fallback)
 
 세션 12 후속. 사용자가 amazon checkout 자동입력 시 phone 안 채워지는 거 발견.
