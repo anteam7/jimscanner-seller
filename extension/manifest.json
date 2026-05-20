@@ -120,7 +120,12 @@
         "https://*.hoyausa.co.kr/*",
         "https://ship.itemscout.io/*"
       ],
-      "js": ["forwarders/capture-shipping-form.js", "forwarders/generic-form-filler.js"],
+      "js": [
+        "forwarders/field-patterns.js",
+        "forwarders/field-classifier.js",
+        "forwarders/capture-shipping-form.js",
+        "forwarders/generic-form-filler.js"
+      ],
       "run_at": "document_idle"
     }
   ]

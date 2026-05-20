@@ -2,7 +2,20 @@
  * GET /api/extension/orders
  *
  * 브라우저 확장의 [🪄 자동 채우기] 버튼이 호출.
- * 셀러의 최근 주문 (status pending/confirmed/paid) + 첫 라인 아이템 묶어서 반환.
+ * 셀러의 active 주문 + 매칭된 매입 영수증을 묶어서 반환.
+ *
+ * 응답 형태 (filler 가 통합형 / 분리형 어디든 활용):
+ *   {
+ *     orders: [{
+ *       id, order_number, market_order_number, marketplace, status, request_notes,
+ *       buyer: { name, phone, postal_code, address, detail_address, customs_code },
+ *       items: [{ supplier_site, supplier_order_number, product_name, brand,
+ *                  qty, unit_price_foreign, currency, product_url, tracking_number_overseas }],
+ *       matched_receipts: [{ id, source, supplier_order_number, currency, total_foreign,
+ *                            items: [...], purchased_at }],
+ *       forwarder: { id, name, slug }
+ *     }]
+ *   }
  *
  * 인증: Bearer (b2b_seller_tokens)
  */
@@ -39,7 +52,7 @@ export async function GET(request: Request) {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const adb = admin as any
 
-  const { data, error } = await adb
+  const { data: ordersData, error } = await adb
     .from('b2b_orders')
     .select(
       `id, order_number, market_order_number, marketplace, status, request_notes,
@@ -88,36 +101,79 @@ export async function GET(request: Request) {
     }[]
   }
 
-  const orders = ((data ?? []) as OrderRow[]).map((o) => ({
+  const orders = (ordersData ?? []) as OrderRow[]
+  const orderIds = orders.map((o) => o.id)
+
+  // 매칭된 영수증 일괄 fetch
+  type ReceiptRow = {
+    id: string
+    source: string
+    supplier_order_number: string
+    purchased_at: string | null
+    currency: string | null
+    total_foreign: number | string | null
+    items: unknown
+    matched_order_id: string | null
+  }
+  let receiptsByOrderId = new Map<string, ReceiptRow[]>()
+  if (orderIds.length > 0) {
+    const { data: receiptsData } = await adb
+      .from('b2b_supplier_purchases')
+      .select('id, source, supplier_order_number, purchased_at, currency, total_foreign, items, matched_order_id')
+      .eq('account_id', auth.account_id)
+      .in('matched_order_id', orderIds)
+    const receipts = (receiptsData ?? []) as ReceiptRow[]
+    receiptsByOrderId = receipts.reduce((acc, r) => {
+      if (!r.matched_order_id) return acc
+      const list = acc.get(r.matched_order_id) ?? []
+      list.push(r)
+      acc.set(r.matched_order_id, list)
+      return acc
+    }, new Map<string, ReceiptRow[]>())
+  }
+
+  const result = orders.map((o) => ({
     id: o.id,
     order_number: o.order_number,
     market_order_number: o.market_order_number,
     marketplace: o.marketplace,
     status: o.status,
-    notes: o.request_notes,
-    buyer_name: o.buyer_name,
-    buyer_phone: o.buyer_phone,
-    buyer_postal_code: o.buyer_postal_code,
-    buyer_address: o.buyer_address,
-    buyer_detail_address: o.buyer_detail_address,
-    buyer_customs_code: o.buyer_customs_code,
-    forwarder_id: o.forwarder_id,
-    forwarder_name: o.forwarders?.name ?? null,
-    forwarder_slug: o.forwarders?.slug ?? null,
-    first_product: o.b2b_order_items?.[0]?.product_name ?? null,
-    items: o.b2b_order_items?.map((it) => ({
+    request_notes: o.request_notes,
+    buyer: {
+      name: o.buyer_name,
+      phone: o.buyer_phone,
+      postal_code: o.buyer_postal_code,
+      address: o.buyer_address,
+      detail_address: o.buyer_detail_address,
+      customs_code: o.buyer_customs_code,
+    },
+    items: (o.b2b_order_items ?? []).map((it) => ({
       id: it.id,
       supplier_site: it.supplier_site,
       supplier_order_number: it.supplier_order_number,
       product_name: it.product_name,
+      brand: it.brand,
       qty: it.quantity,
       unit_price_foreign: it.unit_price_foreign,
       currency: it.currency,
       product_url: it.product_url,
       tracking_number_overseas: it.tracking_number_overseas,
-      brand: it.brand,
-    })) ?? [],
+    })),
+    matched_receipts: (receiptsByOrderId.get(o.id) ?? []).map((r) => ({
+      id: r.id,
+      source: r.source,
+      supplier_order_number: r.supplier_order_number,
+      purchased_at: r.purchased_at,
+      currency: r.currency,
+      total_foreign: r.total_foreign,
+      items: Array.isArray(r.items) ? r.items : [],
+    })),
+    forwarder: o.forwarders
+      ? { id: o.forwarder_id, name: o.forwarders.name, slug: o.forwarders.slug }
+      : null,
+    // legacy helper
+    first_product: o.b2b_order_items?.[0]?.product_name ?? null,
   }))
 
-  return NextResponse.json({ orders }, { headers: CORS_HEADERS })
+  return NextResponse.json({ orders: result }, { headers: CORS_HEADERS })
 }
