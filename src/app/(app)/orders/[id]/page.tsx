@@ -217,6 +217,28 @@ export default async function OrderDetailPage({
 
   if (!order) notFound()
 
+  // 매칭된 영수증 fetch (F5 역방향)
+  type MatchedReceiptRow = {
+    id: string
+    amount_share_foreign: number | string | null
+    matched_at: string
+    b2b_supplier_purchases: {
+      id: string
+      source: string
+      supplier_order_number: string
+      currency: string | null
+      total_foreign: number | string | null
+      purchased_at: string | null
+    } | null
+  }
+  const { data: matchedReceiptsRaw } = (await db
+    .from('b2b_supplier_purchase_matches')
+    .select('id, amount_share_foreign, matched_at, b2b_supplier_purchases(id, source, supplier_order_number, currency, total_foreign, purchased_at)')
+    .eq('order_id', id)
+    .eq('account_id', account.id)
+    .order('matched_at', { ascending: false })) as { data: MatchedReceiptRow[] | null }
+  const matchedReceipts = matchedReceiptsRaw ?? []
+
   // 사용 가능한 양식 (공유 + 본인 소유) — admin client 로 공유 SELECT 보장
   const admin = createAdminClient()
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -555,6 +577,43 @@ export default async function OrderDetailPage({
             </div>
             <OrderStatusSelector orderId={order.id} currentStatus={order.status} />
           </section>
+
+          {/* 매칭된 영수증 (F5 역방향) */}
+          {matchedReceipts.length > 0 && (
+            <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">
+              <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
+                📦 매칭된 해외 영수증 ({matchedReceipts.length}건)
+              </p>
+              <ul className="space-y-2">
+                {matchedReceipts.map((m) => {
+                  const r = m.b2b_supplier_purchases
+                  if (!r) return null
+                  const sourceLabel = r.source === 'amazon_us' ? '아마존 US' :
+                    r.source === 'amazon_jp' ? '아마존 JP' :
+                    r.source === 'rakuten' ? '라쿠텐' :
+                    r.source === 'yahoo' ? '야후' :
+                    r.source
+                  return (
+                    <li key={m.id} className="border border-slate-100 rounded-md p-2 hover:bg-slate-50/60">
+                      <Link href={`/imports/${r.id}`} className="block">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200 rounded">
+                            {sourceLabel}
+                          </span>
+                          <span className="font-mono text-[11px] text-slate-700">{r.supplier_order_number}</span>
+                        </div>
+                        <p className="text-[10px] text-slate-500 mt-1 tabular-nums">
+                          {r.currency && r.total_foreign != null && <>총 {r.total_foreign} {r.currency} · </>}
+                          {m.amount_share_foreign != null && <>분할 {m.amount_share_foreign} {r.currency} · </>}
+                          {r.purchased_at && new Date(r.purchased_at).toLocaleDateString('ko-KR')}
+                        </p>
+                      </Link>
+                    </li>
+                  )
+                })}
+              </ul>
+            </section>
+          )}
 
           {/* 배대지 */}
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5">

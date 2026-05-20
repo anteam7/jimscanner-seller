@@ -79,12 +79,21 @@ function formatDateTime(iso: string | null): string {
 }
 
 function buildSupplierUrl(source: string, orderNumber: string): string | null {
-  if (source === 'amazon_us') {
-    return `https://www.amazon.com/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
-  }
-  if (source === 'amazon_jp') {
-    return `https://www.amazon.co.jp/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
-  }
+  if (source === 'amazon_us') return `https://www.amazon.com/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
+  if (source === 'amazon_jp') return `https://www.amazon.co.jp/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
+  if (source === 'amazon_de') return `https://www.amazon.de/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
+  if (source === 'amazon_uk') return `https://www.amazon.co.uk/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
+  if (source === 'amazon_ca') return `https://www.amazon.ca/gp/your-account/order-details?orderID=${encodeURIComponent(orderNumber)}`
+  if (source === 'rakuten') return `https://order.my.rakuten.co.jp/?l-id=order-history`
+  if (source === 'yahoo') return `https://order.shopping.yahoo.co.jp/`
+  if (source === 'mercari') return `https://jp.mercari.com/mypage/purchases`
+  if (source === 'taobao') return `https://buyertrade.taobao.com/trade/itemlist/list_bought_items.htm`
+  if (source === 'tmall') return `https://buyertrade.tmall.com/trade/itemlist/list_bought_items.htm`
+  if (source === 'aliexpress') return `https://www.aliexpress.com/p/order/index.html`
+  if (source === '1688') return `https://trade.1688.com/order/buyer_order_list.htm`
+  if (source === 'ebay') return `https://www.ebay.com/mye/myebay/purchase`
+  if (source === 'walmart') return `https://www.walmart.com/orders`
+  if (source === 'target') return `https://www.target.com/orders`
   return null
 }
 

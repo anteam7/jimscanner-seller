@@ -423,11 +423,12 @@ export default async function SellerDashboardPage() {
   // "오늘 행동 큐" — 셀러가 즉시 행동해야 하는 항목들
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
-  const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes,
+  const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes, oldUnmatchedRes,
          tokenCountRes, myAddressCountRes, productCountRes, orderCountRes, matchedReceiptCountRes] = await Promise.all([
     db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'refund_requested'),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
+    db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null).lt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
     // Progress 5단계
     db.from('b2b_seller_tokens').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('revoked_at', null),
     db.from('b2b_forwarder_addresses').select('id', { count: 'exact', head: true }).eq('account_id', account.id),
@@ -439,8 +440,9 @@ export default async function SellerDashboardPage() {
     unmatchedReceipts: unmatchedReceiptsRes.count ?? 0,
     refundRequests: refundRequestsRes.count ?? 0,
     oldPending: oldPendingRes.count ?? 0,
+    oldUnmatched: oldUnmatchedRes.count ?? 0,
   }
-  const totalActions = actionQueue.unmatchedReceipts + actionQueue.refundRequests + actionQueue.oldPending
+  const totalActions = actionQueue.unmatchedReceipts + actionQueue.refundRequests + actionQueue.oldPending + actionQueue.oldUnmatched
   const progress = {
     hasToken: (tokenCountRes.count ?? 0) > 0,
     hasMyAddress: (myAddressCountRes.count ?? 0) > 0,
@@ -534,6 +536,13 @@ export default async function SellerDashboardPage() {
                 <p className="text-[11px] uppercase tracking-wider text-slate-700 font-semibold">매입 미진행 (1일+)</p>
                 <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
                 <p className="mt-0.5 text-[11px] text-slate-500">매입 발주 권장 →</p>
+              </Link>
+            )}
+            {actionQueue.oldUnmatched > 0 && (
+              <Link href="/imports" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
+                <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">⏰ 무매칭 7일+</p>
+                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldUnmatched}건</p>
+                <p className="mt-0.5 text-[11px] text-slate-500">방치된 영수증 처리 →</p>
               </Link>
             )}
           </div>
