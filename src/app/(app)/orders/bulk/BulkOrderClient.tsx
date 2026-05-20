@@ -36,6 +36,8 @@ type ColumnDef = {
   group: '마켓' | '구매자' | '상품/매입' | '배대지' | '기타'
   options?: { value: string; label: string }[]
   placeholder?: string
+  pattern?: RegExp
+  patternMessage?: string
 }
 
 const MARKETPLACE_OPTIONS = MARKETPLACES
@@ -62,10 +64,10 @@ function buildColumns(forwarders: ForwarderOption[]): ColumnDef[] {
     // 구매자
     { key: 'buyer_name', label: '구매자 이름', type: 'text', width: 110, group: '구매자' },
     { key: 'buyer_phone', label: '전화', type: 'text', width: 130, group: '구매자', placeholder: '010-1234-5678' },
-    { key: 'buyer_postal_code', label: '우편번호', type: 'text', width: 90, group: '구매자' },
+    { key: 'buyer_postal_code', label: '우편번호', type: 'text', width: 90, group: '구매자', pattern: /^\d{5}$/, patternMessage: '우편번호 5자리' },
     { key: 'buyer_address', label: '기본 주소', type: 'text', width: 240, group: '구매자' },
     { key: 'buyer_detail_address', label: '상세 주소', type: 'text', width: 180, group: '구매자' },
-    { key: 'buyer_customs_code', label: '개인통관코드', type: 'text', width: 140, group: '구매자', placeholder: 'P123...' },
+    { key: 'buyer_customs_code', label: '개인통관코드', type: 'text', width: 140, group: '구매자', placeholder: 'P123...', pattern: /^P\d{12}$/i, patternMessage: 'P+12자리 (예: P123456789012)' },
     // 상품 / 매입
     { key: 'market_product_id', label: '마켓 상품번호', type: 'text', width: 130, group: '상품/매입' },
     { key: 'market_option', label: '마켓 옵션', type: 'text', width: 130, group: '상품/매입', placeholder: '색/사이즈' },
@@ -120,6 +122,28 @@ function rowMissingRequired(row: Row, cols: ColumnDef[]): string[] {
   return cols.filter((c) => c.required && !String(row[c.key] ?? '').trim()).map((c) => c.label)
 }
 
+// 셀별 format 오류 — pattern 정의된 column 의 값이 형식에 안 맞을 때
+function rowFormatErrors(row: Row, cols: ColumnDef[]): { label: string; message: string }[] {
+  if (!rowHasContent(row)) return []
+  const errors: { label: string; message: string }[] = []
+  for (const c of cols) {
+    if (!c.pattern) continue
+    const v = String(row[c.key] ?? '').trim()
+    if (!v) continue // 빈 값은 형식 검사 X (required 와 분리)
+    if (!c.pattern.test(v)) {
+      errors.push({ label: c.label, message: c.patternMessage ?? '형식이 잘못되었습니다.' })
+    }
+  }
+  return errors
+}
+
+function cellHasFormatError(row: Row, col: ColumnDef): boolean {
+  if (!col.pattern) return false
+  const v = String(row[col.key] ?? '').trim()
+  if (!v) return false
+  return !col.pattern.test(v)
+}
+
 // ─── 컴포넌트 ──────────────────────────────────────────────────────────
 export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderOption[] }) {
   const router = useRouter()
@@ -138,12 +162,16 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
   const stats = useMemo(() => {
     let filled = 0
     let invalid = 0
+    let formatErr = 0
     rows.forEach((r) => {
       if (!rowHasContent(r)) return
       filled++
-      if (rowMissingRequired(r, columns).length > 0) invalid++
+      const hasMissing = rowMissingRequired(r, columns).length > 0
+      const hasFormat = rowFormatErrors(r, columns).length > 0
+      if (hasMissing) invalid++
+      if (hasFormat) formatErr++
     })
-    return { filled, invalid, valid: filled - invalid }
+    return { filled, invalid, valid: filled - invalid - formatErr, formatErr }
   }, [rows, columns])
 
   const updateCell = useCallback((rowIdx: number, key: string, value: string) => {
@@ -342,6 +370,10 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
       setGlobalError(`${stats.invalid}개 행에 필수값(★)이 비어있습니다. 빨강 표시된 셀을 채워주세요.`)
       return
     }
+    if (stats.formatErr > 0) {
+      setGlobalError(`${stats.formatErr}개 행에 형식 오류 (통관코드·우편번호) 가 있습니다. 노랑 표시된 셀을 확인해 주세요.`)
+      return
+    }
 
     setSubmitting(true)
     try {
@@ -512,6 +544,12 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
             누락 <span className="font-semibold tabular-nums">{stats.invalid}</span>
           </span>
         )}
+        {stats.formatErr > 0 && (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-amber-50 border border-amber-200 text-amber-700" title="통관코드 (P+12자리) 또는 우편번호 (5자리) 형식 오류">
+            <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+            형식 오류 <span className="font-semibold tabular-nums">{stats.formatErr}</span>
+          </span>
+        )}
       </div>
 
       {globalError && (
@@ -571,6 +609,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
             <tbody className="divide-y divide-slate-100">
               {rows.map((row, ridx) => {
                 const missing = rowMissingRequired(row, columns)
+                const formatErrs = rowFormatErrors(row, columns)
                 const hasContent = rowHasContent(row)
                 const payloadIdx = payloadIndexMap.get(ridx)
                 const result =
@@ -585,21 +624,24 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                         ? 'bg-emerald-50/30'
                         : result && !result.ok
                           ? 'bg-rose-50/30'
-                          : hasContent && missing.length > 0
+                          : hasContent && (missing.length > 0 || formatErrs.length > 0)
                             ? 'bg-amber-50/30'
                             : ''
                     }
+                    title={formatErrs.length > 0 ? `형식 오류: ${formatErrs.map((e) => `${e.label} (${e.message})`).join(', ')}` : undefined}
                   >
                     <td className="px-2 py-1 sticky left-0 z-10 bg-white border-r border-slate-200 text-slate-400 text-center tabular-nums">
                       {ridx + 1}
                     </td>
                     {columns.map((c) => {
                       const isMissing = c.required && hasContent && !String(row[c.key] ?? '').trim()
+                      const isFormatErr = cellHasFormatError(row, c)
                       return (
                         <td
                           key={c.key}
                           style={{ width: c.width, minWidth: c.width }}
-                          className={`p-0 border-r border-slate-100 ${isMissing ? 'bg-rose-50' : ''}`}
+                          className={`p-0 border-r border-slate-100 ${isMissing ? 'bg-rose-50' : isFormatErr ? 'bg-amber-50 ring-1 ring-inset ring-amber-300' : ''}`}
+                          title={isFormatErr ? c.patternMessage : undefined}
                         >
                           {c.key === 'product_name' ? (
                             <SkuPickerCell

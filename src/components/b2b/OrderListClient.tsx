@@ -20,6 +20,7 @@ export type OrderRow = {
   request_notes: string | null
   created_at: string
   b2b_order_items: { product_name: string; sale_price_krw: number | string | null }[] | null
+  receipt_count?: number
 }
 
 type Props = {
@@ -148,6 +149,7 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">구매자</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">상품</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">상태</th>
+                <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">영수증 매칭</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap text-right">판매가</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">주문일</th>
               </tr>
@@ -205,6 +207,25 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                       <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${meta.cls}`}>
                         {meta.label}
                       </span>
+                    </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      {(o.receipt_count ?? 0) > 0 ? (
+                        <Link
+                          href={`/orders/matching`}
+                          className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold text-emerald-800 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100"
+                          title="주문매칭관리로 이동"
+                        >
+                          📦 {o.receipt_count}건
+                        </Link>
+                      ) : (
+                        <Link
+                          href={`/orders/matching`}
+                          className="inline-flex items-center px-1.5 py-0.5 text-[11px] font-semibold text-amber-800 bg-amber-50 border border-amber-200 rounded hover:bg-amber-100"
+                          title="영수증 매칭 필요"
+                        >
+                          ⚠️ 대기
+                        </Link>
+                      )}
                     </td>
                     <td className="px-4 py-3 whitespace-nowrap text-right font-medium text-slate-700 tabular-nums">
                       {formatKRW(totalSale)}

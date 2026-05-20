@@ -7,7 +7,7 @@ import OrderListClient from '@/components/b2b/OrderListClient'
 import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 
 export const metadata: Metadata = {
-  title: '주문 관리',
+  title: '국내 주문 목록',
   robots: { index: false },
 }
 
@@ -187,7 +187,24 @@ export default async function OrdersListPage({
   }
 
   const { data: rows } = (await qb) as { data: OrderRow[] | null }
-  const orders = rows ?? []
+  const baseOrders = rows ?? []
+
+  // 영수증 매칭 count 일괄 fetch
+  const orderIds = baseOrders.map((o) => o.id)
+  type ReceiptCountRow = { matched_order_id: string | null }
+  const receiptCountByOrder = new Map<string, number>()
+  if (orderIds.length > 0) {
+    const { data: matchedRows } = await db
+      .from('b2b_supplier_purchases')
+      .select('matched_order_id')
+      .eq('account_id', account.id)
+      .in('matched_order_id', orderIds)
+    for (const r of (matchedRows ?? []) as ReceiptCountRow[]) {
+      if (!r.matched_order_id) continue
+      receiptCountByOrder.set(r.matched_order_id, (receiptCountByOrder.get(r.matched_order_id) ?? 0) + 1)
+    }
+  }
+  const orders = baseOrders.map((o) => ({ ...o, receipt_count: receiptCountByOrder.get(o.id) ?? 0 }))
 
   // 합배송 모달용 templates fetch (공유 + 본인)
   const admin = createAdminClient()
@@ -272,9 +289,9 @@ export default async function OrdersListPage({
       {/* 헤더 */}
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">주문 관리</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">국내 주문 목록</h1>
           <p className="text-sm text-slate-600 mt-1">
-            마켓 주문을 입력하고 33 배대지 양식으로 변환할 수 있습니다.
+            국내 마켓 주문을 등록하고 해외 매입 영수증과 매칭합니다.
           </p>
         </div>
         <div className="flex items-center gap-2">
