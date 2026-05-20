@@ -5,6 +5,7 @@ import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
 import DeleteButton from './DeleteButton'
+import { MultiMatchPanel } from './MultiMatchPanel'
 
 export const dynamic = 'force-dynamic'
 
@@ -318,6 +319,9 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
 )}
         </pre>
       </details>
+
+      {/* 1:N 다중 매칭 패널 */}
+      <MultiMatchPanel receiptId={row.id} />
 
       {/* 매칭 audit log */}
       {auditLog.length > 0 && (
