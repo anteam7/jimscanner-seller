@@ -229,15 +229,37 @@ export default async function OrderDetailPage({
       currency: string | null
       total_foreign: number | string | null
       purchased_at: string | null
+      items: unknown
     } | null
   }
   const { data: matchedReceiptsRaw } = (await db
     .from('b2b_supplier_purchase_matches')
-    .select('id, amount_share_foreign, matched_at, b2b_supplier_purchases(id, source, supplier_order_number, currency, total_foreign, purchased_at)')
+    .select('id, amount_share_foreign, matched_at, b2b_supplier_purchases(id, source, supplier_order_number, currency, total_foreign, purchased_at, items)')
     .eq('order_id', id)
     .eq('account_id', account.id)
     .order('matched_at', { ascending: false })) as { data: MatchedReceiptRow[] | null }
   const matchedReceipts = matchedReceiptsRaw ?? []
+
+  // 가격 변동 감지: 첫 매칭된 영수증의 items 합 vs 라인 합계 비교
+  type ReceiptItem = { unit_price?: number | null; qty?: number | null }
+  let priceVariancePct: number | null = null
+  if (matchedReceipts.length > 0 && order.b2b_order_items && order.b2b_order_items.length > 0) {
+    const firstReceipt = matchedReceipts[0].b2b_supplier_purchases
+    if (firstReceipt && Array.isArray(firstReceipt.items)) {
+      const receiptItems = firstReceipt.items as ReceiptItem[]
+      const receiptTotal = receiptItems.reduce(
+        (s, it) => s + (Number(it.unit_price ?? 0) * Number(it.qty ?? 1)),
+        0,
+      )
+      const lineTotal = order.b2b_order_items.reduce(
+        (s, it) => s + (Number(it.unit_price_foreign ?? 0) * Number(it.quantity ?? 1)),
+        0,
+      )
+      if (receiptTotal > 0 && lineTotal > 0) {
+        priceVariancePct = Math.abs(receiptTotal - lineTotal) / lineTotal
+      }
+    }
+  }
 
   // 사용 가능한 양식 (공유 + 본인 소유) — admin client 로 공유 SELECT 보장
   const admin = createAdminClient()
@@ -584,6 +606,12 @@ export default async function OrderDetailPage({
               <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
                 📦 매칭된 해외 영수증 ({matchedReceipts.length}건)
               </p>
+              {priceVariancePct !== null && priceVariancePct >= 0.05 && (
+                <div className="mb-3 rounded-md bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-900">
+                  ⚠️ 영수증 합계 vs 등록 단가 <b>{(priceVariancePct * 100).toFixed(1)}%</b> 차이.
+                  매입가 수정 필요할 수 있습니다 (할인·환율·세금 차이).
+                </div>
+              )}
               <ul className="space-y-2">
                 {matchedReceipts.map((m) => {
                   const r = m.b2b_supplier_purchases

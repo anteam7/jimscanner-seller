@@ -89,7 +89,12 @@ function orderDisplayLabel(o: { market_order_number: string | null; order_number
   return mk ? `${mk} ${num}` : num
 }
 
-export default async function ImportsPage() {
+export default async function ImportsPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ source?: string; matched?: string }>
+}) {
+  const { source: sourceFilter = 'all', matched: matchedFilter = 'all' } = await searchParams
   const sb = await createClient()
   const {
     data: { user },
@@ -105,11 +110,16 @@ export default async function ImportsPage() {
     .single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
-  const { data: rowsRaw } = await db
+  let qb = db
     .from('b2b_supplier_purchases')
     .select(
       'id, source, supplier_order_number, purchased_at, currency, total_foreign, items, source_url, matched_order_id, matched_at, created_at',
     )
+  if (sourceFilter !== 'all') qb = qb.eq('source', sourceFilter)
+  if (matchedFilter === 'matched') qb = qb.not('matched_order_id', 'is', null)
+  else if (matchedFilter === 'unmatched') qb = qb.is('matched_order_id', null)
+
+  const { data: rowsRaw } = await qb
     .eq('account_id', account.id)
     .order('created_at', { ascending: false })
     .limit(100)
@@ -203,6 +213,44 @@ export default async function ImportsPage() {
       </header>
 
       <ManualReceiptCreate />
+
+      {/* Filter chips */}
+      <div className="flex items-center gap-2 flex-wrap text-xs">
+        <span className="font-semibold text-slate-600 mr-1">필터:</span>
+        {[
+          { value: 'all', label: '전체' },
+          { value: 'amazon_us', label: '🇺🇸 amazon US' },
+          { value: 'amazon_jp', label: '🇯🇵 amazon JP' },
+          { value: 'rakuten', label: '라쿠텐' },
+          { value: 'yahoo', label: '야후' },
+          { value: 'taobao', label: '타오바오' },
+          { value: 'other', label: '기타' },
+        ].map((f) => {
+          const isActive = sourceFilter === f.value
+          const href = `?source=${f.value}${matchedFilter !== 'all' ? `&matched=${matchedFilter}` : ''}`
+          return (
+            <Link key={f.value} href={href}
+              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                isActive ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+              }`}>{f.label}</Link>
+          )
+        })}
+        <span className="text-slate-300 mx-1">|</span>
+        {[
+          { value: 'all', label: '매칭 전체' },
+          { value: 'matched', label: '✓ 매칭됨' },
+          { value: 'unmatched', label: '⚠️ 대기' },
+        ].map((f) => {
+          const isActive = matchedFilter === f.value
+          const href = `?matched=${f.value}${sourceFilter !== 'all' ? `&source=${sourceFilter}` : ''}`
+          return (
+            <Link key={f.value} href={href}
+              className={`px-2.5 py-1 rounded-md font-medium transition-colors ${
+                isActive ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-slate-100'
+              }`}>{f.label}</Link>
+          )
+        })}
+      </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-indigo-500 px-5 py-4">
