@@ -156,7 +156,7 @@
       tracking_number_overseas: item?.tracking_number_overseas,
       supplier_order_number: item?.supplier_order_number,
       payment_method: null, // 셀러가 직접
-      memo: order.memo,
+      memo: order.notes,
     }
   }
 

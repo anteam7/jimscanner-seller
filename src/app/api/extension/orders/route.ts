@@ -42,7 +42,7 @@ export async function GET(request: Request) {
   const { data, error } = await adb
     .from('b2b_orders')
     .select(
-      `id, order_number, market_order_number, marketplace, status, memo,
+      `id, order_number, market_order_number, marketplace, status, notes,
        buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code,
        forwarder_id, forwarders(name, slug),
        b2b_order_items(id, supplier_site, supplier_order_number, product_name, qty, unit_price_foreign, currency, product_url, tracking_number_overseas)`,
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
     market_order_number: string | null
     marketplace: string | null
     status: string
-    memo: string | null
+    notes: string | null
     buyer_name: string | null
     buyer_phone: string | null
     buyer_postal_code: string | null
@@ -93,7 +93,7 @@ export async function GET(request: Request) {
     market_order_number: o.market_order_number,
     marketplace: o.marketplace,
     status: o.status,
-    memo: o.memo,
+    notes: o.notes,
     buyer_name: o.buyer_name,
     buyer_phone: o.buyer_phone,
     buyer_postal_code: o.buyer_postal_code,
