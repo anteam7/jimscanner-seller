@@ -56,15 +56,73 @@ type Item = {
 }
 
 export function OrderMatchingClient({ items }: { items: Item[] }) {
+  const router = useRouter()
   const [tab, setTab] = useState<'unmatched' | 'matched' | 'all'>('unmatched')
+  const [bulkBusy, setBulkBusy] = useState(false)
+  const [bulkResult, setBulkResult] = useState<{ ok: number; fail: number } | null>(null)
+
   const filtered = items.filter((it) => {
     if (tab === 'unmatched') return !it.matched_order_label
     if (tab === 'matched') return !!it.matched_order_label
     return true
   })
 
+  // 일괄 매칭 가능한 후보 (대기 + 추천 있음)
+  const high90 = items.filter((i) => !i.matched_order_label && i.suggestion && i.suggestion.score >= 90)
+  const mid70 = items.filter((i) => !i.matched_order_label && i.suggestion && i.suggestion.score >= 70 && i.suggestion.score < 90)
+
+  async function bulkApply(targets: Item[], label: string) {
+    if (targets.length === 0) return
+    if (!window.confirm(`${label} ${targets.length}건을 일괄 매칭합니다. 계속할까요?`)) return
+    setBulkBusy(true)
+    setBulkResult(null)
+    let ok = 0, fail = 0
+    await Promise.all(targets.map(async (t) => {
+      if (!t.suggestion) { fail++; return }
+      try {
+        const res = await fetch(`/api/imports/supplier-orders/${t.receiptId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ matched_order_id: t.suggestion.orderId }),
+        })
+        if (res.ok) ok++; else fail++
+      } catch { fail++ }
+    }))
+    setBulkResult({ ok, fail })
+    setBulkBusy(false)
+    router.refresh()
+  }
+
   return (
     <div className="rounded-lg bg-white shadow-sm border border-slate-200 overflow-hidden">
+      {/* 일괄 매칭 액션 바 */}
+      {(high90.length > 0 || mid70.length > 0) && (
+        <div className="px-4 py-3 border-b border-indigo-100 bg-gradient-to-r from-indigo-50 to-white flex items-center justify-between gap-3 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-[11px] font-bold text-indigo-900">🔗 일괄 매칭:</span>
+            {high90.length > 0 && (
+              <button type="button" disabled={bulkBusy}
+                onClick={() => bulkApply(high90, '90점 이상 추천')}
+                className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-white border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50">
+                90+ 점 일괄 적용 ({high90.length})
+              </button>
+            )}
+            {mid70.length > 0 && (
+              <button type="button" disabled={bulkBusy}
+                onClick={() => bulkApply(mid70, '70~89점 추천')}
+                className="px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-white border border-amber-300 rounded hover:bg-amber-50 disabled:opacity-50">
+                70~89점 일괄 적용 ({mid70.length}) <span className="text-[9px]">(검증 권장)</span>
+              </button>
+            )}
+          </div>
+          {bulkResult && (
+            <span className="text-[11px] text-slate-700">
+              ✓ {bulkResult.ok}건 매칭{bulkResult.fail > 0 && <span className="text-rose-600 ml-2">✗ {bulkResult.fail}건 실패</span>}
+            </span>
+          )}
+        </div>
+      )}
+
       <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 flex gap-1">
         <TabBtn active={tab === 'unmatched'} onClick={() => setTab('unmatched')} label={`대기 (${items.filter((i) => !i.matched_order_label).length})`} />
         <TabBtn active={tab === 'matched'} onClick={() => setTab('matched')} label={`매칭됨 (${items.filter((i) => !!i.matched_order_label).length})`} />

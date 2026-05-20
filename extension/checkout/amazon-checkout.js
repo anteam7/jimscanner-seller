@@ -283,16 +283,20 @@
   }
 
   function renderAddressItem(a) {
+    const addToMineBtn = a.is_official
+      ? `<button class="jsx-add-to-mine" data-source-id="${escapeHtml(a.id)}" style="margin-left:auto;font-size:10px;color:#4f46e5;background:#eef2ff;border:1px solid #c7d2fe;padding:2px 6px;border-radius:4px;cursor:pointer;font-weight:600">⭐ 내 주소로</button>`
+      : ''
     return `
-      <li data-id="${escapeHtml(a.id)}" style="border-bottom:1px solid #f1f5f9;cursor:pointer;transition:background 120ms" class="jsx-addr-item">
+      <li data-id="${escapeHtml(a.id)}" style="border-bottom:1px solid #f1f5f9;transition:background 120ms" class="jsx-addr-item">
         <div style="padding:10px 14px">
           <div style="display:flex;align-items:center;gap:6px;margin-bottom:2px;flex-wrap:wrap">
-            <span style="font-weight:700;color:#0f172a">${escapeHtml(a.label)}</span>
+            <span style="font-weight:700;color:#0f172a;cursor:pointer" class="jsx-addr-label">${escapeHtml(a.label)}</span>
             ${a.forwarders?.name ? `<span style="font-size:10px;color:#4338ca;background:#eef2ff;border:1px solid #c7d2fe;padding:1px 5px;border-radius:3px">${escapeHtml(a.forwarders.name)}</span>` : ''}
             ${a.is_default ? `<span style="font-size:10px;color:#047857;background:#ecfdf5;border:1px solid #a7f3d0;padding:1px 5px;border-radius:3px">기본</span>` : ''}
+            ${addToMineBtn}
           </div>
-          <div style="font-size:11px;color:#475569">${escapeHtml(a.recipient_name)}</div>
-          <div style="font-size:10px;color:#94a3b8;margin-top:2px">
+          <div style="font-size:11px;color:#475569;cursor:pointer" class="jsx-addr-label">${escapeHtml(a.recipient_name)}</div>
+          <div style="font-size:10px;color:#94a3b8;margin-top:2px;cursor:pointer" class="jsx-addr-label">
             ${escapeHtml([a.address1, a.address2].filter(Boolean).join(', '))}, ${escapeHtml(a.city)}, ${escapeHtml(a.state)} ${escapeHtml(a.zip)} ${escapeHtml(a.country)}
           </div>
         </div>
@@ -385,10 +389,43 @@
     document.querySelectorAll('.jsx-addr-item').forEach((li) => {
       li.addEventListener('mouseenter', () => (li.style.background = '#f8fafc'))
       li.addEventListener('mouseleave', () => (li.style.background = ''))
-      li.addEventListener('click', () => {
+    })
+    // label 영역 클릭 → fill
+    document.querySelectorAll('.jsx-addr-label').forEach((el) => {
+      el.addEventListener('click', (e) => {
+        const li = e.target.closest('.jsx-addr-item')
+        if (!li) return
         const id = li.getAttribute('data-id')
         const picked = allAddresses.find((a) => a.id === id)
         if (picked) applyFill(picked)
+      })
+    })
+    // [⭐ 내 주소로] 버튼 클릭 → 별도 처리 (fill 막기)
+    document.querySelectorAll('.jsx-add-to-mine').forEach((btn) => {
+      btn.addEventListener('click', async (e) => {
+        e.stopPropagation()
+        const sourceId = btn.getAttribute('data-source-id')
+        btn.disabled = true
+        btn.textContent = '추가 중…'
+        try {
+          const result = await chrome.runtime.sendMessage({ type: 'JIMSCANNER_ADD_AS_MY_ADDRESS', sourceAddressId: sourceId })
+          if (result && result.ok) {
+            btn.textContent = '✓ 추가됨'
+            btn.style.background = '#ecfdf5'
+            btn.style.color = '#047857'
+            btn.style.borderColor = '#a7f3d0'
+            // 잠시 후 panel 새로 (새로 등록한 주소 노출)
+            setTimeout(() => openPanel(), 800)
+          } else {
+            btn.textContent = '실패'
+            btn.style.background = '#fff1f2'
+            btn.style.color = '#b91c1c'
+            console.error('[Jimscanner] add-to-mine 실패:', result)
+          }
+        } catch (err) {
+          btn.textContent = '실패'
+          console.error('[Jimscanner] add-to-mine 에러:', err)
+        }
       })
     })
   }

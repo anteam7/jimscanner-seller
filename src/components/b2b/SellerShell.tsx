@@ -372,7 +372,19 @@ export default function SellerShell({
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <div className="hidden md:block" />
+          <form action="/orders" method="GET" className="hidden md:flex flex-1 max-w-md mx-4">
+            <div className="relative w-full">
+              <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+              </svg>
+              <input
+                name="q"
+                type="search"
+                placeholder="주문번호·구매자·전화로 검색…"
+                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-colors"
+              />
+            </div>
+          </form>
           <div className="flex items-center gap-2">
             <VerificationBadge level={account.verification_level} />
             <NotificationBell />
