@@ -454,6 +454,15 @@ export default async function OrderDetailPage({
                             {it.tracking_number_overseas && (
                               <p className="text-xs text-slate-500 mt-1">
                                 현지 트래킹: <span className="font-mono">{it.tracking_number_overseas}</span>
+                                <a
+                                  href={`https://www.17track.net/en/track?nums=${encodeURIComponent(it.tracking_number_overseas)}`}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="ml-2 text-[11px] text-indigo-700 hover:underline font-semibold"
+                                  title="17track 외부 사이트에서 트래킹"
+                                >
+                                  🔎 17track →
+                                </a>
                               </p>
                             )}
                             {(it.tracking_number || it.carrier) && (
