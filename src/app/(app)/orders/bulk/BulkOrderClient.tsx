@@ -229,6 +229,37 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
     })
   }, [])
 
+  // 마켓별 헤더 alias — 쿠팡·스마트스토어·옥션·11번가 등 다양한 한국어 헤더 매핑
+  const HEADER_ALIASES: Record<string, string[]> = {
+    market_order_number: ['주문번호', '상품주문번호', '마켓 주문번호', '결제번호', 'Order ID', 'Order Number'],
+    order_number: ['셀러 주문번호', '내부주문번호', 'Internal Order'],
+    marketplace: ['마켓', '쇼핑몰', '판매처', '채널'],
+    order_date: ['주문일', '주문일자', '결제일', '주문 시각'],
+    buyer_name: ['구매자 이름', '구매자명', '수취인이름', '수취인명', '받는분', '받는 분', '수취인', '수령자', '받는사람'],
+    buyer_phone: ['전화', '수취인연락처', '수취인전화', '받는분연락처', '연락처', '핸드폰', '휴대폰', '핸드폰번호', '구매자전화'],
+    buyer_postal_code: ['우편번호', '받는분우편번호', '수령지우편번호', '집코드', 'ZIP'],
+    buyer_address: ['기본 주소', '수령지주소', '받는분주소', '배송지', '도로명주소', '주소'],
+    buyer_detail_address: ['상세 주소', '상세주소', '나머지주소', '동/호수'],
+    buyer_customs_code: ['개인통관코드', '통관고유부호', '개인통관고유부호', '개통번호', 'PCCC', '통관코드'],
+    market_product_id: ['상품번호', '마켓 상품번호', '상품 ID', 'product_id'],
+    market_option: ['마켓 옵션', '옵션', '옵션 정보'],
+    product_name: ['상품명', '품명', '제품명', '아이템'],
+    quantity: ['갯수', '수량', '개수', '주문 수량'],
+    supplier_site: ['매입처', '해외 쇼핑몰', '구매 사이트'],
+    product_url: ['매입 링크', '상품 URL', '구매 링크', '쇼핑 URL'],
+    supplier_order_number: ['매입 주문번호', '해외 주문번호', '쇼핑몰 주문번호'],
+    currency: ['통화', '화폐'],
+    unit_price_foreign: ['매입 단가', '단가', '구매가', '해외 단가'],
+    forwarder_country: ['매입 국가', '구매 국가', '도착 국가'],
+    weight_kg: ['중량(kg)', '중량', '무게'],
+    sale_price_krw: ['판매가(KRW)', '판매가', '판매 금액', '판매가격'],
+    forwarder_id: ['배대지', '배송대행지'],
+    forwarder_warehouse: ['배대지 창고', '창고'],
+    market_commission_krw: ['수수료(KRW)', '수수료', '마켓 수수료'],
+    shipping_fee_krw: ['배송비(KRW)', '배송비'],
+    request_notes: ['메모', '요청사항', '비고'],
+  }
+
   // 헤더 라벨 → 컬럼 키 매핑 (paste 시 사용)
   const headerToKey = useMemo(() => {
     const map = new Map<string, string>()
@@ -236,6 +267,12 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
       map.set(c.label, c.key)
       map.set(c.key, c.key) // 영문 key 도 허용
     })
+    // 마켓별 alias 추가
+    for (const [key, aliases] of Object.entries(HEADER_ALIASES)) {
+      for (const alias of aliases) {
+        if (!map.has(alias)) map.set(alias, key)
+      }
+    }
     return map
   }, [columns])
 
