@@ -1,83 +1,143 @@
-# 자동 진행 큐 (cron 30분 간격)
+# 자동 진행 큐 (24h agent cron)
 
-> **상태 (2026-05-18):** 31/31 모두 완료, cron job `5cbb6b5c` 삭제됨. 이후 세션 12 에서
-> 새 도메인 (브라우저 확장 + 매입처 영수증) 진행 — 그건 [`next-steps.md`](next-steps.md) 참고.
+마지막 갱신: 2026-05-25 (v2 — STOP&ASK 통합)
+참조: [`agent-decision-rules.md`](agent-decision-rules.md) 매 fire 시 1회 read 필수
 
-cron 이 매 30분 fire → 첫 `pending` 항목 1개 처리 → commit + push → `done` 마킹.
-모두 done 이면 cron 자동 종료.
-
-전체 로드맵: [`full-feature-roadmap.md`](full-feature-roadmap.md)
+cron 이 매 회차 fire → 첫 P1 `pending` 항목 1개 처리 → commit + push + `b2b_auto_runs` row → `[x]` 마킹.
+P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
+모두 done 이면 cron idle (큐 추가될 때까지).
 
 ---
 
 ## 진행 규칙 (cron prompt 가 따라야 할 표준)
 
-1. 큐의 첫 `[ ]` (pending) 항목을 찾는다
-2. 항목의 "작업" 내용대로 코드/DB 변경 → `npm run build` 통과 확인
-3. commit 메시지: `feat/fix/refactor(cron-N): <짧은 설명>` 형식
-4. push origin main
-5. 이 파일에서 해당 항목을 `[x]` 로 변경하고 별도 commit (`chore(cron): N 완료`)
-6. 큐에 더 pending 없으면 마지막에 `chore(cron): 큐 소진 — cron 자동 종료 권장` push 후 종료
+1. **시작 시 reference**: `agent-decision-rules.md` 1회 read
+2. 큐의 P0 항목 중 `waiting_for: issue#<n>` 가 있으면 → `node scripts/agent/check-decision-reply.mjs --issue <n>` 호출 → decision 따라 진행 또는 skip
+3. P1 `[ ]` (pending) 첫 항목 pick
+4. 작업 시작 — 도중 STOP&ASK 트리거 발견 시:
+   - `node scripts/agent/decision-needed.mjs --title ... --body ... --labels ... --waiting-for-key ...` 실행
+   - 큐 항목을 `status: waiting → P0` 로 이동 + `waiting_for: issue#<번호>` 기록
+   - 큐 다음 P1 항목으로
+5. 작업 완료 시:
+   - `npm run build` 통과 확인
+   - commit: `[AGENT-AUTO] <category>: <짧은 설명>` 형식
+   - push origin main
+   - 큐에서 `[x]` 마킹 + 별도 commit `chore(queue): #N 완료`
+   - `b2b_auto_runs` row insert (Supabase MCP `execute_sql`)
+6. 큐 비었으면 `chore(queue): 비었음 — idle` commit 후 종료
 
-작업 중 새 이슈 발견 시: 큐 끝에 추가 (pending 으로) 후 다음 cron 회차에 진행.
+작업 중 새 이슈 발견 시: P2 카테고리로 큐 끝에 추가.
 
 ---
 
-## Queue (우선순위 순)
+## P0 — 사용자 결정 대기 (issue 답신 받기 전까지 skip)
 
-### Phase 1 — 가벼운 보강 (5~30분)
-- [x] **1. A1** signup 카운트 동기화 — `src/app/signup/page.tsx` 의 "33개/13개/24개/7종" → 실 카운트 (forwarders 30개, marketplaces 14개, supplier_sites 25개, currencies 8개). 또는 "30+개/13+개/24+개" 같은 안전 표기. 추후 forwarders 36 모두 활성 시 자동 반영되도록 server fetch 로 동적화 권장. ✅ d3fb2dd
-- [x] **2. F2** Pretendard preconnect — `globals.css` 의 @import url 을 `<link rel="preconnect">` + `<link rel="preload" as="style">` 로 분리 (`layout.tsx` head). FOIT 감소. ✅ 573f3cd
-- [x] **3. C8** 404 페이지 — `src/app/not-found.tsx` 작성 (v2.1 톤, 로고 + 짧은 카피 + "홈으로/주문으로" 링크). ✅ 61feeb5
-- [x] **4. G3** `/api/announcements/active` 정상화 — E1 후 후속이지만 단독 가능: 현재 graceful 빈 배열 반환. 일단 보존하되 빌드 로그에서 silent error 가능성 점검. 변경 없을 시 skip 결정 commit. ✅ 8aac688 (쿼리 순서 최적화: 3→1 쿼리)
-- [x] **5. C5** `/pricing` 페이지 디자인 v2.1 — shadow-sm 카드, accent border-l, gradient banner, p-8 max-w-6xl, Pretendard tracking-tight. PricingCard 컴포넌트도 같이. ✅ ecce933 (헤더 gradient + emerald accent 공통기능 + 도메인 카피 정정)
-- [x] **6. C7** `/login` 디자인 톤 — signup 의 그라데이션 배경 + 로고 PNG + dot pattern 일관성. 로그인 폼은 그대로 두고 헤더/푸터/배경만 통일. ✅ 4489709 (배경 + 로고 PNG + 폼 카드 shadow-xl + gradient CTA)
-- [x] **7. C9** `auth/forgot-password`, `auth/reset-password`, `auth/mfa-challenge` 디자인 v2.1. ✅ 680ebc4 (AuthShell 컴포넌트 추출 + 3개 페이지 적용)
-- [x] **8. C6** `/settings` 페이지 디자인 v2.1 — 카드 그리드 2-col, shadow-sm hover:shadow-md. account/security/compliance 서브페이지도 일관성. ✅ 9d7be65 (헤더 gradient + 그룹별 accent border + 도메인 정합. 서브페이지는 향후 별도 보강)
+(현재 없음)
 
-### Phase 2 — 운영 자동화 약속 (30~60분)
-- [x] **9. B4** dashboard 빈 상태 가이드 — 주문/SKU 0건 시 "3-step 시작하기" 카드. dashboard/page.tsx 상단에 조건부. ✅ 2b1830b (OnboardingGuide 컴포넌트 + isNewSeller 조건 + 도메인 카피 정정)
-- [x] **10. B1** 합배송 배송비 절감 추정 — BulkExportModal 에 "N건 합치면 배송비 1회 = ~M원 절감" 안내. M 은 배대지 평균 배송비 (5천원~만원 가정, 카피로만 처리). ✅ e2dcb8b (6000원/배송 가정 + emerald gradient 박스 + 디스클레이머)
-- [x] **11. B2** 마진율 경고 — NewOrderForm 의 마진 영역에 5% 미만 시 amber 경고. orders/[id] 의 비용 카드에도 동일. ✅ f7ab326 (NewOrderForm + 상세 둘 다 적용, 음수는 rose)
-- [x] **12. C3** `b2b_order_items.image_url`, `tracking_number_overseas` 컬럼 — Supabase MCP apply_migration + NewOrderForm 라인에 입력 필드 추가 + orders/[id] 상세에 표시 + 짐패스 v1 시드 매핑 갱신 (이전엔 constant ''). ✅ 0e549e1 (DB 마이그 + UI + API + export ORDER_COLUMNS + forwarder-export type)
-- [x] **13. C4** dashboard 통계 더 풍성 — 최근 주문 5건 row + 환율 미니 표 + status pipeline 미니 차트 (status 별 카운트). ✅ ebddf76
-- [x] **14. F1** dashboard `unstable_cache` — 4쿼리 60초 캐싱 (account_id key). 트래픽 적어도 매 진입 비용 줄임. ✅ e8394fc (6 query → getDashboardStats helper, tag dashboard:{accountId})
-- [x] **15. E5** `/billing` 페이지 UI — 구독 플랜·used/limit 진행바·다음 갱신일·플랜 변경 링크. 결제 연동 X (UI만). ✅ a7afcc7 (status badge + 사용량 진행바 + 가격 grid + 액션 카드)
-- [x] **16. E1** `b2b_announcements` 테이블 + 시드 1개 — `supabase/b2b_announcements.sql` + `/api/announcements/active` 실제 데이터 반환. AnnouncementBanner 가 active=true 인 항목 표시. ✅ 138b474 (테이블 + RLS + 시드 30일, MCP apply_migration)
+---
 
-### Phase 3 — 신규 기능 (60분~)
-- [x] **17. D5** 부가세 자료 CSV export — `/api/orders/export-csv` 월별 매출 합계 + 사업자등록증 형식. button 은 settings/compliance. ✅ 982c27b (20 컬럼 + UTF-8 BOM + 환율 환산 + 이번/지난 달 다운로드 link)
-- [x] **18. H2** 환율 변동 알림 — dashboard 에 "USD 매매기준율: 1380원 (+0.8% 전일)" 미니 배너. 전일 환율 캐싱은 b2b_subscriptions 같은 곳에 별도 저장 또는 client cookie. ✅ aff342a (KoreaExim API searchdate 활용 24h 캐싱 + ≥1% 변동 큰 변동 배너)
-- [x] **19. C1** `/orders/bulk` SKU autocomplete (Phase 3) — grid 셀의 product_name 컬럼에 dropdown. SKU 선택 시 같은 row 의 supplier_site/currency/unit_price 자동 채움. ✅ fb19053 (SkuPickerCell + applySkuToRow + product_id 매핑 + 키보드 지원)
-- [x] **20. D3** 운송장 자동 트래킹 스키마 + 수동 입력 UI — `b2b_order_items.tracking_number` (이미 있음) + carrier 컬럼 추가 + /orders/[id] 운송장 입력 + 외부 트래킹 API 는 추후. ✅ d8453a2 (carrier 컬럼 + PATCH endpoint + TrackingEditor 인라인 폼)
-- [x] **21. E4** 의뢰자 CRM (`/clients`) — 같은 phone+marketplace 2회 이상 등장한 buyer 를 자동 묶음 + 목록 페이지. ✅ 61f25a7 (단골 구매자 그룹화 + 재구매율 통계 + 메뉴 활성화 + 도메인 라벨 정정)
-- [x] **22. E2** 알림 센터 — DB 스키마 있음 (b2b_notifications 류 확인 후). 헤더 종 아이콘 + dropdown + 페이지. ✅ 7930d10 (b2b_notifications 신규 + GET/POST read API + NotificationBell + /notifications 페이지)
-- [x] **23. E3** 1:1 문의 UI — 스키마 활용 + `/support` 페이지 (목록 + 작성). ✅ cd3c564 (b2b_support_tickets + messages 신규 + /support 목록·작성·상세 + 답글 폼 + 메뉴)
-- [x] **24. D1** 어필리에이트 상품 추천 페이지 (`/recommendations`) — 일본·미국 trending mock 데이터 + 마진 예시. 실 어필리에이트 ID 는 추후. ✅ 53b9f62 (12개 mock + 환율 환산 + 마진 컬러 + 메뉴)
-- [x] **25. H1** "잘 나가는 SKU" 추천 — analytics 페이지에 본인 데이터 기반 TOP + 익명 전체 셀러 평균 비교 (RLS 우회 필요한 부분만 별도 view). ✅ 27ed8c4 (b2b_marketwide_supplier_stats RPC SECURITY DEFINER k=20 + analytics 비교 섹션)
-- [x] **26. H3** 마진 손실 알림 — SKU 별 default_unit_price + 현 환율로 환산해 sale_price_krw 보다 큰 경우 dashboard 배너. ✅ 89b344a (getMarginLossAlerts + MarginLossBanner 상위 5개 + 배송비 6000 가정)
+## P1 — 자율 진행 가능 (우선순위 순)
 
-### Phase 4 — 기술 부채 / 일관성
-- [x] **27. G1** Supabase generated types — main repo 의 `types/supabase.ts` 최신화 후 이 repo 로 copy. admin client `any` 캐스팅 일부 제거. ✅ d2a648b (MCP generate_typescript_types → types/supabase.ts 156KB. 신규 12 hits. main repo sync 별도. any 캐스팅 제거는 다음 회차로 미룸 — 위험 낮은 보수적 접근)
-- [x] **28. G2** monthly_order_used 월 초 reset cron 점검 — DB 의 schedule 함수 확인 + 없으면 Supabase cron 등록. ✅ 34e6eec (함수+cron 없음 확인 → b2b_reset_monthly_quotas() + pg_cron 매일 UTC 00:05 등록, idempotent)
-- [x] **29. F3** form validation 일관성 — signup/login/settings 의 inline 에러 패턴 통일 (aria-invalid + rose 보더 + [11px] 메시지). ✅ 723f9b3 (FormError/FormAlert/errorRingClass 공용 + signup/settings red→rose 통일 + text-rose-600→700)
-- [x] **30. F4** WCAG AA 잔여 검토 — `_memory/b2b_auto_todo.md` 의 cron 발견 30+ 건 처리 (signup·login·security·pricing 등). ✅ ddd5f1a (b2b_auto_todo.md 부재 — 최근 cron 작업물 핀포인트 보강: NotificationBell dropdown + SkuPickerCell combobox + MarginLossBanner region + TrackingEditor 닫기 ESC)
-- [x] **31. F5** 모바일 반응형 검토 — 사이드바 (현재 always visible 220px), 모달 (max-w-lg 가 작은 화면 OK?), 일괄 입력 그리드. ✅ d0c13f6 (햄버거 슬라이드인 사이드바 + 페이지 8개 p-8→p-4 md:p-8 + body scroll lock + ESC/백드롭 닫기)
+### 어제 QA 보류 6건 (small wins)
+
+- [ ] **#1 환율 배너 "마지막 성공 시각" 표시 (M-4)** — `/dashboard` 환율 배너에 `fetchedAt` 노출 + fallback 사용 중일 때 amber 배지. 환율 API 응답에 fetchedAt 이 이미 있음. UI 만 추가.
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#2 /settings "준비 중" 4개 카드 disabled 처리 (L-4)** — API 키 관리·팀원 초대·웹훅·구글 시트 카드를 `opacity-50 cursor-not-allowed` + tooltip "L4 인증 후 사용 가능"
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#3 /notifications 페이지네이션 (L-8)** — 최근 100건 → cursor 기반 50/page
+  - estimated: 45m
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#4 /imports navigation 정리 (L-5)** — empty state 의 "주문 매칭관리 통합 뷰" 화살표 link 가 자명하게
+  - estimated: 20m
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#5 /orders row click highlight + scroll position (L-7)** — sessionStorage 로 마지막 클릭 row 추적, 돌아오면 highlight + scroll
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#6 admin client `any` 캐스팅 제거 (G1 후속)** — `types/supabase.ts` 활용해서 점진. 한 회차에 한 모듈씩 (orders, products, settings ...).
+  - estimated: 1h × 6 회차
+  - prereq: 없음
+  - decision_required: false
+
+### next-steps.md 4순위 기술 부채
+
+- [ ] **#7 paste 한글 → enum reverse lookup 확장 (MK1 후속)** — `/orders/bulk` paste 시 한국어 마켓·상태·통화 값 들어와도 영문 enum 으로 변환
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#8 `/api/announcements/active` graceful 제거 (cron-4 후속)** — b2b_announcements 테이블 있고 active row 있으면 정상 반환. graceful fallback 한 줄 제거 + 명시 에러
+  - estimated: 20m
+  - prereq: 없음
+  - decision_required: false
+
+- [ ] **#9 B3 첫 로그인 onboarding modal** — 가입 후 첫 /dashboard 진입 시 1회 모달. localStorage 로 dismiss 추적.
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false (단 디자인 컨셉 결정 필요할 수 있어 사전 sketch 후 진행)
+
+### 자체 점검·품질 (skill 활용)
+
+- [ ] **#10 매주 월요일 `/qa` 자동 실행** — 발견 critical/high 자동 fix, medium 이하는 P2 큐에 추가
+  - estimated: 30m setup + 1h 실행
+  - prereq: 없음
+  - decision_required: false (단 fix 가 STOP&ASK 범위면 issue 생성)
+  - schedule: weekly Mon 03:00 KST
+
+- [ ] **#11 매주 `/security-review` 자동 실행** — 새로 추가된 API route / 마이그레이션 위주 점검
+  - schedule: weekly Wed 03:00 KST
+
+### 작은 자동화
+
+- [ ] **#12 cron 실행 이력 dashboard 카드** — `/dashboard` 우측에 "최근 agent 활동" 3건 미니 카드 (시드 후)
+  - estimated: 40m
+  - prereq: b2b_auto_runs 에 row 1+ (cron 시작 후 자연 발생)
+  - decision_required: false
+
+---
+
+## P2 — 도메인·운영 (사용자 액션 필요 — agent 가 알림만)
+
+- [ ] **#A `seller.jimscanner.co.kr` Vercel 도메인 매핑** — 사용자가 DNS CNAME 등록 + Vercel 측 도메인 추가. agent 는 30일 뒤에도 안 됐으면 reminder issue 생성.
+- [ ] **#B Resend 가입 + RESEND_API_KEY 발급** — 이메일 알림 채널 추가용. STOP&ASK 후 사용자 confirm 시 agent 가 가입 시도.
+- [ ] **#C NTS_BUSINESS_API_KEY 발급 (data.go.kr)** — signup step-5 진위확인 활성. STOP&ASK + 사용자 confirm.
+- [ ] **#D main repo `bfa487f` push + types/supabase.ts sync** — 사용자가 main repo 에서 직접 push (agent 가 main repo 접근 X)
+
+---
+
+## P3 — 향후 큰 작업 (대기열, 아직 spec 미정)
+
+- M2 다중 사용자·권한 분리 (DB·RLS·UI 큰 변경)
+- 마켓 API 자동 import (쿠팡·스마트스토어)
+- 라쿠텐·야후·메루카리 확장 스크래퍼 (사이트별 selector — 사용자가 1페이지 보여줘야)
+- 17track 양방향 API
+- 카카오 알림톡
+- 자사몰 API 연동
+- 도매 워크플로우 (P8)
+
+---
+
+## 큐 통계
+
+- P1 자율 가능: **12개**
+- P2 사용자 액션 대기: **4개**
+- P3 미래: **7개**
+- 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
 
 ---
 
 ## 종료 조건
 
-모든 항목 `[x]` → 다음 cron fire 시 큐 비었음을 감지 → `chore(cron): 큐 소진 — 자동 종료` commit/push 후 cron 비활성화 (CronDelete) 또는 idle 종료.
-
----
-
-## 큐 진행 통계
-
-- 총 항목: **31개**
-- Phase 1 (가벼운): **8개**
-- Phase 2 (자동화): **8개**
-- Phase 3 (신규): **10개**
-- Phase 4 (부채): **5개**
-- 예상 총 시간: 약 18~22시간
-- 30분 간격 × 31회차 = **15.5시간** (1세션 분량 무거운 건 2~3회차에 걸쳐 진행)
+P1 모두 `[x]` → 다음 fire 시 큐 비었음 감지 → `chore(queue): P1 소진` commit 후 idle.
+사용자가 새 항목 추가하면 다음 fire 부터 다시 작동.

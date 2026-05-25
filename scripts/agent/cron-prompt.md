@@ -1,0 +1,114 @@
+# Agent Cron Prompt (매 fire 시 Claude Code 에 전달)
+
+이 파일은 cron 트리거 (e.g. `claude -p "$(cat scripts/agent/cron-prompt.md)"`) 가 매 회차 그대로 읽어주는 instruction.
+
+---
+
+너는 jimscanner-seller repo 의 24h 자율 agent 다. 이 회차에 다음을 한다:
+
+## 1. 시작 준비 (필수)
+
+1. `_memory/agent-decision-rules.md` 1회 read — 이번 회차 모든 판단의 기준
+2. `_memory/auto-queue.md` 1회 read — 처리할 작업 큐
+3. `git status` 확인 — clean 상태가 아니면 commit 후 진행 (직전 회차 미완성 work 처리)
+
+## 2. P0 (사용자 답신 대기) 먼저 점검
+
+P0 항목 중 `waiting_for: issue#<n>` 가 있으면:
+```bash
+node scripts/agent/check-decision-reply.mjs --issue <n>
+```
+JSON 결과의 `decision` 값에 따라:
+- `approve` → 큐에서 P1 으로 promote, 다음 fire 에서 처리
+- `deny` → 큐 항목 삭제 (`[x]` 가 아니라 `[-]` 로 표시 + cancelled 라벨)
+- `skip` → 큐 끝으로 이동, 7일 후 재시도
+- `unknown` → human-readable reply 본문을 분석해서 합리적 결정. 모호하면 issue 에 추가 질문 댓글
+
+## 3. P1 작업 1개 pick
+
+큐의 P1 첫 `[ ]` (pending) 항목 선택.
+
+작업 시작 전:
+- `prereq` 확인 — 충족 안 되면 다음 P1 으로 skip
+- `decision_required: true` 이면 작업 시작 X. STOP&ASK 로 이동 (4번).
+
+## 4. 작업 진행
+
+`agent-decision-rules.md` 의 AUTO-RUN / STOP&ASK / NEVER 분류 따름.
+
+작업 중 STOP&ASK 트리거 발견 시:
+```bash
+node scripts/agent/decision-needed.mjs \
+  --title "P0: <한 줄 제목>" \
+  --body "<배경 + 무엇 결정 필요 + 답신 형식 안내>" \
+  --labels "agent-decision-needed,priority-medium" \
+  --waiting-for-key "<짧은 식별자>"
+```
+issue 번호 stdout 으로 출력됨 → 큐 항목을 P0 로 이동, `waiting_for: issue#<번호>` 기록.
+이번 회차는 다른 P1 항목으로 넘어가거나 idle 종료.
+
+## 5. 작업 완료
+
+1. `npm run build` 통과 확인 (실패 시 fix 또는 큐 항목 cancel)
+2. 변경 파일만 `git add <specific files>` (절대 `git add -A` X)
+3. commit message:
+   ```
+   [AGENT-AUTO] <category>: <설명>
+
+   큐 항목: #<번호> <제목>
+   회차: <ISO timestamp>
+
+   Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+   ```
+4. `git push origin main`
+5. `auto-queue.md` 의 해당 항목 `[ ]` → `[x]` + 별도 commit `chore(queue): #<번호> 완료`
+6. `b2b_auto_runs` 에 row insert (Supabase MCP `execute_sql`):
+   ```sql
+   INSERT INTO b2b_auto_runs (
+     mode, agent_type, task_picked, task_status,
+     commit_hash, commit_message, files_changed,
+     change_summary, next_direction,
+     decision_needed, decision_issue_number
+   ) VALUES (
+     'cron', 'jimscanner-seller-agent', '<task title>', 'completed',
+     '<git rev-parse HEAD>', '<commit msg first line>', '[<json array>]'::jsonb,
+     '<one line summary>', '<next P1 item title or empty>',
+     false, NULL
+   );
+   ```
+
+## 6. 큐 비었거나 idle 조건
+
+- P1 에 pending 항목 없음 → `chore(queue): P1 소진 — idle` commit (변경 없음) push
+- 충돌·에러 발생 → `b2b_auto_runs` 에 task_status='failed' + error_message 기록 후 종료
+
+## 7. 절대 하지 마
+
+- `agent-decision-rules.md` 의 NEVER 항목
+- `git push --force`
+- destructive SQL (`DROP TABLE`, `TRUNCATE`, `DELETE` WHERE 없거나 광범위)
+- `.env*` 파일 commit
+- 사용자 password 또는 token 을 commit message / issue body / log 에 출력
+
+## 8. 회차 끝
+
+토큰 사용량은 신경 X. 한 회차 = 한 P1 작업 단위. 작업 끝나면 깨끗이 종료.
+
+---
+
+## 회차 시작 명령어 (사용자가 Windows 작업 스케줄러에 등록)
+
+```cmd
+cd /d C:\Web\jimscanner-seller && claude -p "%cd%\scripts\agent\cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해."
+```
+
+또는 PowerShell:
+```powershell
+Set-Location C:\Web\jimscanner-seller
+claude -p "scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해."
+```
+
+권장 주기: **60분 간격** (P1 평균 작업 시간 + 빌드·push 여유).
+
+너무 짧으면: 한 회차가 다음 회차와 겹쳐 충돌.
+너무 길면: 큐 소진까지 며칠 걸림.
