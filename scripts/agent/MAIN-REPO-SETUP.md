@@ -45,43 +45,54 @@ AGENT_PRIMARY_PASS_STRONG="An@124#802"
 
 ---
 
-## cron-prompt.md 의 추가 단계 (main 측 only)
+## 운영 정책 (seller 와 동일)
 
-seller 의 cron-prompt 에 다음 단계를 **"2. P0 점검" 직전에** 삽입:
+- **이슈 등록 주기**: daily (audit 03:00, brainstorm 05:00)
+- **이슈 답신·close 확인 + 다음 진행 결정**: hourly (이 cron 의 책임)
+- 매 회차 시작 시 GitHub 의 3개 label 카테고리 open issue 의 새 댓글·close 상태를 polling
+
+## cron-prompt.md 의 추가 단계 (main 측)
+
+seller 의 cron-prompt 를 복사하되 **"2. Issue Inbox Polling" 의 label 목록을 main repo 관점으로 교체**:
 
 ```markdown
-## 1-b. Cross-repo handoff issue polling (main 측 only)
+## 2. Issue Inbox Polling (매 회차 필수)
 
-매 회차 시작 시 자기 repo 의 handoff-from-* label open issue 를 P0 큐로 import.
+매 hourly fire 시작 시 자기 repo 의 3개 label open issue 처리.
 
-```bash
-# label agent-handoff-from-* 의 open issue 조회
-gh issue list \
-  --repo anteam7/jimpass-agent-platform \
-  --label "agent-handoff-from-seller" \
-  --state open \
-  --json number,title,body,labels,createdAt \
-  --limit 10
-```
-
-또는 fetch:
 ```bash
 node -e "
-const fetch = (await import('node-fetch')).default;
 const t = process.env.AGENT_GITHUB_TOKEN;
-const r = await fetch('https://api.github.com/repos/anteam7/jimpass-agent-platform/issues?labels=agent-handoff-from-seller&state=open', {headers:{Authorization:'Bearer '+t}});
-console.log(await r.json());
+const repo = process.env.AGENT_GITHUB_REPO || 'anteam7/jimpass-agent-platform';
+// main 측은 'agent-handoff-from-seller' (seller 가 보낸 작업) 받음
+const labels = ['agent-decision-needed','agent-idea','agent-handoff-from-seller'];
+for (const label of labels) {
+  const r = await fetch('https://api.github.com/repos/' + repo + '/issues?labels=' + encodeURIComponent(label) + '&state=open&per_page=20', { headers: { Authorization: 'Bearer ' + t, Accept: 'application/vnd.github+json' } });
+  const items = await r.json();
+  console.log(JSON.stringify({ label, count: items.length, issues: items.map(i => ({number:i.number, title:i.title, comments:i.comments, updated_at:i.updated_at})) }));
+}
 " --input-type=module
 ```
 
-각 open issue 마다:
-1. body 의 `<!-- agent-handoff-meta` 블록 파싱 (spec_key, from_repo, from_context)
-2. P0 큐 상단에 추가: `#HND-<issue_number> <issue_title>`
-3. 이미 큐에 같은 spec_key 가 있으면 dedup
-4. P0 의 handoff 항목을 P1 처럼 처리:
-   - issue body 의 "## 무엇을 해야 하나" 그대로 수행
-   - 작업 끝나면 `gh issue comment <num> --body "✅ commit <hash> 에 처리됨" && gh issue close <num>`
-5. P0 처리 후 일반 P1 큐로 넘어감
+### 2-a. `agent-decision-needed` (큐 항목 결정 대기)
+- 큐 항목이 `waiting_for: issue#<n>` 으로 묶여 있음
+- `node scripts/agent/check-decision-reply.mjs --issue <n>` 호출 → approve/deny/skip/unknown 처리
+
+### 2-b. `agent-idea` (brainstorm 발견)
+- `approve` 댓글 → `_memory/auto-queue.md` P1 끝에 추가 + issue 에 `✅ 큐에 추가됨` 댓글
+- `skip` / `deny` → issue close
+
+### 2-c. `agent-handoff-from-seller` (seller repo 가 보낸 작업)
+- main 측이 picking 해서 처리할 cross-repo 작업
+- body 의 `<!-- agent-handoff-meta` 파싱 → spec_key 추출 → dedup
+- P0 큐 상단에 추가 (decision_required: false, 우선 처리)
+- 작업 완료 시 `✅ commit <hash> 에 처리됨` 댓글 + issue close
+
+### Inbox polling 결과
+- 새로 P1 / P0 에 추가된 항목 수
+- close 된 issue 수
+- 답신 없이 그대로 둔 open issue 수
+- 위 정보를 b2b_auto_runs 의 change_summary 에 한 줄로 (main repo 의 같은 테이블)
 ```
 
 ---

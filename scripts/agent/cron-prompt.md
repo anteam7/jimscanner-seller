@@ -6,23 +6,73 @@
 
 너는 jimscanner-seller repo 의 24h 자율 agent 다. 이 회차에 다음을 한다:
 
+## 운영 정책 (핵심)
+
+- **이슈 등록 주기**: daily (brainstorm 05:00, audit 03:00 에서 발견 → 사용자 결정용 issue)
+- **이슈 답신 확인 + 다음 진행 결정**: **hourly (이 cron 의 책임)**
+- agent 는 매 hourly fire 시작 시 GitHub 의 모든 open issue 의 새 댓글·close 상태를 polling 해서 큐 흐름을 조정한다.
+- 결과로: 사용자가 모바일에서 issue 에 답신하면 다음 1시간 안에 agent 가 그 결정에 따라 움직임.
+
 ## 1. 시작 준비 (필수)
 
 1. `_memory/agent-decision-rules.md` 1회 read — 이번 회차 모든 판단의 기준
 2. `_memory/auto-queue.md` 1회 read — 처리할 작업 큐
 3. `git status` 확인 — clean 상태가 아니면 commit 후 진행 (직전 회차 미완성 work 처리)
 
-## 2. P0 (사용자 답신 대기) 먼저 점검
+## 2. Issue Inbox Polling (매 회차 필수)
 
-P0 항목 중 `waiting_for: issue#<n>` 가 있으면:
+GitHub 의 3개 label 카테고리를 polling 해서 큐 흐름 조정.
+
 ```bash
-node scripts/agent/check-decision-reply.mjs --issue <n>
+# 자기 repo 의 open issue 3 카테고리 동시 조회
+node -e "
+const t = process.env.AGENT_GITHUB_TOKEN;
+const repo = process.env.AGENT_GITHUB_REPO || 'anteam7/jimscanner-seller';
+const labels = ['agent-decision-needed','agent-idea','agent-handoff-from-main'];
+for (const label of labels) {
+  const r = await fetch('https://api.github.com/repos/' + repo + '/issues?labels=' + encodeURIComponent(label) + '&state=open&per_page=20', { headers: { Authorization: 'Bearer ' + t, Accept: 'application/vnd.github+json' } });
+  const items = await r.json();
+  console.log(JSON.stringify({ label, count: items.length, issues: items.map(i => ({number:i.number, title:i.title, comments:i.comments, updated_at:i.updated_at})) }));
+}
+" --input-type=module
 ```
-JSON 결과의 `decision` 값에 따라:
-- `approve` → 큐에서 P1 으로 promote, 다음 fire 에서 처리
-- `deny` → 큐 항목 삭제 (`[x]` 가 아니라 `[-]` 로 표시 + cancelled 라벨)
-- `skip` → 큐 끝으로 이동, 7일 후 재시도
-- `unknown` → human-readable reply 본문을 분석해서 합리적 결정. 모호하면 issue 에 추가 질문 댓글
+
+각 카테고리 처리:
+
+### 2-a. `agent-decision-needed` (큐 항목 결정 대기)
+- 큐 항목이 `waiting_for: issue#<n>` 으로 묶여 있음
+- 각 open issue 마다 `node scripts/agent/check-decision-reply.mjs --issue <n>` 호출
+- `decision` 결과:
+  - `approve` → 묶인 큐 항목 P0 → P1 promote, 이번 또는 다음 회차에 처리
+  - `deny` → 큐 항목 `[-]` 로 cancel + 별도 commit
+  - `skip` → 큐 끝으로 이동, 7일 후 재시도
+  - `unknown` → reply 본문 분석. 모호하면 issue 에 추가 질문 댓글 + 다음 회차 대기
+
+### 2-b. `agent-idea` (brainstorm 발견 — 큐에 없음)
+- 사용자가 `approve` 댓글 단 issue → `_memory/auto-queue.md` 의 P1 끝에 추가:
+  ```markdown
+  - [ ] **#idea-<issue번호> <title>** _(brainstorm approved YYYY-MM-DD)_
+    - estimated: <body 의 예상 시간>
+    - prereq: <body 참조>
+    - decision_required: false
+    - source: github issue#<번호>
+  ```
+  추가 후 issue 에 댓글 `✅ 큐에 추가됨 (#<큐번호>)` + 그대로 open 유지 (작업 완료 시 close)
+- `skip` 또는 `deny` 댓글 → issue close + 큐에는 안 추가
+- 댓글 없음 (24시간 이상 경과) → 그대로 open. 7일 이상 무답이면 자동 P3 (low priority) 로 메모
+
+### 2-c. `agent-handoff-from-main` (다른 repo 가 보낸 작업)
+- main repo agent 가 우리 repo 에 보낸 cross-repo 작업
+- open issue 의 body 의 `<!-- agent-handoff-meta` 파싱 → `spec_key` 추출
+- 같은 spec_key 가 이미 큐에 있으면 skip (dedup)
+- 없으면 P0 큐 상단에 추가 (decision_required: false, prereq: 없음 — main 이 보낸 거니까 진행)
+- 작업 완료 시 issue 에 댓글 `✅ commit <hash> 에 처리됨` + close
+
+### Inbox polling 결과 정리
+- 새로 P1 에 추가된 항목 수
+- close 된 issue 수
+- 답신 없이 그대로 둔 open issue 수
+- 위 정보를 회차 끝의 b2b_auto_runs 의 `change_summary` 에 한 줄로
 
 ## 3. P1 작업 1개 pick
 
