@@ -36,6 +36,58 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ---
 
+## ⭐ Phase 0 — 슈퍼 어드민 셀러 health 가시화 (cross-repo)
+
+목표: 어드민이 모바일로 5초 안에 "모든 셀러 상태 / 누가 막혔나" 답.
+
+### seller repo 측 작업 (이 repo agent 가 처리)
+
+- [ ] **#PH0-1 b2b_seller_health_snapshot 테이블 + 인덱스 + RLS**
+  - estimated: 45m
+  - prereq: 없음
+  - decision_required: false
+  - DDL: account_id+snapshot_date PK, 약 20 컬럼 (verification, plan, orders, sales, has_extension, products, receipts_7d, matched_pct, margin_failed, issue_flags jsonb, health_score)
+  - `supabase/b2b_seller_health_snapshot.sql` 작성 + Supabase MCP apply_migration
+
+- [ ] **#PH0-2 health snapshot 계산 SQL function + pg_cron 등록**
+  - estimated: 1h
+  - prereq: #PH0-1
+  - decision_required: false
+  - `b2b_compute_seller_health_snapshot(p_date date)` SECURITY DEFINER 함수
+  - 모든 active b2b_accounts loop, metric upsert
+  - pg_cron `b2b_seller_health_snapshot_daily` KST 04:00 등록
+  - 1회 backfill (오늘 날짜) 실행
+
+- [ ] **#PH0-3 seller repo 측 dashboard 미니카드 — 본인 health score**
+  - estimated: 30m
+  - prereq: #PH0-1, #PH0-2 (snapshot row 있어야)
+  - decision_required: false
+  - `/dashboard` 우측에 본인 health score + 부족한 항목 hint 1개 미니카드
+  - 셀러 본인이 어드민이 보는 metric 을 일부 미리 보게 함 (transparency)
+
+### main repo 측 작업 (handoff issue 로 위임)
+
+- [ ] **#PH0-4 [handoff] main repo `/admin/b2b/health` 페이지 신규**
+  - estimated: 5m (이 repo 측: issue 생성만)
+  - prereq: #PH0-1 완료 (스키마 있어야 spec body 정확)
+  - decision_required: false
+  - 동작: `handoff-to-repo.mjs --to-repo anteam7/jimpass-agent-platform --spec-key phase0-admin-health-page --title "[from-seller] /admin/b2b/health 신규" --body "..." --labels "agent-handoff-from-seller,phase-0"`
+  - body 에 포함: 테이블 스키마 / 4 KPI 카드 / row table / 필터 / 모바일 우선
+
+- [ ] **#PH0-5 [handoff] main repo `/admin/b2b/health/[account_id]` detail 모달/페이지**
+  - estimated: 5m (handoff issue 생성)
+  - prereq: #PH0-4 issue 생성 후 (같은 main agent 가 후속 처리)
+  - decision_required: false
+  - 셀러 단건 클릭 시: 30일 trend chart, 이슈 카테고리 칩, 정지/plan 변경 액션
+
+- [ ] **#PH0-6 [handoff] main repo `/admin/dashboard` 에 셀러 KPI 4 카드**
+  - estimated: 5m
+  - prereq: #PH0-4 완료 또는 동시
+  - decision_required: false
+  - 어드민 메인 페이지에 "B2B 셀러" 섹션 — 가입 총, 활성, 위험, 우수 4 카드 (서버 컴포넌트로 b2b_seller_health_snapshot 의 오늘 row 집계)
+
+---
+
 ## P1 — 자율 진행 가능 (우선순위 순)
 
 ### 어제 QA 보류 6건 (small wins)

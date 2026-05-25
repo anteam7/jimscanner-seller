@@ -47,6 +47,42 @@ node scripts/agent/decision-needed.mjs \
 issue 번호 stdout 으로 출력됨 → 큐 항목을 P0 로 이동, `waiting_for: issue#<번호>` 기록.
 이번 회차는 다른 P1 항목으로 넘어가거나 idle 종료.
 
+### 4-b. 다른 repo 코드 변경 필요 시 (cross-repo handoff)
+
+이 repo (`jimscanner-seller`) 의 agent 는 **다른 repo 의 코드·파일을 절대 직접 commit 하지 않는다**.
+다른 repo 변경이 필요하면 handoff:
+
+```bash
+node scripts/agent/handoff-to-repo.mjs \
+  --to-repo anteam7/jimpass-agent-platform \
+  --title "[from-seller] <한 줄 작업 요청>" \
+  --body "$(cat <<'BODY'
+## 배경
+seller repo 의 X 작업 중 발견된 main repo 변경 요청.
+
+## 무엇을 해야 하나
+- src/app/admin/.../page.tsx 신규
+- ...
+
+## DB 스키마 (이미 적용됨)
+- b2b_seller_health_snapshot 테이블 (seller repo abc1234)
+
+## 완료 기준
+- /admin/... 접근 시 ... 화면이 보임
+- admin 권한 가드
+
+## 참조 commit (seller 측)
+- abc1234
+BODY
+)" \
+  --labels "agent-handoff-from-seller,priority-medium" \
+  --spec-key "<unique-key-for-dedup>" \
+  --from-context "<현재 큐 항목 #번호>"
+```
+
+issue 번호 출력 → 큐 항목을 `[x] (handoff: target-issue#N)` 으로 마킹 (이 repo 측 작업은 끝났으므로).
+main repo agent 가 처리 후 close. 결과 알림 필요시 다음 회차에 issue state polling.
+
 ## 5. 작업 완료
 
 1. `npm run build` 통과 확인 (실패 시 fix 또는 큐 항목 cancel)

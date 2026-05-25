@@ -118,6 +118,65 @@
 - 셀러 PII 본문을 issue / commit / log 에 노출
 - 외부 사이트에서 셀러 데이터 게시 (Stack Overflow, Discord 등)
 - 백업 없이 destructive migration
+- **다른 repo 의 코드·파일 직접 commit·push** — 반드시 handoff issue 패턴 사용
+
+---
+
+## 🔁 Cross-repo 작업 (다른 repo 변경 필요 시)
+
+### 원칙
+이 repo (`jimscanner-seller`) 의 agent 는 **이 repo 의 파일만 직접 수정**한다.
+다른 repo 변경이 필요하면 **GitHub issue 로 그 repo 에 핸드오프**한다.
+
+### 핸드오프 방법
+```bash
+node scripts/agent/handoff-to-repo.mjs \
+  --to-repo anteam7/jimpass-agent-platform \
+  --title "[from-seller] /admin/b2b/health 페이지 추가" \
+  --body "상세 spec ..." \
+  --labels "agent-handoff-from-seller,phase-0" \
+  --spec-key "phase0-admin-health-page" \
+  --from-context "seller repo Phase 0 작업 중 발견"
+```
+
+### dedup
+같은 `spec-key` 의 open issue 가 이미 그 repo 에 있으면 새로 안 만든다 (재호출해도 안전).
+
+### 처리 책임 분배
+- DB 마이그레이션 (b2b_*) → seller repo 가 권한자 (이 repo 에서 작성, Supabase MCP apply)
+- 셀러 화면 (seller.jimscanner.co.kr) → seller repo
+- 어드민·B2C 화면 (jimscanner.co.kr) → main repo (`jimpass-agent-platform`) 로 handoff
+- 공유 자산 (shadcn ui, security helpers) → 우선 한 쪽에서 commit + 다른 쪽에 sync handoff issue
+
+### 결과 polling (선택)
+- handoff issue 는 main repo agent 가 처리하고 close
+- seller repo 측에서 phase 완료 여부 확인 필요 시 매 회차에 `gh api repos/{repo}/issues/{n}` 로 state 확인
+- close 되면 후속 작업 진행
+
+### 핸드오프 spec body 형식 (권장)
+```
+## 배경
+seller repo 의 어떤 작업 중에 발견된 cross-repo 필요인지
+
+## 무엇을 해야 하나
+- 파일 경로 (예상)
+- 추가/수정할 기능 1줄씩
+- 참조할 패턴 (기존 main repo 의 어떤 페이지·컴포넌트)
+
+## 입력 / 출력
+- DB 스키마 (이미 마이그레이션 적용된 테이블·컬럼)
+- API endpoint
+- UX 요구
+
+## 완료 기준 (Definition of Done)
+- 빌드 통과
+- 어떤 URL 에서 어떤 화면이 보여야 한다
+- 권한 가드 (admin only)
+
+## 참조 commit (seller 측)
+- abc1234: 관련 마이그레이션
+- def5678: 관련 함수
+```
 
 ---
 
