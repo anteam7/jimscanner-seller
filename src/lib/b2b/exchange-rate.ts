@@ -25,6 +25,20 @@ export type ExchangeRates = {
 // 동일 인스턴스 내 최후 성공 캐시 (API 장애 시 fallback 용)
 let lastGoodSnapshot: ExchangeRates | null = null
 
+// API key 무효 / 초기 cold start 등으로 최후 스냅샷도 없을 때 사용할 최종 fallback.
+// 정확한 일일 환율은 아니지만 화면이 깨지는 것보다 보수적 기준값 노출이 낫다.
+// 갱신 책임: 분기 1회 수동 점검.
+const STATIC_FALLBACK: ExchangeRates = {
+  rates: {
+    USD: { currency: 'USD', rate: 1380, unit: 1, fetchedAt: '2026-01-01T00:00:00.000Z', isFallback: true },
+    JPY: { currency: 'JPY', rate: 900, unit: 100, fetchedAt: '2026-01-01T00:00:00.000Z', isFallback: true },
+    CNY: { currency: 'CNY', rate: 190, unit: 1, fetchedAt: '2026-01-01T00:00:00.000Z', isFallback: true },
+    EUR: { currency: 'EUR', rate: 1500, unit: 1, fetchedAt: '2026-01-01T00:00:00.000Z', isFallback: true },
+  },
+  fetchedAt: '2026-01-01T00:00:00.000Z',
+  isFallback: true,
+}
+
 async function fetchFromKoreaExim(): Promise<ExchangeRates> {
   const apiKey = process.env.KOREAEXIM_API_KEY
   if (!apiKey) throw new Error('KOREAEXIM_API_KEY env not set')
@@ -150,14 +164,14 @@ export async function getYesterdayRates(): Promise<ExchangeRates | null> {
 export async function getExchangeRates(): Promise<ExchangeRates> {
   try {
     return await getCachedRates()
-  } catch (err) {
+  } catch {
     if (lastGoodSnapshot) {
       const fallbackRates = Object.fromEntries(
         Object.entries(lastGoodSnapshot.rates).map(([k, v]) => [k, { ...v, isFallback: true }])
       )
       return { ...lastGoodSnapshot, rates: fallbackRates, isFallback: true }
     }
-    throw err
+    return STATIC_FALLBACK
   }
 }
 

@@ -103,20 +103,38 @@ function MfaChallengeContent() {
 
   if (initError) {
     return (
-      <div className="min-h-screen bg-slate-50 text-slate-900 flex flex-col items-center justify-center px-4">
-        <div className="w-full max-w-sm text-center space-y-4">
-          <p className="text-slate-400 text-sm">
-            2단계 인증 정보를 불러오지 못했습니다.
-          </p>
-          <button
-            onClick={handleSignOut}
-            disabled={signingOut}
-            className="inline-block text-indigo-600 hover:text-indigo-700 text-sm transition-colors disabled:opacity-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 rounded"
-          >
-            {signingOut ? '로그아웃 중…' : '로그인 페이지로 돌아가기'}
-          </button>
+      <AuthShell topRight={null}>
+        <div className="rounded-2xl border border-slate-200 bg-white shadow-xl p-8 space-y-6 text-center">
+          <div className="flex justify-center">
+            <div className="w-12 h-12 rounded-xl bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-600">
+              <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v3.75m9-.75a9 9 0 1 1-18 0 9 9 0 0 1 18 0Zm-9 3.75h.008v.008H12v-.008Z" />
+              </svg>
+            </div>
+          </div>
+          <div className="space-y-1">
+            <h1 className="text-xl font-bold tracking-tight text-slate-900">2단계 인증 정보를 불러오지 못했습니다</h1>
+            <p className="text-slate-600 text-sm">
+              세션이 만료되었거나 등록된 OTP 가 없는 계정일 수 있습니다.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Button
+              onClick={() => window.location.reload()}
+              className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md transition-all"
+            >
+              다시 시도
+            </Button>
+            <button
+              onClick={handleSignOut}
+              disabled={signingOut}
+              className="w-full text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50 py-2"
+            >
+              {signingOut ? '로그아웃 중…' : '로그인 페이지로 돌아가기'}
+            </button>
+          </div>
         </div>
-      </div>
+      </AuthShell>
     )
   }
 

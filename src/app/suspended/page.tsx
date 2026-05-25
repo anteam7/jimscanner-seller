@@ -18,9 +18,15 @@ export default function AccountSuspendedPage() {
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { data } = await (supabase as any)
         .from('b2b_accounts')
-        .select('suspended_reason')
+        .select('verification_status, suspended_reason')
         .eq('user_id', user.id)
         .maybeSingle()
+
+      // active 계정이 직접 URL 로 진입한 경우 dashboard 로 보냄
+      if (data && data.verification_status !== 'suspended') {
+        router.replace('/dashboard')
+        return
+      }
 
       setSuspendedReason(data?.suspended_reason ?? null)
     }

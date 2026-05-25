@@ -147,12 +147,16 @@ function EmptyState() {
   )
 }
 
+const PAGE_SIZE = 50
+
 export default async function OrdersListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; marketplace?: string }>
+  searchParams: Promise<{ status?: string; q?: string; marketplace?: string; page?: string }>
 }) {
-  const { status: statusFilter = 'all', q: query = '', marketplace: marketFilter = '' } = await searchParams
+  const { status: statusFilter = 'all', q: query = '', marketplace: marketFilter = '', page: pageRaw } = await searchParams
+  const page = Math.max(1, Number.parseInt(pageRaw ?? '1', 10) || 1)
+  const offset = (page - 1) * PAGE_SIZE
 
   const supabase = await createClient()
   const {
@@ -176,11 +180,12 @@ export default async function OrdersListPage({
     .from('b2b_orders')
     .select(
       'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
+      { count: 'exact' },
     )
     .eq('account_id', account.id)
     .is('deleted_at', null)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .range(offset, offset + PAGE_SIZE - 1)
 
   if (statusFilter !== 'all' && STATUS_META[statusFilter]) {
     qb = qb.eq('status', statusFilter)
@@ -193,8 +198,10 @@ export default async function OrdersListPage({
     qb = qb.or(`order_number.ilike.%${q}%,market_order_number.ilike.%${q}%`)
   }
 
-  const { data: rows } = (await qb) as { data: OrderRow[] | null }
+  const { data: rows, count: totalCount } = (await qb) as { data: OrderRow[] | null; count: number | null }
   const baseOrders = rows ?? []
+  const total = totalCount ?? 0
+  const totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE))
 
   // 영수증 매칭 count 일괄 fetch
   const orderIds = baseOrders.map((o) => o.id)
@@ -284,9 +291,12 @@ export default async function OrdersListPage({
     const status = overrides.status !== undefined ? overrides.status : (statusFilter !== 'all' ? statusFilter : null)
     const mp = overrides.marketplace !== undefined ? overrides.marketplace : (marketFilter || null)
     const qv = overrides.q !== undefined ? overrides.q : (query || null)
+    // 필터 변경 시 page 리셋, 명시 override 가 있으면 그 값
+    const pg = overrides.page !== undefined ? overrides.page : null
     if (status) sp.set('status', status)
     if (mp) sp.set('marketplace', mp)
     if (qv) sp.set('q', qv)
+    if (pg) sp.set('page', pg)
     const s = sp.toString()
     return s ? `/orders?${s}` : '/orders'
   }
@@ -413,9 +423,36 @@ export default async function OrdersListPage({
             marketplaceLabel={MARKETPLACE_LABEL}
             statusMeta={STATUS_META}
           />
-          <p className="text-xs text-slate-500">
-            최근 {orders.length}건 표시 · 페이지네이션은 추후 확장 예정
-          </p>
+          <div className="flex items-center justify-between text-xs text-slate-500 pt-1">
+            <p>
+              전체 {total.toLocaleString('ko-KR')}건 · {offset + 1}–{offset + orders.length} 표시
+              {totalPages > 1 ? ` · ${page}/${totalPages}쪽` : ''}
+            </p>
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                {page > 1 ? (
+                  <Link
+                    href={buildHref({ page: page > 2 ? String(page - 1) : null })}
+                    className="px-2.5 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    ← 이전
+                  </Link>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-md border border-slate-100 bg-slate-50 text-slate-300">← 이전</span>
+                )}
+                {page < totalPages ? (
+                  <Link
+                    href={buildHref({ page: String(page + 1) })}
+                    className="px-2.5 py-1 rounded-md border border-slate-200 bg-white text-slate-700 hover:bg-slate-50 transition-colors"
+                  >
+                    다음 →
+                  </Link>
+                ) : (
+                  <span className="px-2.5 py-1 rounded-md border border-slate-100 bg-slate-50 text-slate-300">다음 →</span>
+                )}
+              </div>
+            )}
+          </div>
         </>
       )}
     </div>

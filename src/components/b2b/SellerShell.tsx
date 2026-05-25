@@ -253,6 +253,7 @@ export default function SellerShell({
               height={80}
               priority
               className="h-7 w-auto brightness-0 invert opacity-95 group-hover:opacity-100 transition-opacity"
+              style={{ width: 'auto', height: 'auto' }}
             />
             <span className="text-[11px] font-semibold tracking-widest text-indigo-300 bg-indigo-500/15 border border-indigo-500/30 rounded px-1.5 py-0.5">
               SELLER

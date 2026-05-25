@@ -17,9 +17,12 @@ export function SignupHeader() {
     <header className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
       <Link
         href={isLoggedIn ? '/dashboard' : '/signup'}
-        className="text-lg font-bold text-indigo-600 tracking-tight"
+        className="inline-flex items-center gap-2"
       >
-        짐스캐너 B2B
+        <span className="text-lg font-bold text-indigo-600 tracking-tight">짐스캐너</span>
+        <span className="text-[10px] font-bold tracking-wider text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+          SELLER
+        </span>
       </Link>
       {!isLoggedIn && (
         <Link href="/login" className="text-sm text-slate-400 hover:text-slate-900 transition-colors">

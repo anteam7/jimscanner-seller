@@ -72,6 +72,7 @@ export default async function AnalyticsPage() {
 
   // 환율 fetch (실패 시 KRW 만 합산)
   let rates: Record<string, { rate: number; unit: number }> = {}
+  let exchangeRateOk = true
   try {
     const r = await getExchangeRates()
     for (const [k, v] of Object.entries(r.rates)) {
@@ -79,6 +80,7 @@ export default async function AnalyticsPage() {
     }
   } catch {
     rates = {}
+    exchangeRateOk = false
   }
 
   function toKrw(amount: number, currency: string): number | null {
@@ -222,12 +224,16 @@ export default async function AnalyticsPage() {
   }
   const marketByKey = new Map(marketStats.map((m) => [m.supplier_site, m]))
 
-  // 전체 6개월 합계
+  // 전체 6개월 합계 — 환율 누락 라인이 있으면 총 마진/마진율은 신뢰 못 함
   const totalSale = months.reduce((acc, m) => acc + m.saleKrw, 0)
   const totalPurchase = months.reduce((acc, m) => acc + m.purchaseKrw, 0)
-  const totalMargin = totalSale - totalPurchase
   const totalOrders = months.reduce((acc, m) => acc + m.orderCount, 0)
-  const marginRate = totalSale > 0 ? (totalMargin / totalSale) * 100 : null
+  const knownMonths = months.filter((m) => m.marginKrwKnown)
+  const marginKnown = knownMonths.length > 0
+  const totalMargin = marginKnown ? knownMonths.reduce((acc, m) => acc + m.marginKrw, 0) : null
+  const knownSale = knownMonths.reduce((acc, m) => acc + m.saleKrw, 0)
+  const marginRate = marginKnown && knownSale > 0 && totalMargin != null ? (totalMargin / knownSale) * 100 : null
+  const skippedMonths = months.length - knownMonths.length
 
   // 차트용 max
   const maxBar = Math.max(
@@ -246,6 +252,18 @@ export default async function AnalyticsPage() {
         </div>
       </div>
 
+      {(!exchangeRateOk || skippedMonths > 0) && (
+        <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+          <p className="font-semibold">⚠️ 마진 계산 일부 누락</p>
+          <p className="text-amber-800 mt-0.5">
+            {!exchangeRateOk
+              ? '환율 정보를 불러오지 못해 외화 매입이 KRW 로 환산되지 않았습니다. '
+              : ''}
+            총 마진/마진율은 환율 환산이 완료된 주문만 집계합니다 (환산 누락 월 {skippedMonths}건 제외).
+          </p>
+        </div>
+      )}
+
       {/* 요약 카드 */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <SummaryCard label="총 주문" value={`${totalOrders.toLocaleString('ko-KR')}건`} accent="indigo" />
@@ -253,13 +271,9 @@ export default async function AnalyticsPage() {
         <SummaryCard label="총 매입" value={formatKRW(totalPurchase || null)} accent="sky" />
         <SummaryCard
           label="총 마진"
-          value={
-            totalSale > 0 || totalPurchase > 0
-              ? formatKRW(totalMargin)
-              : '—'
-          }
-          sub={marginRate != null ? `마진율 ${marginRate.toFixed(1)}%` : null}
-          accent={totalMargin >= 0 ? 'emerald' : 'rose'}
+          value={marginKnown && totalMargin != null ? formatKRW(totalMargin) : '—'}
+          sub={marginRate != null ? `마진율 ${marginRate.toFixed(1)}%` : (marginKnown ? null : '환율 환산 필요')}
+          accent={!marginKnown || totalMargin == null ? 'sky' : totalMargin >= 0 ? 'emerald' : 'rose'}
         />
       </div>
 

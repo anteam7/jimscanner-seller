@@ -163,7 +163,9 @@ export default async function ClientsPage() {
         <div className="rounded-lg bg-white shadow-sm border-l-[3px] border-l-amber-500 px-5 py-4">
           <p className="text-[11px] uppercase tracking-wider text-slate-500 font-semibold">단골 구매자</p>
           <p className="mt-1 text-2xl font-bold text-slate-900 tabular-nums">{repeatCount.toLocaleString('ko-KR')}명</p>
-          <p className="mt-0.5 text-[11px] text-amber-700 font-semibold">재구매율 {repeatRate}%</p>
+          <p className="mt-0.5 text-[11px] text-amber-700 font-semibold">
+            {totalBuyers > 0 ? `재구매율 ${repeatRate}%` : '데이터 없음'}
+          </p>
         </div>
       </div>
 

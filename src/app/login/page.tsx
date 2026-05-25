@@ -113,6 +113,7 @@ function SellerLoginContent() {
             height={28}
             priority
             className="h-7 w-auto"
+            style={{ width: 'auto', height: 'auto' }}
           />
           <span className="text-[10px] font-bold tracking-wider text-slate-500 bg-white border border-slate-200 rounded px-1.5 py-0.5">
             SELLER

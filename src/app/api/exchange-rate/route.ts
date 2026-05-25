@@ -15,13 +15,7 @@ export async function GET() {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
 
-  try {
-    const rates = await getExchangeRates()
-    return NextResponse.json(rates)
-  } catch {
-    return NextResponse.json(
-      { error: '환율 정보를 불러올 수 없습니다. 잠시 후 다시 시도해 주세요.' },
-      { status: 503 }
-    )
-  }
+  // getExchangeRates 는 static fallback 까지 보장되므로 항상 200 OK.
+  const rates = await getExchangeRates()
+  return NextResponse.json(rates)
 }
