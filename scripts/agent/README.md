@@ -27,22 +27,24 @@ node scripts/agent/decision-needed.mjs \
 
 ### 3. Windows 작업 스케줄러 등록
 
-작업 스케줄러 → 새 작업 만들기:
-- 이름: `jimscanner-seller-agent`
-- 트리거: 시작 시점 = 작업 만든 직후, 반복 = 1시간, 지속 시간 = 무기한
-- 동작:
-  - 프로그램: `cmd.exe`
-  - 인수: `/c cd /d C:\Web\jimscanner-seller && claude -p "scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해." >> logs/agent-cron.log 2>&1`
-- 조건: "AC 전원 사용 시만 실행" 체크 해제 (배터리에서도 진행)
-- 설정: "작업이 이미 실행 중인 경우 새 인스턴스 시작 안 함" 체크
+**중요**: `claude -p` (non-interactive) 모드는 permission prompt 가 뜨면 차단됩니다.
+cron 환경에서는 반드시 `--dangerously-skip-permissions` 를 함께 사용해야 Edit / Bash / MCP 호출이 통과합니다.
+이 권한은 cron 의 prompt 가 받는 instruction (`cron-prompt.md`) 안에서만 적용되고, 일반 대화형 세션에는 영향 없습니다.
+`agent-decision-rules.md` 의 NEVER 마지노선이 destructive action 을 막는 역할을 합니다.
 
-또는 PowerShell `Register-ScheduledTask` 명령:
+PowerShell `Register-ScheduledTask` 명령 (PowerShell 로 claude.ps1 실행):
 ```powershell
-$action = New-ScheduledTaskAction -Execute "cmd.exe" -Argument '/c cd /d C:\Web\jimscanner-seller && claude -p "scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해." >> logs/agent-cron.log 2>&1'
+$action = New-ScheduledTaskAction -Execute "powershell.exe" `
+  -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"Set-Location 'C:\Web\jimscanner-seller'; & claude --dangerously-skip-permissions -p 'scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해.' *>> logs\agent-cron.log`""
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date) -RepetitionInterval (New-TimeSpan -Minutes 60)
-$settings = New-ScheduledTaskSettingsSet -StartWhenAvailable -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries -MultipleInstances IgnoreNew
-Register-ScheduledTask -TaskName "jimscanner-seller-agent" -Action $action -Trigger $trigger -Settings $settings -Description "24h 자율 agent — _memory/auto-queue.md 처리"
+$settings = New-ScheduledTaskSettingsSet `
+  -StartWhenAvailable -DontStopIfGoingOnBatteries -AllowStartIfOnBatteries `
+  -MultipleInstances IgnoreNew -ExecutionTimeLimit (New-TimeSpan -Hours 2)
+Register-ScheduledTask -TaskName "jimscanner-seller-agent" -Action $action -Trigger $trigger -Settings $settings -Description "24h 자율 agent — _memory/auto-queue.md 처리" -Force
 ```
+
+daily self-audit (KST 03:00) + brainstorm (KST 05:00) 도 같은 패턴.
+prompt 만 `daily-self-audit-prompt.md` / `daily-brainstorm-prompt.md` 로 바꿔서 등록.
 
 ## 파일 구조
 

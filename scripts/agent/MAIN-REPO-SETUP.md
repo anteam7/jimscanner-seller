@@ -150,10 +150,14 @@ node scripts/agent/handoff-to-repo.mjs \
 
 ## Windows 작업 스케줄러 등록 (main 측)
 
+**중요**: `claude -p` 호출에 반드시 `--dangerously-skip-permissions` 포함.
+이 권한 없으면 cron 환경에서 Edit/Bash/MCP 가 모두 permission prompt 로 차단되어 실제 작업이 진행되지 않음.
+(seller repo 첫 셋업 때 이 권한 누락으로 2일간 Task 만 fire 되고 commit 0건 발생함 — 같은 함정 피하기.)
+
 ```powershell
 $action = New-ScheduledTaskAction `
   -Execute "powershell.exe" `
-  -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"Set-Location 'C:\Web\jimscanner\jimpass-agent-platform'; & claude -p 'scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해.' *>> logs\agent-cron.log`""
+  -Argument "-NoProfile -ExecutionPolicy Bypass -Command `"Set-Location 'C:\Web\jimscanner\jimpass-agent-platform'; & claude --dangerously-skip-permissions -p 'scripts/agent/cron-prompt.md 의 instruction 을 따라 한 회차 작업하고 종료해.' *>> logs\agent-cron.log`""
 
 $trigger = New-ScheduledTaskTrigger -Once -At (Get-Date).AddMinutes(2) -RepetitionInterval (New-TimeSpan -Minutes 60)
 
