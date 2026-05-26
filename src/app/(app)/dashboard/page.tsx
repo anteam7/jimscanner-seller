@@ -633,6 +633,24 @@ const MP_LABEL: Record<string, string> = Object.fromEntries(
   MARKETPLACES.map((m) => [m.value, m.label]),
 )
 
+function formatFetchedAt(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const now = Date.now()
+  const diffMin = Math.floor((now - d.getTime()) / 60000)
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}시간 전`
+  return d.toLocaleString('ko-KR', {
+    month: 'numeric',
+    day: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    hour12: false,
+  })
+}
+
 function ExchangeRatesCard({
   rates,
   yesterday,
@@ -660,16 +678,24 @@ function ExchangeRatesCard({
       : []
   return (
     <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-gradient-to-br from-sky-50/40 to-white shadow-sm p-5">
-      <div className="flex items-baseline justify-between mb-3">
-        <div>
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
           <p className="text-xs font-semibold text-sky-700 uppercase tracking-wider">오늘의 환율</p>
           <p className="text-[10px] text-slate-500 mt-0.5">
             한국수출입은행 매매기준율 {yesterday ? '· 전일 대비' : ''}
           </p>
+          {rates?.fetchedAt && (
+            <p className="text-[10px] text-slate-400 mt-0.5 tabular-nums">
+              마지막 성공 {formatFetchedAt(rates.fetchedAt)}
+            </p>
+          )}
         </div>
         {rates?.isFallback && (
-          <span className="text-[10px] text-amber-700 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5">
-            캐시값
+          <span
+            className="text-[10px] text-amber-800 bg-amber-50 border border-amber-200 rounded px-1.5 py-0.5 font-semibold shrink-0"
+            title="실시간 환율 호출에 실패해 직전 캐시값을 표시합니다."
+          >
+            ⚠ 캐시값 사용 중
           </span>
         )}
       </div>
