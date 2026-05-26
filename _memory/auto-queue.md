@@ -92,10 +92,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### 어제 QA 보류 6건 (small wins)
 
-- [ ] **#1 환율 배너 "마지막 성공 시각" 표시 (M-4)** — `/dashboard` 환율 배너에 `fetchedAt` 노출 + fallback 사용 중일 때 amber 배지. 환율 API 응답에 fetchedAt 이 이미 있음. UI 만 추가.
+- [x] **#1 환율 배너 "마지막 성공 시각" 표시 (M-4)** — `/dashboard` 환율 배너에 `fetchedAt` 노출 + fallback 사용 중일 때 amber 배지. 환율 API 응답에 fetchedAt 이 이미 있음. UI 만 추가.
   - estimated: 30m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-27 commit 97c9127
 
 - [ ] **#2 /settings "준비 중" 4개 카드 disabled 처리 (L-4)** — API 키 관리·팀원 초대·웹훅·구글 시트 카드를 `opacity-50 cursor-not-allowed` + tooltip "L4 인증 후 사용 가능"
   - estimated: 30m
