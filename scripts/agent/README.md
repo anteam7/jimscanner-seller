@@ -43,17 +43,21 @@ $settings = New-ScheduledTaskSettingsSet `
 Register-ScheduledTask -TaskName "jimscanner-seller-agent" -Action $action -Trigger $trigger -Settings $settings -Description "24h 자율 agent — _memory/auto-queue.md 처리" -Force
 ```
 
-daily self-audit (KST 03:00) + brainstorm (KST 05:00) 도 같은 패턴.
-prompt 만 `daily-self-audit-prompt.md` / `daily-brainstorm-prompt.md` 로 바꿔서 등록.
+daily self-audit (KST 03:00) + brainstorm (KST 05:00) + weekly QA (Mon KST 03:00) 도 같은 패턴.
+prompt 만 `daily-self-audit-prompt.md` / `daily-brainstorm-prompt.md` / `weekly-qa-prompt.md` 로 바꿔서 등록.
 
 ## 파일 구조
 
-| 파일 | 역할 |
-|---|---|
-| `cron-prompt.md` | 매 fire 시 Claude Code 가 받는 instruction |
-| `decision-needed.mjs` | STOP&ASK 트리거 → GitHub issue 자동 생성 |
-| `check-decision-reply.mjs` | issue 의 사용자 답신 댓글 확인 |
-| `README.md` | 이 문서 |
+| 파일 | 역할 | 주기 |
+|---|---|---|
+| `cron-prompt.md` | 매 fire 시 Claude Code 가 받는 instruction | hourly |
+| `daily-self-audit-prompt.md` | QA + security + lint/build 자체 점검 | daily KST 03:00 |
+| `daily-brainstorm-prompt.md` | 아이디어 brainstorm → issue 등록 | daily KST 05:00 |
+| `weekly-qa-prompt.md` | 4 페르소나 QA + critical/high 즉시 fix | weekly Mon KST 03:00 |
+| `decision-needed.mjs` | STOP&ASK 트리거 → GitHub issue 자동 생성 | on-demand |
+| `check-decision-reply.mjs` | issue 의 사용자 답신 댓글 확인 | on-demand |
+| `handoff-to-repo.mjs` | cross-repo 작업 위임 issue 생성 | on-demand |
+| `README.md` | 이 문서 | — |
 
 ## 운영 관찰
 
