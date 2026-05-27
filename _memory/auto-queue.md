@@ -42,12 +42,13 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### seller repo 측 작업 (이 repo agent 가 처리)
 
-- [ ] **#PH0-1 b2b_seller_health_snapshot 테이블 + 인덱스 + RLS**
+- [x] **#PH0-1 b2b_seller_health_snapshot 테이블 + 인덱스 + RLS**
   - estimated: 45m
   - prereq: 없음
   - decision_required: false
-  - DDL: account_id+snapshot_date PK, 약 20 컬럼 (verification, plan, orders, sales, has_extension, products, receipts_7d, matched_pct, margin_failed, issue_flags jsonb, health_score)
+  - DDL: account_id+snapshot_date PK, 23 컬럼 (verification, plan, orders, sales, has_extension, products, receipts_7d, matched_pct, margin_failed, issue_flags jsonb, health_score)
   - `supabase/b2b_seller_health_snapshot.sql` 작성 + Supabase MCP apply_migration
+  - 완료: 2026-05-27
 
 - [ ] **#PH0-2 health snapshot 계산 SQL function + pg_cron 등록**
   - estimated: 1h
