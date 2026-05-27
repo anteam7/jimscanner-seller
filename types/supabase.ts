@@ -370,6 +370,10 @@ export type Database = {
           commit_hash: string | null
           commit_message: string | null
           created_at: string
+          decision_issue_number: number | null
+          decision_needed: boolean
+          decision_resolution: string | null
+          decision_resolved_at: string | null
           duration_seconds: number | null
           error_message: string | null
           files_changed: Json | null
@@ -388,6 +392,10 @@ export type Database = {
           commit_hash?: string | null
           commit_message?: string | null
           created_at?: string
+          decision_issue_number?: number | null
+          decision_needed?: boolean
+          decision_resolution?: string | null
+          decision_resolved_at?: string | null
           duration_seconds?: number | null
           error_message?: string | null
           files_changed?: Json | null
@@ -406,6 +414,10 @@ export type Database = {
           commit_hash?: string | null
           commit_message?: string | null
           created_at?: string
+          decision_issue_number?: number | null
+          decision_needed?: boolean
+          decision_resolution?: string | null
+          decision_resolved_at?: string | null
           duration_seconds?: number | null
           error_message?: string | null
           files_changed?: Json | null
@@ -487,6 +499,65 @@ export type Database = {
         Relationships: [
           {
             foreignKeyName: "b2b_clients_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_domestic_products: {
+        Row: {
+          account_id: string
+          category: string | null
+          created_at: string
+          display_name: string
+          id: string
+          image_url: string | null
+          is_active: boolean
+          market_option: string | null
+          market_product_id: string | null
+          marketplace: string | null
+          notes: string | null
+          sale_price_krw: number | null
+          seller_sku: string | null
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          category?: string | null
+          created_at?: string
+          display_name: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          market_option?: string | null
+          market_product_id?: string | null
+          marketplace?: string | null
+          notes?: string | null
+          sale_price_krw?: number | null
+          seller_sku?: string | null
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          category?: string | null
+          created_at?: string
+          display_name?: string
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          market_option?: string | null
+          market_product_id?: string | null
+          marketplace?: string | null
+          notes?: string | null
+          sale_price_krw?: number | null
+          seller_sku?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_domestic_products_account_id_fkey"
             columns: ["account_id"]
             isOneToOne: false
             referencedRelation: "b2b_accounts"
@@ -619,6 +690,138 @@ export type Database = {
           },
         ]
       }
+      b2b_forwarder_addresses: {
+        Row: {
+          account_id: string | null
+          address1: string
+          address2: string | null
+          city: string
+          country: string
+          created_at: string
+          forwarder_id: string
+          id: string
+          is_default: boolean
+          is_official: boolean
+          label: string
+          member_no: string | null
+          notes: string | null
+          phone: string | null
+          recipient_name: string
+          state: string
+          updated_at: string
+          zip: string
+        }
+        Insert: {
+          account_id?: string | null
+          address1: string
+          address2?: string | null
+          city: string
+          country?: string
+          created_at?: string
+          forwarder_id: string
+          id?: string
+          is_default?: boolean
+          is_official?: boolean
+          label: string
+          member_no?: string | null
+          notes?: string | null
+          phone?: string | null
+          recipient_name: string
+          state: string
+          updated_at?: string
+          zip: string
+        }
+        Update: {
+          account_id?: string | null
+          address1?: string
+          address2?: string | null
+          city?: string
+          country?: string
+          created_at?: string
+          forwarder_id?: string
+          id?: string
+          is_default?: boolean
+          is_official?: boolean
+          label?: string
+          member_no?: string | null
+          notes?: string | null
+          phone?: string | null
+          recipient_name?: string
+          state?: string
+          updated_at?: string
+          zip?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_forwarder_addresses_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_forwarder_addresses_forwarder_id_fkey"
+            columns: ["forwarder_id"]
+            isOneToOne: false
+            referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_forwarder_form_snapshots: {
+        Row: {
+          account_id: string
+          created_at: string
+          fields: Json | null
+          forwarder_id: string | null
+          forwarder_slug: string | null
+          html_excerpt: string | null
+          id: string
+          page_title: string | null
+          url: string
+          user_note: string | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          fields?: Json | null
+          forwarder_id?: string | null
+          forwarder_slug?: string | null
+          html_excerpt?: string | null
+          id?: string
+          page_title?: string | null
+          url: string
+          user_note?: string | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          fields?: Json | null
+          forwarder_id?: string | null
+          forwarder_slug?: string | null
+          html_excerpt?: string | null
+          id?: string
+          page_title?: string | null
+          url?: string
+          user_note?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_forwarder_form_snapshots_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_forwarder_form_snapshots_forwarder_id_fkey"
+            columns: ["forwarder_id"]
+            isOneToOne: false
+            referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2b_forwarder_mappings: {
         Row: {
           account_id: string
@@ -716,6 +919,7 @@ export type Database = {
           created_at: string
           currency: string | null
           display_order: number
+          forwarder_id: string | null
           id: string
           image_url: string | null
           market_option: string | null
@@ -746,6 +950,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           display_order?: number
+          forwarder_id?: string | null
           id?: string
           image_url?: string | null
           market_option?: string | null
@@ -776,6 +981,7 @@ export type Database = {
           created_at?: string
           currency?: string | null
           display_order?: number
+          forwarder_id?: string | null
           id?: string
           image_url?: string | null
           market_option?: string | null
@@ -800,6 +1006,13 @@ export type Database = {
           weight_kg?: number | null
         }
         Relationships: [
+          {
+            foreignKeyName: "b2b_order_items_forwarder_id_fkey"
+            columns: ["forwarder_id"]
+            isOneToOne: false
+            referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "b2b_order_items_order_id_fkey"
             columns: ["order_id"]
@@ -935,6 +1148,58 @@ export type Database = {
             columns: ["forwarder_id"]
             isOneToOne: false
             referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_product_mappings: {
+        Row: {
+          account_id: string
+          created_at: string
+          domestic_product_id: string
+          foreign_product_id: string
+          id: string
+          notes: string | null
+          qty_ratio: number
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          domestic_product_id: string
+          foreign_product_id: string
+          id?: string
+          notes?: string | null
+          qty_ratio?: number
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          domestic_product_id?: string
+          foreign_product_id?: string
+          id?: string
+          notes?: string | null
+          qty_ratio?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_product_mappings_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_product_mappings_domestic_product_id_fkey"
+            columns: ["domestic_product_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_domestic_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_product_mappings_foreign_product_id_fkey"
+            columns: ["foreign_product_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_products"
             referencedColumns: ["id"]
           },
         ]
@@ -1095,6 +1360,133 @@ export type Database = {
             columns: ["default_forwarder_id"]
             isOneToOne: false
             referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_seller_health_snapshot: {
+        Row: {
+          account_id: string
+          computed_at: string
+          has_extension: boolean
+          health_score: number | null
+          issue_flags: Json
+          last_login_at: string | null
+          last_order_at: string | null
+          margin_30d_krw: number
+          margin_failed_count: number
+          matched_pct: number | null
+          orders_30d: number
+          orders_pending: number
+          orders_stuck: number
+          orders_total: number
+          plan_code: string | null
+          plan_status: string | null
+          products_count: number
+          purchase_30d_krw: number
+          receipts_7d: number
+          sales_30d_krw: number
+          snapshot_date: string
+          verification_level: number | null
+          verification_status: string | null
+        }
+        Insert: {
+          account_id: string
+          computed_at?: string
+          has_extension?: boolean
+          health_score?: number | null
+          issue_flags?: Json
+          last_login_at?: string | null
+          last_order_at?: string | null
+          margin_30d_krw?: number
+          margin_failed_count?: number
+          matched_pct?: number | null
+          orders_30d?: number
+          orders_pending?: number
+          orders_stuck?: number
+          orders_total?: number
+          plan_code?: string | null
+          plan_status?: string | null
+          products_count?: number
+          purchase_30d_krw?: number
+          receipts_7d?: number
+          sales_30d_krw?: number
+          snapshot_date?: string
+          verification_level?: number | null
+          verification_status?: string | null
+        }
+        Update: {
+          account_id?: string
+          computed_at?: string
+          has_extension?: boolean
+          health_score?: number | null
+          issue_flags?: Json
+          last_login_at?: string | null
+          last_order_at?: string | null
+          margin_30d_krw?: number
+          margin_failed_count?: number
+          matched_pct?: number | null
+          orders_30d?: number
+          orders_pending?: number
+          orders_stuck?: number
+          orders_total?: number
+          plan_code?: string | null
+          plan_status?: string | null
+          products_count?: number
+          purchase_30d_krw?: number
+          receipts_7d?: number
+          sales_30d_krw?: number
+          snapshot_date?: string
+          verification_level?: number | null
+          verification_status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_seller_health_snapshot_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_seller_tokens: {
+        Row: {
+          account_id: string
+          created_at: string
+          id: string
+          label: string
+          last_used_at: string | null
+          revoked_at: string | null
+          token_hash: string
+          token_prefix: string
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash: string
+          token_prefix: string
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          id?: string
+          label?: string
+          last_used_at?: string | null
+          revoked_at?: string | null
+          token_hash?: string
+          token_prefix?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_seller_tokens_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
             referencedColumns: ["id"]
           },
         ]
@@ -1292,6 +1684,197 @@ export type Database = {
           },
         ]
       }
+      b2b_supplier_purchase_matches: {
+        Row: {
+          account_id: string
+          amount_share_foreign: number | null
+          id: string
+          match_confidence: number | null
+          matched_at: string
+          matched_by_user_id: string | null
+          note: string | null
+          order_id: string
+          order_item_id: string | null
+          receipt_id: string
+        }
+        Insert: {
+          account_id: string
+          amount_share_foreign?: number | null
+          id?: string
+          match_confidence?: number | null
+          matched_at?: string
+          matched_by_user_id?: string | null
+          note?: string | null
+          order_id: string
+          order_item_id?: string | null
+          receipt_id: string
+        }
+        Update: {
+          account_id?: string
+          amount_share_foreign?: number | null
+          id?: string
+          match_confidence?: number | null
+          matched_at?: string
+          matched_by_user_id?: string | null
+          note?: string | null
+          order_id?: string
+          order_item_id?: string | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_supplier_purchase_matches_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_supplier_purchase_matches_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_supplier_purchase_matches_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_order_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_supplier_purchase_matches_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_supplier_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_supplier_purchases: {
+        Row: {
+          account_id: string
+          created_at: string
+          currency: string | null
+          id: string
+          items: Json
+          matched_at: string | null
+          matched_order_id: string | null
+          purchased_at: string | null
+          raw_meta: Json | null
+          shipping_foreign: number | null
+          source: string
+          source_url: string | null
+          subtotal_foreign: number | null
+          supplier_order_number: string
+          tax_foreign: number | null
+          total_foreign: number | null
+        }
+        Insert: {
+          account_id: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items?: Json
+          matched_at?: string | null
+          matched_order_id?: string | null
+          purchased_at?: string | null
+          raw_meta?: Json | null
+          shipping_foreign?: number | null
+          source: string
+          source_url?: string | null
+          subtotal_foreign?: number | null
+          supplier_order_number: string
+          tax_foreign?: number | null
+          total_foreign?: number | null
+        }
+        Update: {
+          account_id?: string
+          created_at?: string
+          currency?: string | null
+          id?: string
+          items?: Json
+          matched_at?: string | null
+          matched_order_id?: string | null
+          purchased_at?: string | null
+          raw_meta?: Json | null
+          shipping_foreign?: number | null
+          source?: string
+          source_url?: string | null
+          subtotal_foreign?: number | null
+          supplier_order_number?: string
+          tax_foreign?: number | null
+          total_foreign?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_supplier_purchases_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_supplier_purchases_matched_order_id_fkey"
+            columns: ["matched_order_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_supplier_purchases_audit: {
+        Row: {
+          account_id: string
+          changed_at: string
+          changed_by_user_id: string | null
+          field_name: string
+          id: string
+          new_value: string | null
+          old_value: string | null
+          reason: string | null
+          receipt_id: string
+        }
+        Insert: {
+          account_id: string
+          changed_at?: string
+          changed_by_user_id?: string | null
+          field_name: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+          receipt_id: string
+        }
+        Update: {
+          account_id?: string
+          changed_at?: string
+          changed_by_user_id?: string | null
+          field_name?: string
+          id?: string
+          new_value?: string | null
+          old_value?: string | null
+          reason?: string | null
+          receipt_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_supplier_purchases_audit_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_supplier_purchases_audit_receipt_id_fkey"
+            columns: ["receipt_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_supplier_purchases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2b_support_messages: {
         Row: {
           body: string
@@ -1404,6 +1987,7 @@ export type Database = {
           center_name: string | null
           country: string
           country_name: string | null
+          default_phone: string | null
           forwarder_id: string | null
           id: string
           is_tax_free: boolean | null
@@ -1420,6 +2004,7 @@ export type Database = {
           center_name?: string | null
           country: string
           country_name?: string | null
+          default_phone?: string | null
           forwarder_id?: string | null
           id?: string
           is_tax_free?: boolean | null
@@ -1436,6 +2021,7 @@ export type Database = {
           center_name?: string | null
           country?: string
           country_name?: string | null
+          default_phone?: string | null
           forwarder_id?: string | null
           id?: string
           is_tax_free?: boolean | null
@@ -1559,6 +2145,7 @@ export type Database = {
         Row: {
           cons: string[] | null
           created_at: string | null
+          default_phone: string | null
           description: string | null
           features: string[] | null
           id: string
@@ -1574,6 +2161,7 @@ export type Database = {
         Insert: {
           cons?: string[] | null
           created_at?: string | null
+          default_phone?: string | null
           description?: string | null
           features?: string[] | null
           id?: string
@@ -1589,6 +2177,7 @@ export type Database = {
         Update: {
           cons?: string[] | null
           created_at?: string | null
+          default_phone?: string | null
           description?: string | null
           features?: string[] | null
           id?: string
@@ -2432,6 +3021,304 @@ export type Database = {
         }
         Relationships: []
       }
+      jimscanner_coupang_listings: {
+        Row: {
+          approval_status_name: string | null
+          approved_at: string | null
+          auto_paused: boolean | null
+          brand: string | null
+          coupang_sale_stopped_at: string | null
+          created_at: string
+          display_category_code: number
+          display_category_name: string | null
+          displayable: boolean
+          dome_price_krw: number
+          estimated_fee_krw: number | null
+          estimated_margin_krw: number | null
+          estimated_margin_pct: number | null
+          id: string
+          last_response: Json | null
+          last_stock_check: string | null
+          last_synced_at: string | null
+          list_price_krw: number
+          msp_price_krw: number
+          outbound_shipping_fee_krw: number | null
+          product_id: number | null
+          registered_at: string | null
+          registered_title: string
+          rejection_reason: string | null
+          request_payload: Json | null
+          seller_product_id: number | null
+          sold_count: number | null
+          source: string
+          source_detail_url: string | null
+          source_goods_no: string
+          source_shipping_fee_krw: number | null
+          status: string
+          stock_sold_out_at: string | null
+          stock_status: string | null
+          updated_at: string
+          vendor_id: string
+          view_count: number | null
+        }
+        Insert: {
+          approval_status_name?: string | null
+          approved_at?: string | null
+          auto_paused?: boolean | null
+          brand?: string | null
+          coupang_sale_stopped_at?: string | null
+          created_at?: string
+          display_category_code: number
+          display_category_name?: string | null
+          displayable?: boolean
+          dome_price_krw: number
+          estimated_fee_krw?: number | null
+          estimated_margin_krw?: number | null
+          estimated_margin_pct?: number | null
+          id?: string
+          last_response?: Json | null
+          last_stock_check?: string | null
+          last_synced_at?: string | null
+          list_price_krw: number
+          msp_price_krw: number
+          outbound_shipping_fee_krw?: number | null
+          product_id?: number | null
+          registered_at?: string | null
+          registered_title: string
+          rejection_reason?: string | null
+          request_payload?: Json | null
+          seller_product_id?: number | null
+          sold_count?: number | null
+          source?: string
+          source_detail_url?: string | null
+          source_goods_no: string
+          source_shipping_fee_krw?: number | null
+          status?: string
+          stock_sold_out_at?: string | null
+          stock_status?: string | null
+          updated_at?: string
+          vendor_id: string
+          view_count?: number | null
+        }
+        Update: {
+          approval_status_name?: string | null
+          approved_at?: string | null
+          auto_paused?: boolean | null
+          brand?: string | null
+          coupang_sale_stopped_at?: string | null
+          created_at?: string
+          display_category_code?: number
+          display_category_name?: string | null
+          displayable?: boolean
+          dome_price_krw?: number
+          estimated_fee_krw?: number | null
+          estimated_margin_krw?: number | null
+          estimated_margin_pct?: number | null
+          id?: string
+          last_response?: Json | null
+          last_stock_check?: string | null
+          last_synced_at?: string | null
+          list_price_krw?: number
+          msp_price_krw?: number
+          outbound_shipping_fee_krw?: number | null
+          product_id?: number | null
+          registered_at?: string | null
+          registered_title?: string
+          rejection_reason?: string | null
+          request_payload?: Json | null
+          seller_product_id?: number | null
+          sold_count?: number | null
+          source?: string
+          source_detail_url?: string | null
+          source_goods_no?: string
+          source_shipping_fee_krw?: number | null
+          status?: string
+          stock_sold_out_at?: string | null
+          stock_status?: string | null
+          updated_at?: string
+          vendor_id?: string
+          view_count?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jimscanner_coupang_listings_source_goods_no_fk"
+            columns: ["source_goods_no"]
+            isOneToOne: false
+            referencedRelation: "jimscanner_ggsan_products"
+            referencedColumns: ["goods_no"]
+          },
+        ]
+      }
+      jimscanner_coupang_orders: {
+        Row: {
+          created_at: string
+          delivered_at: string | null
+          delivery_charge: number | null
+          delivery_company: string | null
+          discount_amount: number | null
+          id: string
+          invoice_number: string | null
+          last_synced_at: string | null
+          listing_id: string | null
+          option_name: string | null
+          order_id: number
+          order_item_id: number
+          order_price: number | null
+          ordered_at: string
+          paid_amount: number | null
+          paid_at: string | null
+          product_name: string
+          purchase_note: string | null
+          purchase_ordered_at: string | null
+          purchase_received_at: string | null
+          purchase_status: string
+          purchase_total_cost: number | null
+          purchase_unit_cost: number | null
+          raw_payload: Json | null
+          receiver_address: string | null
+          receiver_name: string | null
+          receiver_phone: string | null
+          receiver_zip_code: string | null
+          sale_price: number | null
+          seller_product_id: number | null
+          shipment_box_id: number | null
+          shipped_at: string | null
+          shipping_count: number
+          shipping_status: string
+          updated_at: string
+          vendor_id: string
+          vendor_item_id: number | null
+        }
+        Insert: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_charge?: number | null
+          delivery_company?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_number?: string | null
+          last_synced_at?: string | null
+          listing_id?: string | null
+          option_name?: string | null
+          order_id: number
+          order_item_id: number
+          order_price?: number | null
+          ordered_at: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          product_name: string
+          purchase_note?: string | null
+          purchase_ordered_at?: string | null
+          purchase_received_at?: string | null
+          purchase_status?: string
+          purchase_total_cost?: number | null
+          purchase_unit_cost?: number | null
+          raw_payload?: Json | null
+          receiver_address?: string | null
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          receiver_zip_code?: string | null
+          sale_price?: number | null
+          seller_product_id?: number | null
+          shipment_box_id?: number | null
+          shipped_at?: string | null
+          shipping_count?: number
+          shipping_status?: string
+          updated_at?: string
+          vendor_id: string
+          vendor_item_id?: number | null
+        }
+        Update: {
+          created_at?: string
+          delivered_at?: string | null
+          delivery_charge?: number | null
+          delivery_company?: string | null
+          discount_amount?: number | null
+          id?: string
+          invoice_number?: string | null
+          last_synced_at?: string | null
+          listing_id?: string | null
+          option_name?: string | null
+          order_id?: number
+          order_item_id?: number
+          order_price?: number | null
+          ordered_at?: string
+          paid_amount?: number | null
+          paid_at?: string | null
+          product_name?: string
+          purchase_note?: string | null
+          purchase_ordered_at?: string | null
+          purchase_received_at?: string | null
+          purchase_status?: string
+          purchase_total_cost?: number | null
+          purchase_unit_cost?: number | null
+          raw_payload?: Json | null
+          receiver_address?: string | null
+          receiver_name?: string | null
+          receiver_phone?: string | null
+          receiver_zip_code?: string | null
+          sale_price?: number | null
+          seller_product_id?: number | null
+          shipment_box_id?: number | null
+          shipped_at?: string | null
+          shipping_count?: number
+          shipping_status?: string
+          updated_at?: string
+          vendor_id?: string
+          vendor_item_id?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "jimscanner_coupang_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "jimscanner_coupang_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      jimscanner_coupang_stock_sync_runs: {
+        Row: {
+          duration_ms: number | null
+          error_count: number | null
+          error_message: string | null
+          finished_at: string | null
+          id: string
+          resumed_count: number | null
+          sold_out_count: number | null
+          started_at: string
+          status: string | null
+          total_checked: number | null
+          triggered_by: string | null
+        }
+        Insert: {
+          duration_ms?: number | null
+          error_count?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          resumed_count?: number | null
+          sold_out_count?: number | null
+          started_at?: string
+          status?: string | null
+          total_checked?: number | null
+          triggered_by?: string | null
+        }
+        Update: {
+          duration_ms?: number | null
+          error_count?: number | null
+          error_message?: string | null
+          finished_at?: string | null
+          id?: string
+          resumed_count?: number | null
+          sold_out_count?: number | null
+          started_at?: string
+          status?: string | null
+          total_checked?: number | null
+          triggered_by?: string | null
+        }
+        Relationships: []
+      }
       jimscanner_duty_rates: {
         Row: {
           category_tag: string
@@ -2884,6 +3771,8 @@ export type Database = {
           is_imminent: boolean | null
           last_changed_at: string
           last_seen_at: string
+          list_price_krw: number | null
+          min_sell_price_krw: number | null
           price_krw: number | null
           price_text: string | null
           raw_payload: Json | null
@@ -2903,6 +3792,8 @@ export type Database = {
           is_imminent?: boolean | null
           last_changed_at?: string
           last_seen_at?: string
+          list_price_krw?: number | null
+          min_sell_price_krw?: number | null
           price_krw?: number | null
           price_text?: string | null
           raw_payload?: Json | null
@@ -2922,6 +3813,8 @@ export type Database = {
           is_imminent?: boolean | null
           last_changed_at?: string
           last_seen_at?: string
+          list_price_krw?: number | null
+          min_sell_price_krw?: number | null
           price_krw?: number | null
           price_text?: string | null
           raw_payload?: Json | null
@@ -3669,6 +4562,81 @@ export type Database = {
           start_at?: string | null
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      jimscanner_shops: {
+        Row: {
+          affiliate_status: string
+          affiliate_url_template: string | null
+          categories: string[]
+          cons: string[]
+          country: string
+          created_at: string | null
+          created_by: string | null
+          description: string | null
+          external_url: string
+          id: string
+          is_active: boolean | null
+          is_featured: boolean | null
+          logo_url: string | null
+          name: string
+          name_ko: string | null
+          notes: string | null
+          popularity_rank: number | null
+          pros: string[]
+          recommended_forwarder_slug: string | null
+          shipping_to_korea: string | null
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          affiliate_status?: string
+          affiliate_url_template?: string | null
+          categories?: string[]
+          cons?: string[]
+          country: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          external_url: string
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          name: string
+          name_ko?: string | null
+          notes?: string | null
+          popularity_rank?: number | null
+          pros?: string[]
+          recommended_forwarder_slug?: string | null
+          shipping_to_korea?: string | null
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          affiliate_status?: string
+          affiliate_url_template?: string | null
+          categories?: string[]
+          cons?: string[]
+          country?: string
+          created_at?: string | null
+          created_by?: string | null
+          description?: string | null
+          external_url?: string
+          id?: string
+          is_active?: boolean | null
+          is_featured?: boolean | null
+          logo_url?: string | null
+          name?: string
+          name_ko?: string | null
+          notes?: string | null
+          popularity_rank?: number | null
+          pros?: string[]
+          recommended_forwarder_slug?: string | null
+          shipping_to_korea?: string | null
+          slug?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
@@ -4894,6 +5862,13 @@ export type Database = {
       }
     }
     Functions: {
+      b2b_compute_seller_health_snapshot: {
+        Args: { p_date?: string }
+        Returns: {
+          out_processed: number
+          out_snapshot_date: string
+        }[]
+      }
       b2b_marketwide_supplier_stats: {
         Args: { p_min_lines?: number }
         Returns: {
@@ -4902,6 +5877,12 @@ export type Database = {
           line_count: number
           median_sale_krw: number
           supplier_site: string
+        }[]
+      }
+      b2b_reset_monthly_quotas: {
+        Args: never
+        Returns: {
+          reset_count: number
         }[]
       }
       jimscanner_ggsan_recommend: {

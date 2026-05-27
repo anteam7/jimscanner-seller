@@ -12,12 +12,12 @@ export const dynamic = 'force-dynamic'
 export default async function BulkOrderPage() {
   const supabase = await createClient()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rows } = (await (supabase as any)
+  const { data: rows } = await supabase
     .from('forwarders')
     .select('id, name, slug')
     .eq('is_active', true)
-    .order('name', { ascending: true })) as { data: ForwarderOption[] | null }
+    .order('name', { ascending: true })
+    .returns<ForwarderOption[]>()
 
   return <BulkOrderClient forwarders={rows ?? []} />
 }

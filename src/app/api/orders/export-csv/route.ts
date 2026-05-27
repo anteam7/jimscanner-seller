@@ -56,9 +56,7 @@ export async function GET(request: Request) {
   // to 는 그 날의 23:59:59 까지 포함
   const toEnd = new Date(to.getFullYear(), to.getMonth(), to.getDate(), 23, 59, 59, 999)
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name')
     .eq('user_id', user.id)
@@ -67,7 +65,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
   }
 
-  const { data: orderRows, error } = await db
+  const { data: orderRows, error } = await sb
     .from('b2b_orders')
     .select(
       'id, order_number, market_order_number, marketplace, order_date, status, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, b2b_order_items(display_order, product_name, supplier_site, quantity, currency, unit_price_foreign, sale_price_krw)',

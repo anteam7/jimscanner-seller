@@ -43,10 +43,7 @@ export async function GET() {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -56,7 +53,7 @@ export async function GET() {
     return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
   }
 
-  const { data: sub } = await db
+  const { data: sub } = await sb
     .from('b2b_subscriptions')
     .select(
       'monthly_order_used, monthly_order_quota_override, status, b2b_subscription_plans(plan_code, name_ko, monthly_order_quota)'

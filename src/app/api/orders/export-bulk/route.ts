@@ -70,9 +70,7 @@ export async function POST(request: Request) {
   } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name, phone')
     .eq('user_id', user.id)
@@ -80,7 +78,7 @@ export async function POST(request: Request) {
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   // 주문 일괄 조회 (RLS)
-  const { data: orders, error: orderErr } = await db
+  const { data: orders, error: orderErr } = await sb
     .from('b2b_orders')
     .select(ORDER_COLUMNS)
     .eq('account_id', account.id)
@@ -90,7 +88,7 @@ export async function POST(request: Request) {
   if (orderErr) {
     return NextResponse.json({ error: `주문 조회 실패: ${orderErr.message}` }, { status: 500 })
   }
-  const orderRows = (orders ?? []) as Order[]
+  const orderRows = (orders ?? []) as unknown as Order[]
   if (orderRows.length === 0) {
     return NextResponse.json({ error: '선택한 주문을 찾을 수 없습니다.' }, { status: 404 })
   }
@@ -105,9 +103,7 @@ export async function POST(request: Request) {
 
   // 템플릿 + 컬럼 (admin — 공유 템플릿 SELECT 보장)
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data: tpl } = await adb
+  const { data: tpl } = await admin
     .from('b2b_form_templates')
     .select('id, owner_account_id, name, source_file_path, data_sheet_name, data_start_row, combine_rule, is_active')
     .eq('id', templateId)
@@ -120,7 +116,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '이 템플릿에 접근 권한이 없습니다.' }, { status: 403 })
   }
 
-  const { data: cols } = await adb
+  const { data: cols } = await admin
     .from('b2b_form_template_columns')
     .select('column_index, column_letter, column_label, source_kind, source_path, composite_template, constant_value, user_input_label, user_input_options, transform, required')
     .eq('template_id', tpl.id)
@@ -133,7 +129,7 @@ export async function POST(request: Request) {
   // Storage 에서 원본 xlsx 다운로드
   const [bucket, ...rest] = tpl.source_file_path.split('/')
   const objectPath = rest.join('/')
-  const { data: fileBlob, error: dlErr } = await adb.storage.from(bucket).download(objectPath)
+  const { data: fileBlob, error: dlErr } = await admin.storage.from(bucket).download(objectPath)
   if (dlErr || !fileBlob) {
     return NextResponse.json(
       { error: `템플릿 원본 파일을 불러오지 못했습니다. ${dlErr?.message ?? ''}` },

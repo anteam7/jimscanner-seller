@@ -45,10 +45,7 @@ async function handle(
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name, phone, ceo_name')
     .eq('user_id', user.id)
@@ -59,7 +56,7 @@ async function handle(
   }
 
   // 주문 + 라인 (RLS 통과)
-  const { data: order, error: orderErr } = await db
+  const { data: order, error: orderErr } = await sb
     .from('b2b_orders')
     .select(ORDER_COLUMNS)
     .eq('id', orderId)
@@ -73,10 +70,8 @@ async function handle(
 
   // 템플릿 + 컬럼 — 공유 템플릿은 service_role 로 (RLS USING(owner_account_id IS NULL) 조항이 anon 으로도 통과해야 하지만 안전하게 admin)
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
-  const { data: tpl } = await adb
+  const { data: tpl } = await admin
     .from('b2b_form_templates')
     .select('id, owner_account_id, name, source_file_path, data_sheet_name, data_start_row, combine_rule, is_active')
     .eq('id', templateId)
@@ -90,7 +85,7 @@ async function handle(
     return NextResponse.json({ error: '이 템플릿에 접근 권한이 없습니다.' }, { status: 403 })
   }
 
-  const { data: cols } = await adb
+  const { data: cols } = await admin
     .from('b2b_form_template_columns')
     .select('column_index, column_letter, column_label, source_kind, source_path, composite_template, constant_value, user_input_label, user_input_options, transform, required')
     .eq('template_id', tpl.id)
@@ -104,7 +99,7 @@ async function handle(
   // source_file_path = 'forwarder-templates/jimpass_v1.xlsx' 형식 (bucket/path)
   const [bucket, ...rest] = tpl.source_file_path.split('/')
   const objectPath = rest.join('/')
-  const { data: fileBlob, error: dlErr } = await adb.storage.from(bucket).download(objectPath)
+  const { data: fileBlob, error: dlErr } = await admin.storage.from(bucket).download(objectPath)
   if (dlErr || !fileBlob) {
     return NextResponse.json({ error: `템플릿 원본 파일을 불러오지 못했습니다. ${dlErr?.message ?? ''}` }, { status: 500 })
   }
@@ -120,7 +115,8 @@ async function handle(
     columns: cols as TemplateColumn[],
   }
 
-  const rows = expandRows([order as Order], template.combine_rule)
+  const orderTyped = order as unknown as Order
+  const rows = expandRows([orderTyped], template.combine_rule)
   if (rows.length === 0) {
     return NextResponse.json({ error: '내보낼 라인 아이템이 없습니다.' }, { status: 400 })
   }
@@ -135,7 +131,7 @@ async function handle(
 
   const today = new Date().toISOString().slice(0, 10).replace(/-/g, '')
   const safeName = template.name.replace(/[^\p{L}\p{N}._-]+/gu, '_')
-  const orderTag = (order as Order).market_order_number ?? (order as Order).order_number
+  const orderTag = orderTyped.market_order_number ?? orderTyped.order_number
   const filename = `${safeName}_${orderTag}_${today}.xlsx`
 
   return new NextResponse(new Uint8Array(out), {

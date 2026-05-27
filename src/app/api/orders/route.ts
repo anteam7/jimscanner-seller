@@ -112,10 +112,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -131,7 +128,7 @@ export async function GET(request: Request) {
   const q = url.searchParams.get('q')
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 50), 1), 200)
 
-  let qb = db
+  let qb = sb
     .from('b2b_orders')
     .select(
       'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
@@ -251,11 +248,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '상품명을 모두 입력해 주세요.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
   // 사업자 계정
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -266,7 +260,7 @@ export async function POST(request: Request) {
   }
 
   // 쿼터 / grace period 체크
-  const { data: sub } = await db
+  const { data: sub } = await sb
     .from('b2b_subscriptions')
     .select(
       'monthly_order_used, monthly_order_quota_override, status, b2b_subscription_plans(monthly_order_quota)',
@@ -293,7 +287,7 @@ export async function POST(request: Request) {
   }
 
   // 주문 insert (마켓 구매자 PII 는 b2b_orders 에 직접 — b2b_clients 자동 upsert 폐기)
-  const { data: order, error: oErr } = await db
+  const { data: order, error: oErr } = await sb
     .from('b2b_orders')
     .insert({
       account_id: account.id,
@@ -327,9 +321,10 @@ export async function POST(request: Request) {
   }
 
   // 라인 아이템 insert
-  const { error: iErr } = await db
-    .from('b2b_order_items')
-    .insert(items.map((it) => ({ ...it, order_id: order.id })))
+  const itemRows = items
+    .filter((x): x is NonNullable<typeof x> => x !== null)
+    .map((it) => ({ ...it, order_id: order.id }))
+  const { error: iErr } = await sb.from('b2b_order_items').insert(itemRows)
 
   if (iErr) {
     return NextResponse.json(

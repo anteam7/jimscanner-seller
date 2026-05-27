@@ -194,10 +194,7 @@ export default async function OrderDetailPage({
 
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-
-  const { data: account } = await db
+  const { data: account } = await supabase
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -205,7 +202,7 @@ export default async function OrderDetailPage({
 
   if (!account) return null
 
-  const { data: order } = (await db
+  const { data: order } = (await supabase
     .from('b2b_orders')
     .select(
       'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
@@ -232,7 +229,7 @@ export default async function OrderDetailPage({
       items: unknown
     } | null
   }
-  const { data: matchedReceiptsRaw } = (await db
+  const { data: matchedReceiptsRaw } = (await supabase
     .from('b2b_supplier_purchase_matches')
     .select('id, amount_share_foreign, matched_at, b2b_supplier_purchases(id, source, supplier_order_number, currency, total_foreign, purchased_at, items)')
     .eq('order_id', id)
@@ -263,9 +260,7 @@ export default async function OrderDetailPage({
 
   // 사용 가능한 양식 (공유 + 본인 소유) — admin client 로 공유 SELECT 보장
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data: tplRows } = await adb
+  const { data: tplRows } = await admin
     .from('b2b_form_templates')
     .select('id, name, owner_account_id, forwarder_id, combine_rule, is_active, forwarders(name)')
     .eq('is_active', true)
@@ -273,9 +268,9 @@ export default async function OrderDetailPage({
     .order('owner_account_id', { ascending: true, nullsFirst: true })
     .order('name', { ascending: true })
 
-  const templateIds = (tplRows ?? []).map((t: { id: string }) => t.id)
+  const templateIds = (tplRows ?? []).map((t) => t.id)
   const { data: colRows } = templateIds.length
-    ? await adb
+    ? await admin
         .from('b2b_form_template_columns')
         .select('template_id, column_index, column_label, source_kind, user_input_label, user_input_options, constant_value, required')
         .in('template_id', templateIds)

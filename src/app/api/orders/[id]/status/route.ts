@@ -59,12 +59,10 @@ export async function PATCH(
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
   const admin = createAdminClient()
 
   // 사업자 계정 확인
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, email, business_name')
     .eq('user_id', user.id)
@@ -75,7 +73,7 @@ export async function PATCH(
   }
 
   // 주문 소유권 확인 + 현재 상태 조회
-  const { data: order, error: orderErr } = await (admin as any)
+  const { data: order, error: orderErr } = await admin
     .from('b2b_orders')
     .select('id, status, account_id, client_id')
     .eq('id', orderId)
@@ -99,7 +97,7 @@ export async function PATCH(
   }
 
   // 상태 업데이트
-  const { error: updateErr } = await (admin as any)
+  const { error: updateErr } = await admin
     .from('b2b_orders')
     .update({ status: newStatus, updated_at: new Date().toISOString() })
     .eq('id', orderId)

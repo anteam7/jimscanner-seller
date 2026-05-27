@@ -56,19 +56,17 @@ export default async function OrderMatchingPage() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
   const [ordersRes, receiptsRes] = await Promise.all([
-    db.from('b2b_orders')
+    sb.from('b2b_orders')
       .select('id, order_number, market_order_number, marketplace, status, buyer_name, created_at, b2b_order_items(supplier_site, currency, quantity, unit_price_foreign, product_name)')
       .eq('account_id', account.id)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(200),
-    db.from('b2b_supplier_purchases')
+    sb.from('b2b_supplier_purchases')
       .select('id, source, supplier_order_number, purchased_at, currency, total_foreign, matched_order_id')
       .eq('account_id', account.id)
       .order('purchased_at', { ascending: false, nullsFirst: false })

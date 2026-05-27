@@ -165,10 +165,7 @@ export default async function OrdersListPage({
 
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
-
-  const { data: account } = await db
+  const { data: account } = await supabase
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -176,7 +173,7 @@ export default async function OrdersListPage({
 
   if (!account) return null
 
-  let qb = db
+  let qb = supabase
     .from('b2b_orders')
     .select(
       'id, order_number, status, order_date, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, request_notes, created_at, b2b_order_items(product_name, sale_price_krw)',
@@ -208,7 +205,7 @@ export default async function OrdersListPage({
   type ReceiptCountRow = { matched_order_id: string | null }
   const receiptCountByOrder = new Map<string, number>()
   if (orderIds.length > 0) {
-    const { data: matchedRows } = await db
+    const { data: matchedRows } = await supabase
       .from('b2b_supplier_purchases')
       .select('matched_order_id')
       .eq('account_id', account.id)
@@ -222,9 +219,7 @@ export default async function OrdersListPage({
 
   // 합배송 모달용 templates fetch (공유 + 본인)
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data: tplRows } = await adb
+  const { data: tplRows } = await admin
     .from('b2b_form_templates')
     .select('id, name, owner_account_id, forwarder_id, combine_rule, forwarders(name)')
     .eq('is_active', true)
@@ -232,9 +227,9 @@ export default async function OrdersListPage({
     .order('owner_account_id', { ascending: true, nullsFirst: true })
     .order('name', { ascending: true })
 
-  const templateIds = (tplRows ?? []).map((t: { id: string }) => t.id)
+  const templateIds = (tplRows ?? []).map((t) => t.id)
   const { data: colRows } = templateIds.length
-    ? await adb
+    ? await admin
         .from('b2b_form_template_columns')
         .select('template_id, column_index, column_label, source_kind, user_input_label, user_input_options, constant_value, required')
         .in('template_id', templateIds)

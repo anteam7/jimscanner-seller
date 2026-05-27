@@ -274,11 +274,8 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: false, success_count: 0, fail_count: results.length, results }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
   // 사업자 계정
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -289,7 +286,7 @@ export async function POST(request: Request) {
   }
 
   // 쿼터 / grace period 체크 (유효 행 수와 한도 비교)
-  const { data: sub } = await db
+  const { data: sub } = await sb
     .from('b2b_subscriptions')
     .select(
       'monthly_order_used, monthly_order_quota_override, status, b2b_subscription_plans(monthly_order_quota)',
@@ -322,7 +319,7 @@ export async function POST(request: Request) {
   // 라인 아이템과의 짝 트랜잭션이 row 단위로 필요해 v0 에선 순차로 안전하게.
   for (const { idx, data } of validRows) {
     const { item, ...orderFields } = data
-    const { data: order, error: oErr } = await db
+    const { data: order, error: oErr } = await sb
       .from('b2b_orders')
       .insert({
         account_id: account.id,
@@ -343,7 +340,7 @@ export async function POST(request: Request) {
       continue
     }
 
-    const { error: iErr } = await db.from('b2b_order_items').insert({
+    const { error: iErr } = await sb.from('b2b_order_items').insert({
       ...item,
       order_id: order.id,
       display_order: 0,
@@ -351,7 +348,7 @@ export async function POST(request: Request) {
 
     if (iErr) {
       // 주문은 남아있지만 라인 아이템 실패. 일관성 위해 주문 삭제 시도
-      await db.from('b2b_orders').delete().eq('id', order.id)
+      await sb.from('b2b_orders').delete().eq('id', order.id)
       results.push({ index: idx, ok: false, error: `${idx + 1}행: 상품 등록 실패 (주문 롤백됨)` })
       continue
     }

@@ -45,11 +45,9 @@ export async function PATCH(
     return NextResponse.json({ error: '잘못된 요청 형식입니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
   const admin = createAdminClient()
 
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -59,8 +57,7 @@ export async function PATCH(
   }
 
   // 주문 소유권 확인
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: order, error: orderErr } = await (admin as any)
+  const { data: order, error: orderErr } = await admin
     .from('b2b_orders')
     .select('id, account_id')
     .eq('id', orderId)
@@ -71,8 +68,7 @@ export async function PATCH(
   }
 
   // 라인 소유권 확인
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: item, error: itemErr } = await (admin as any)
+  const { data: item, error: itemErr } = await admin
     .from('b2b_order_items')
     .select('id, order_id')
     .eq('id', itemId)
@@ -82,7 +78,11 @@ export async function PATCH(
     return NextResponse.json({ error: '상품을 찾을 수 없습니다.' }, { status: 404 })
   }
 
-  const patch: Record<string, string | null> = {}
+  const patch: {
+    tracking_number?: string | null
+    tracking_number_overseas?: string | null
+    carrier?: string | null
+  } = {}
   if ('tracking_number' in body) patch.tracking_number = clean(body.tracking_number, 128)
   if ('tracking_number_overseas' in body) patch.tracking_number_overseas = clean(body.tracking_number_overseas, 128)
   if ('carrier' in body) patch.carrier = clean(body.carrier, 64)
@@ -91,8 +91,7 @@ export async function PATCH(
     return NextResponse.json({ error: '업데이트할 필드가 없습니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: updateErr } = await (admin as any)
+  const { error: updateErr } = await admin
     .from('b2b_order_items')
     .update(patch)
     .eq('id', itemId)
