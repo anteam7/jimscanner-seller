@@ -1,10 +1,13 @@
 'use client'
 
 import Link from 'next/link'
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BulkExportModal, { type SelectedOrderInfo } from './BulkExportModal'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
+
+const LAST_CLICK_KEY = 'b2bOrdersLastClickedId'
+const LAST_SCROLL_KEY = 'b2bOrdersScrollY'
 
 const BULK_STATUS_OPTIONS = [
   { value: 'confirmed', label: '매입 발주 완료' },
@@ -114,6 +117,37 @@ function sumSale(items: { sale_price_krw: number | string | null }[]): number | 
 export default function OrderListClient({ orders, templates, marketplaceLabel, statusMeta }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [highlightId, setHighlightId] = useState<string | null>(null)
+  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map())
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const lastId = sessionStorage.getItem(LAST_CLICK_KEY)
+    const scrollY = sessionStorage.getItem(LAST_SCROLL_KEY)
+    if (!lastId) return
+    sessionStorage.removeItem(LAST_CLICK_KEY)
+    sessionStorage.removeItem(LAST_SCROLL_KEY)
+    const exists = orders.some((o) => o.id === lastId)
+    if (!exists) return
+    setHighlightId(lastId)
+    requestAnimationFrame(() => {
+      const row = rowRefs.current.get(lastId)
+      if (row) {
+        row.scrollIntoView({ block: 'center', behavior: 'auto' })
+      } else if (scrollY) {
+        const y = Number.parseInt(scrollY, 10)
+        if (Number.isFinite(y)) window.scrollTo({ top: y, behavior: 'auto' })
+      }
+    })
+    const timer = window.setTimeout(() => setHighlightId(null), 2000)
+    return () => window.clearTimeout(timer)
+  }, [orders])
+
+  function rememberClick(id: string) {
+    if (typeof window === 'undefined') return
+    sessionStorage.setItem(LAST_CLICK_KEY, id)
+    sessionStorage.setItem(LAST_SCROLL_KEY, String(window.scrollY))
+  }
 
   const allSelected = orders.length > 0 && selected.size === orders.length
   const someSelected = selected.size > 0 && !allSelected
@@ -222,10 +256,21 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                 const detailHref = `/orders/${o.id}`
                 const meta = statusMeta[o.status] ?? statusMeta.pending
                 const checked = selected.has(o.id)
+                const isHighlighted = highlightId === o.id
                 return (
                   <tr
                     key={o.id}
-                    className={`hover:bg-slate-50/70 transition-colors ${checked ? 'bg-indigo-50/40' : ''}`}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(o.id, el)
+                      else rowRefs.current.delete(o.id)
+                    }}
+                    className={`transition-colors ${
+                      isHighlighted
+                        ? 'bg-amber-50 ring-2 ring-amber-300 ring-inset'
+                        : checked
+                          ? 'bg-indigo-50/40 hover:bg-indigo-50/60'
+                          : 'hover:bg-slate-50/70'
+                    }`}
                   >
                     <td className="px-3 py-3">
                       <input
@@ -248,6 +293,7 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Link
                         href={detailHref}
+                        onClick={() => rememberClick(o.id)}
                         className="font-mono text-xs font-semibold text-slate-900 hover:text-indigo-700 transition-colors"
                       >
                         {o.market_order_number ?? (
