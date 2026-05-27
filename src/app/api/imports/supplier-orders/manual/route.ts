@@ -36,9 +36,7 @@ export async function POST(request: Request) {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   let body: Record<string, unknown>
@@ -73,11 +71,9 @@ export async function POST(request: Request) {
     : null
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 멱등 — 기존 row 있으면 그대로 반환
-  const { data: existing } = await adb
+  const { data: existing } = await admin
     .from('b2b_supplier_purchases')
     .select('id')
     .eq('account_id', account.id)
@@ -88,7 +84,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true, id: existing.id, status: 'existing' })
   }
 
-  const { data: row, error } = await adb
+  const { data: row, error } = await admin
     .from('b2b_supplier_purchases')
     .insert({
       account_id: account.id,

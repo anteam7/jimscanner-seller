@@ -24,9 +24,7 @@ async function authAccount() {
   } = await sb.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -34,7 +32,7 @@ async function authAccount() {
   if (!account) {
     return { error: NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 }) }
   }
-  return { account }
+  return { account, user }
 }
 
 export async function DELETE(
@@ -46,8 +44,7 @@ export async function DELETE(
   if ('error' in auth) return auth.error
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (admin as any)
+  const { error } = await admin
     .from('b2b_supplier_purchases')
     .delete()
     .eq('id', id)
@@ -89,12 +86,10 @@ export async function PATCH(
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 매칭하려는 주문이 본인 소유인지 검증
   if (matchedOrderId) {
-    const { data: ord } = await adb
+    const { data: ord } = await admin
       .from('b2b_orders')
       .select('id, account_id')
       .eq('id', matchedOrderId)
@@ -105,14 +100,14 @@ export async function PATCH(
   }
 
   // 변경 전 값 가져오기 (audit log 용)
-  const { data: prev } = await adb
+  const { data: prev } = await admin
     .from('b2b_supplier_purchases')
     .select('matched_order_id')
     .eq('id', id)
     .eq('account_id', auth.account.id)
     .maybeSingle()
 
-  const { error } = await adb
+  const { error } = await admin
     .from('b2b_supplier_purchases')
     .update({
       matched_order_id: matchedOrderId,
@@ -126,17 +121,14 @@ export async function PATCH(
   }
 
   // Audit log — 매칭/해제 이력 (실패해도 본 작업은 성공 처리)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = await createClient() as any
-  const { data: { user: authUser } } = await sb.auth.getUser()
   const oldValue = prev?.matched_order_id ?? null
   const reason = matchedOrderId
     ? (oldValue ? 'manual_rematch' : 'manual_link')
     : 'manual_unlink'
-  await adb.from('b2b_supplier_purchases_audit').insert({
+  await admin.from('b2b_supplier_purchases_audit').insert({
     receipt_id: id,
     account_id: auth.account.id,
-    changed_by_user_id: authUser?.id ?? null,
+    changed_by_user_id: auth.user.id,
     field_name: 'matched_order_id',
     old_value: oldValue,
     new_value: matchedOrderId,

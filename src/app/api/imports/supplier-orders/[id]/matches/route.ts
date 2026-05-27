@@ -32,11 +32,9 @@ async function authAccount() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return { error: NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 }) }
-  return { db, accountId: account.id as string, user }
+  return { sb, accountId: account.id, user }
 }
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -45,9 +43,7 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
   if ('error' in auth) return auth.error
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data, error } = await adb
+  const { data, error } = await admin
     .from('b2b_supplier_purchase_matches')
     .select(`id, receipt_id, order_id, order_item_id, amount_share_foreign, match_confidence, matched_at, note,
              b2b_orders(id, order_number, market_order_number, marketplace, buyer_name)`)
@@ -77,11 +73,9 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   const note = str(body.note, 500)
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 영수증·주문 본인 소유 검증
-  const { data: receipt } = await adb
+  const { data: receipt } = await admin
     .from('b2b_supplier_purchases')
     .select('id, account_id')
     .eq('id', id)
@@ -89,7 +83,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
   if (!receipt || receipt.account_id !== auth.accountId) {
     return NextResponse.json({ error: '영수증 권한 없음' }, { status: 404 })
   }
-  const { data: order } = await adb
+  const { data: order } = await admin
     .from('b2b_orders')
     .select('id, account_id')
     .eq('id', orderId)
@@ -98,7 +92,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     return NextResponse.json({ error: '주문 권한 없음' }, { status: 404 })
   }
 
-  const { data: inserted, error } = await adb
+  const { data: inserted, error } = await admin
     .from('b2b_supplier_purchase_matches')
     .insert({
       account_id: auth.accountId,
@@ -112,16 +106,16 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     })
     .select('id')
     .single()
-  if (error) {
-    const code = (error as { code?: string }).code
+  if (error || !inserted) {
+    const code = (error as { code?: string } | null)?.code
     if (code === '23505') {
       return NextResponse.json({ error: '이미 매칭된 조합입니다.' }, { status: 409 })
     }
-    return NextResponse.json({ error: '저장 실패', detail: error.message }, { status: 500 })
+    return NextResponse.json({ error: '저장 실패', detail: error?.message }, { status: 500 })
   }
 
   // 호환성: 첫 매칭이면 matched_order_id sync
-  await adb.from('b2b_supplier_purchases')
+  await admin.from('b2b_supplier_purchases')
     .update({ matched_order_id: orderId, matched_at: new Date().toISOString() })
     .eq('id', id)
     .eq('account_id', auth.accountId)
@@ -129,21 +123,21 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
 
   // 자동 status 진행: 주문이 pending/confirmed 면 paid (해외 매입 완료) 로 변경
   // 매칭됐다는 건 매입이 실제로 일어났다는 신호
-  const { data: ord } = await adb
+  const { data: ord } = await admin
     .from('b2b_orders')
     .select('status')
     .eq('id', orderId)
     .eq('account_id', auth.accountId)
     .single()
   if (ord && (ord.status === 'pending' || ord.status === 'confirmed')) {
-    await adb.from('b2b_orders')
+    await admin.from('b2b_orders')
       .update({ status: 'paid', updated_at: new Date().toISOString() })
       .eq('id', orderId)
       .eq('account_id', auth.accountId)
   }
 
   // Audit log
-  await adb.from('b2b_supplier_purchases_audit').insert({
+  await admin.from('b2b_supplier_purchases_audit').insert({
     receipt_id: id,
     account_id: auth.accountId,
     changed_by_user_id: auth.user.id,

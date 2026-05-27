@@ -28,6 +28,7 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { authenticateSellerToken } from '@/lib/b2b/seller-tokens'
+import type { Json } from '../../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -117,11 +118,9 @@ export async function POST(request: Request) {
       : null
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 멱등: 기존 row 있으면 그대로 반환
-  const { data: existing } = await adb
+  const { data: existing } = await admin
     .from('b2b_supplier_purchases')
     .select('id')
     .eq('account_id', auth.account_id)
@@ -136,7 +135,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { data: row, error } = await adb
+  const { data: row, error } = await admin
     .from('b2b_supplier_purchases')
     .insert({
       account_id: auth.account_id,
@@ -148,9 +147,9 @@ export async function POST(request: Request) {
       shipping_foreign: num(body.shipping_foreign),
       tax_foreign: num(body.tax_foreign),
       total_foreign: num(body.total_foreign),
-      items,
+      items: items as unknown as Json,
       source_url: sourceUrl,
-      raw_meta: rawMeta,
+      raw_meta: rawMeta as Json,
     })
     .select('id')
     .single()

@@ -105,9 +105,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -115,8 +113,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rowRaw } = await (admin as any)
+  const { data: rowRaw } = await admin
     .from('b2b_supplier_purchases')
     .select(
       'id, source, supplier_order_number, purchased_at, currency, subtotal_foreign, shipping_foreign, tax_foreign, total_foreign, items, source_url, raw_meta, matched_order_id, matched_at, created_at, account_id',
@@ -126,7 +123,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
     .single()
 
   if (!rowRaw) notFound()
-  const row = rowRaw as Row
+  const row = rowRaw as unknown as Row
 
   // 매칭 audit log
   type AuditRow = {
@@ -137,8 +134,7 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
     new_value: string | null
     reason: string | null
   }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: auditRaw } = await (admin as any)
+  const { data: auditRaw } = await admin
     .from('b2b_supplier_purchases_audit')
     .select('id, changed_at, field_name, old_value, new_value, reason')
     .eq('receipt_id', id)

@@ -101,16 +101,14 @@ export default async function ImportsPage({
   } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
-  let qb = db
+  let qb = sb
     .from('b2b_supplier_purchases')
     .select(
       'id, source, supplier_order_number, purchased_at, currency, total_foreign, items, source_url, matched_order_id, matched_at, created_at',
@@ -146,17 +144,17 @@ export default async function ImportsPage({
   }
 
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
-  const { data: ordersRaw } = await db
+  const { data: ordersRaw } = await sb
     .from('b2b_orders')
     .select(
-      'id, order_number, market_order_number, marketplace, created_at, b2b_order_items(supplier_site, currency, qty, unit_price_foreign)',
+      'id, order_number, market_order_number, marketplace, created_at, b2b_order_items(supplier_site, currency, qty:quantity, unit_price_foreign)',
     )
     .eq('account_id', account.id)
     .gte('created_at', sixtyDaysAgo)
     .order('created_at', { ascending: false })
     .limit(300)
 
-  const orders = (ordersRaw ?? []) as OrderRow[]
+  const orders = (ordersRaw ?? []) as unknown as OrderRow[]
   const matchedOrderIds = new Set(
     rows.filter((r) => r.matched_order_id).map((r) => r.matched_order_id!),
   )
