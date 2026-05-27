@@ -207,12 +207,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - fix: Supabase MCP apply_migration `b2b_trigger_functions_set_search_path` — `ALTER FUNCTION ... SET search_path = public, pg_temp` 3건. 원본 정의 (b2b_schema.sql, b2b_form_templates.sql, b2b_products.sql) 에도 `SET search_path = public, pg_temp` inline 추가하여 차후 재적용 시 동기 유지. 기록 SQL: `supabase/b2b_2026_05_28_trigger_search_path.sql`.
   - note: b2b SECURITY DEFINER 함수 4건 (`b2b_compute_seller_health_snapshot`, `b2b_marketwide_supplier_stats`, `b2b_reset_monthly_quotas`, `b2b_auto_provision_free_subscription`) 은 이미 `search_path=public` 또는 `public, pg_temp` 가 설정되어 advisor 에서 미플래그. EXECUTE 권한은 `#auto-C` 에서 별도 처리.
 
-- [ ] **#auto-C db: b2b SECURITY DEFINER 함수 anon/authenticated EXECUTE REVOKE** _(audit 발견 2026-05-28)_
+- [x] **#auto-C db: b2b SECURITY DEFINER 함수 anon/authenticated EXECUTE REVOKE** _(audit 발견 2026-05-28)_
   - estimated: 20m
   - prereq: 없음
   - decision_required: false
   - finding: Supabase advisor — `b2b_auto_provision_free_subscription`, `b2b_compute_seller_health_snapshot`, `b2b_marketwide_supplier_stats`, `b2b_reset_monthly_quotas` 가 anon/authenticated 에서 EXECUTE 가능. 의도된 호출자는 service_role / pg_cron 만.
   - severity: high
+  - 완료: 2026-05-28
+  - fix: Supabase MCP `apply_migration b2b_security_definer_revoke_execute` — 4 함수 모두 PUBLIC/anon REVOKE. `b2b_auto_provision_free_subscription` (트리거 전용), `b2b_compute_seller_health_snapshot` (pg_cron), `b2b_reset_monthly_quotas` (pg_cron) 는 authenticated 도 REVOKE → 결과 ACL `postgres / service_role` 만. `b2b_marketwide_supplier_stats` 는 /analytics 페이지가 세션 .rpc() 직접 호출하므로 authenticated 유지. 원본 SQL (`b2b_accounts_auto_provision_free_subscription.sql`, `b2b_compute_seller_health_snapshot.sql`, `b2b_reset_monthly_quotas.sql`, `b2b_marketwide_supplier_stats_rpc.sql`) 에도 REVOKE 블록 추가하여 재적용 시 동기 유지. 기록 SQL: `supabase/b2b_2026_05_28_revoke_security_definer_execute.sql`.
 
 - [ ] **#auto-D db: b2b_auto_runs RLS policy 추가 (admin-only)** _(audit 발견 2026-05-28)_
   - estimated: 15m
@@ -276,6 +278,40 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - UI: /eta 페이지 + dashboard 미니카드 + ICS export endpoint
   - 참조: 사용자가 issue#5 댓글에 33 배대지 양식 xlsx 5개 (japan_boat/japan_air/china_air/england/usa_air) 첨부 — 양식 변환 작업 시 함께 활용
 
+### Brainstorm approved (2026-05-28)
+
+- [ ] **#idea-8 운송장 자동 트래킹 hub (17track 1-click + status 자동 전이)** _(brainstorm approved 2026-05-28)_
+  - estimated: 1.5-2h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#8
+  - DB 변경: b2b_order_items 에 tracking_number_overseas / tracked_carrier / tracking_updated_at 3 컬럼 + trigger (paid → in_transit)
+  - UI: /orders 라인별 운송장 입력 + 17track 외부 link 버튼 + bulk paste
+
+- [ ] **#idea-9 dashboard 7일 매출 sparkline + WoW 비교** _(brainstorm approved 2026-05-28)_
+  - estimated: 40-50m
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#9
+  - DB 변경: 없음
+  - UI: 4 통계 카드에 인라인 SVG sparkline + 전주 대비 % 칩
+
+- [ ] **#idea-10 자주 사는 매입 SKU 즐겨찾기 / 최근 매입 quick-pick** _(brainstorm approved 2026-05-28)_
+  - estimated: 2-2.5h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#10
+  - DB 변경: b2b_products.is_favorite + last_purchased_at 추가
+  - UI: /orders/new 에 SKUQuickPick 드롭다운, GET /api/products/quick-pick
+
+- [ ] **#idea-11 통관 가이드 inline hint — 주문 생성 시 카테고리 자동 매칭** _(brainstorm approved 2026-05-28)_
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#11
+  - DB 변경: b2b_order_items.customs_category 컬럼 (있는지 확인 후 없으면 추가)
+  - UI: /orders/new + /orders/bulk 라인 입력에 CustomsCategoryHint inline 배너 + keyword 사전 (한·영·일 ~150)
+
 ---
 
 ## P2 — 도메인·운영 (사용자 액션 필요 — agent 가 알림만)
@@ -301,7 +337,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **22개** (#7, #8, #9, #10, #11, #12, #auto-A 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건)
+- P1 자율 가능: **26개** (#7~12, #auto-A, #auto-B 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건. brainstorm approved 2026-05-28 +4건: #idea-8~11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
