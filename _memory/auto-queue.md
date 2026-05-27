@@ -178,10 +178,12 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### 작은 자동화
 
-- [ ] **#12 cron 실행 이력 dashboard 카드** — `/dashboard` 우측에 "최근 agent 활동" 3건 미니 카드 (시드 후)
+- [x] **#12 cron 실행 이력 dashboard 카드** — `/dashboard` 최하단에 "최근 시스템 활동" 3건 미니 카드 (b2b_auto_runs 직접 read via admin client)
   - estimated: 40m
   - prereq: b2b_auto_runs 에 row 1+ (cron 시작 후 자연 발생)
   - decision_required: false
+  - 완료: 2026-05-28 commit cb8dfbe
+  - 구현: src/app/(app)/dashboard/page.tsx — admin client 로 b2b_auto_runs ORDER BY created_at DESC LIMIT 3 fetch, mode 배지 (구현/점검/발견), failed 시 rose 배지, change_summary 140자 truncate. runs 0건이면 카드 hide.
 
 ### Audit 발견 2026-05-28 (self-audit cycle)
 
@@ -296,7 +298,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **22개** (#7, #8, #9, #10, #11, #auto-A 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건)
+- P1 자율 가능: **22개** (#7, #8, #9, #10, #11, #12, #auto-A 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
