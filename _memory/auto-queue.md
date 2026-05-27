@@ -116,10 +116,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - decision_required: false
   - 완료: 2026-05-27 commit ce8b900
 
-- [ ] **#5 /orders row click highlight + scroll position (L-7)** — sessionStorage 로 마지막 클릭 row 추적, 돌아오면 highlight + scroll
+- [x] **#5 /orders row click highlight + scroll position (L-7)** — sessionStorage 로 마지막 클릭 row 추적, 돌아오면 highlight + scroll
   - estimated: 1h
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-27 commit 9fdcb9a
 
 - [ ] **#6 admin client `any` 캐스팅 제거 (G1 후속)** — `types/supabase.ts` 활용해서 점진. 한 회차에 한 모듈씩 (orders, products, settings ...).
   - estimated: 1h × 6 회차
