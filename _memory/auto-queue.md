@@ -130,8 +130,9 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - estimated: 1h × 6 회차
   - prereq: 없음
   - decision_required: false
-  - progress: orders (commit 8ddd2f5), products (commit 46c6b91), settings 5/6 파일 완료. 남은: imports, signup, billing, lib/b2b
+  - progress: orders (commit 8ddd2f5), products (commit 46c6b91), settings 5/6 파일, imports (commit 3394954). 남은: signup, billing, lib/b2b
   - note: `src/app/api/settings/compliance/route.ts` 는 DB 에 없는 `b2b_withdrawal_notices` 테이블 + `withdrawal_notice_*` 컬럼 참조하여 cast 유지. 별도 fix 필요 (DB 마이그레이션 또는 코드 제거)
+  - bonus: imports 회차에서 `b2b_order_items.qty` 가 실제 컬럼 `quantity` 와 불일치하던 silent bug 발견·수정 (postgrest alias `qty:quantity`)
 
 ### next-steps.md 4순위 기술 부채
 
