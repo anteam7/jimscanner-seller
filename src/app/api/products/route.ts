@@ -50,9 +50,7 @@ export async function GET(request: Request) {
   } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -63,7 +61,7 @@ export async function GET(request: Request) {
   const q = url.searchParams.get('q')?.trim() ?? ''
   const includeInactive = url.searchParams.get('include_inactive') === '1'
 
-  let qb = db
+  let qb = sb
     .from('b2b_products')
     .select(
       'id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, default_forwarder_id, default_weight_kg, image_url, is_active, created_at, updated_at',
@@ -102,9 +100,7 @@ export async function POST(request: Request) {
   if (!sku) return NextResponse.json({ error: 'SKU 코드를 입력해주세요.' }, { status: 400 })
   if (!name) return NextResponse.json({ error: '상품명을 입력해주세요.' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -112,7 +108,7 @@ export async function POST(request: Request) {
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   // 중복 검사
-  const { data: existing } = await db
+  const { data: existing } = await sb
     .from('b2b_products')
     .select('id')
     .eq('account_id', account.id)
@@ -125,7 +121,7 @@ export async function POST(request: Request) {
     )
   }
 
-  const { data: inserted, error: insErr } = await db
+  const { data: inserted, error: insErr } = await sb
     .from('b2b_products')
     .insert({
       account_id: account.id,
@@ -171,9 +167,9 @@ export async function POST(request: Request) {
         notes: m.notes || null,
       }))
     if (rows.length > 0) {
-      const { error } = await db.from('b2b_product_market_links').insert(rows)
+      const { error } = await sb.from('b2b_product_market_links').insert(rows)
       if (error) {
-        await db.from('b2b_products').delete().eq('id', productId)
+        await sb.from('b2b_products').delete().eq('id', productId)
         return NextResponse.json({ error: `마켓 매핑 저장 실패: ${error.message}` }, { status: 500 })
       }
     }
@@ -193,9 +189,9 @@ export async function POST(request: Request) {
         notes: s.notes || null,
       }))
     if (rows.length > 0) {
-      const { error } = await db.from('b2b_product_supplier_links').insert(rows)
+      const { error } = await sb.from('b2b_product_supplier_links').insert(rows)
       if (error) {
-        await db.from('b2b_products').delete().eq('id', productId)
+        await sb.from('b2b_products').delete().eq('id', productId)
         return NextResponse.json({ error: `매입처 저장 실패: ${error.message}` }, { status: 500 })
       }
     }

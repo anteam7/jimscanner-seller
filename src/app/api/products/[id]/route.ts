@@ -4,30 +4,34 @@
  * DELETE /api/products/[id]  — soft (is_active=false). 영구는 query ?hard=1 (사용 중 주문 있으면 거부)
  */
 import { NextResponse } from 'next/server'
+import type { SupabaseClient } from '@supabase/supabase-js'
 import { createClient } from '@/lib/auth/server'
+import type { Database } from '../../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
-async function ownerProduct(sb: unknown, userId: string, id: string) {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+async function ownerProduct(
+  sb: SupabaseClient<Database>,
+  userId: string,
+  id: string,
+) {
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', userId)
     .single()
   if (!account) return { error: '사업자 계정이 없습니다.', status: 404 as const }
-  const { data: p } = await db
+  const { data: p } = await sb
     .from('b2b_products')
     .select('id, account_id')
     .eq('id', id)
     .maybeSingle()
   if (!p) return { error: '상품을 찾을 수 없습니다.', status: 404 as const }
   if (p.account_id !== account.id) return { error: '권한 없음', status: 403 as const }
-  return { db, account, product: p }
+  return { sb, account, product: p }
 }
 
 export async function GET(
@@ -46,7 +50,7 @@ export async function GET(
   const ctx = await ownerProduct(sb, user.id, id)
   if ('error' in ctx) return NextResponse.json({ error: ctx.error }, { status: ctx.status })
 
-  const { data, error } = await ctx.db
+  const { data, error } = await ctx.sb
     .from('b2b_products')
     .select(
       '*, b2b_product_market_links(id, marketplace, market_product_id, market_option, sale_price_krw, notes), b2b_product_supplier_links(id, supplier_site, supplier_product_url, supplier_unit_price, supplier_currency, is_primary, notes)',
@@ -109,7 +113,7 @@ export async function PATCH(
   const ctx = await ownerProduct(sb, user.id, id)
   if ('error' in ctx) return NextResponse.json({ error: ctx.error }, { status: ctx.status })
 
-  const patch: Record<string, unknown> = {}
+  const patch: Database['public']['Tables']['b2b_products']['Update'] = {}
   if (typeof body.display_name === 'string' && body.display_name.trim())
     patch.display_name = body.display_name.trim()
   for (const k of [
@@ -133,13 +137,13 @@ export async function PATCH(
   if (typeof body.is_active === 'boolean') patch.is_active = body.is_active
 
   if (Object.keys(patch).length > 0) {
-    const { error } = await ctx.db.from('b2b_products').update(patch).eq('id', id)
+    const { error } = await ctx.sb.from('b2b_products').update(patch).eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
   // market_links replace (전달된 경우에만)
   if (body.market_links !== undefined) {
-    await ctx.db.from('b2b_product_market_links').delete().eq('product_id', id)
+    await ctx.sb.from('b2b_product_market_links').delete().eq('product_id', id)
     if (Array.isArray(body.market_links) && body.market_links.length > 0) {
       const rows = body.market_links
         .filter((m) => m.marketplace && m.market_product_id)
@@ -152,7 +156,7 @@ export async function PATCH(
           notes: m.notes || null,
         }))
       if (rows.length > 0) {
-        const { error } = await ctx.db.from('b2b_product_market_links').insert(rows)
+        const { error } = await ctx.sb.from('b2b_product_market_links').insert(rows)
         if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       }
     }
@@ -160,7 +164,7 @@ export async function PATCH(
 
   // supplier_links replace
   if (body.supplier_links !== undefined) {
-    await ctx.db.from('b2b_product_supplier_links').delete().eq('product_id', id)
+    await ctx.sb.from('b2b_product_supplier_links').delete().eq('product_id', id)
     if (Array.isArray(body.supplier_links) && body.supplier_links.length > 0) {
       const rows = body.supplier_links
         .filter((s) => s.supplier_site)
@@ -174,7 +178,7 @@ export async function PATCH(
           notes: s.notes || null,
         }))
       if (rows.length > 0) {
-        const { error } = await ctx.db.from('b2b_product_supplier_links').insert(rows)
+        const { error } = await ctx.sb.from('b2b_product_supplier_links').insert(rows)
         if (error) return NextResponse.json({ error: error.message }, { status: 500 })
       }
     }
@@ -204,7 +208,7 @@ export async function DELETE(
 
   if (hard) {
     // 사용 중 주문 확인
-    const { count } = await ctx.db
+    const { count } = await ctx.sb
       .from('b2b_order_items')
       .select('id', { count: 'exact', head: true })
       .eq('product_id', id)
@@ -214,11 +218,11 @@ export async function DELETE(
         { status: 409 },
       )
     }
-    const { error } = await ctx.db.from('b2b_products').delete().eq('id', id)
+    const { error } = await ctx.sb.from('b2b_products').delete().eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   } else {
     // soft delete: is_active=false
-    const { error } = await ctx.db.from('b2b_products').update({ is_active: false }).eq('id', id)
+    const { error } = await ctx.sb.from('b2b_products').update({ is_active: false }).eq('id', id)
     if (error) return NextResponse.json({ error: error.message }, { status: 500 })
   }
   return NextResponse.json({ ok: true })

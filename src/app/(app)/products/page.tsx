@@ -56,16 +56,14 @@ export default async function ProductsPage({
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .single()
   if (!account) return null
 
-  let qb = db
+  let qb = sb
     .from('b2b_products')
     .select('id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, is_active, updated_at')
     .eq('account_id', account.id)
@@ -76,7 +74,7 @@ export default async function ProductsPage({
     const term = query.trim().replace(/[%,]/g, '')
     qb = qb.or(`seller_sku.ilike.%${term}%,display_name.ilike.%${term}%,english_name.ilike.%${term}%`)
   }
-  const { data: rows } = (await qb) as { data: ProductRow[] | null }
+  const { data: rows } = await qb.returns<ProductRow[]>()
   const products = rows ?? []
 
   return (

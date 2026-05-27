@@ -42,28 +42,29 @@ export default async function ProductMatchingPage() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
   const [domesticRes, foreignRes, mappingRes] = await Promise.all([
-    db.from('b2b_domestic_products')
+    sb.from('b2b_domestic_products')
       .select('id, seller_sku, display_name, marketplace, sale_price_krw, image_url')
       .eq('account_id', account.id).eq('is_active', true)
-      .order('updated_at', { ascending: false }).limit(300),
-    db.from('b2b_products')
+      .order('updated_at', { ascending: false }).limit(300)
+      .returns<DomesticProduct[]>(),
+    sb.from('b2b_products')
       .select('id, seller_sku, display_name, english_name, default_supplier_site, default_currency, default_unit_price, image_url')
       .eq('account_id', account.id).eq('is_active', true)
-      .order('updated_at', { ascending: false }).limit(300),
-    db.from('b2b_product_mappings')
+      .order('updated_at', { ascending: false }).limit(300)
+      .returns<ForeignProduct[]>(),
+    sb.from('b2b_product_mappings')
       .select('id, domestic_product_id, foreign_product_id, qty_ratio, notes, created_at')
       .eq('account_id', account.id)
-      .order('created_at', { ascending: false }),
+      .order('created_at', { ascending: false })
+      .returns<Mapping[]>(),
   ])
-  const domesticProducts = (domesticRes.data ?? []) as DomesticProduct[]
-  const foreignProducts = (foreignRes.data ?? []) as ForeignProduct[]
-  const mappings = (mappingRes.data ?? []) as Mapping[]
+  const domesticProducts = domesticRes.data ?? []
+  const foreignProducts = foreignRes.data ?? []
+  const mappings = mappingRes.data ?? []
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">

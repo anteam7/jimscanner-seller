@@ -49,19 +49,18 @@ export default async function DomesticProductsPage() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
-  const { data: rowsRaw } = await db
+  const { data: rowsRaw } = await sb
     .from('b2b_domestic_products')
     .select('id, seller_sku, display_name, marketplace, market_product_id, market_option, sale_price_krw, category, image_url, updated_at')
     .eq('account_id', account.id)
     .eq('is_active', true)
     .order('updated_at', { ascending: false })
     .limit(200)
-  const rows = (rowsRaw ?? []) as Row[]
+    .returns<Row[]>()
+  const rows = rowsRaw ?? []
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">

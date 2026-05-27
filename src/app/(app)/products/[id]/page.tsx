@@ -65,32 +65,32 @@ export default async function ProductEditPage({
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .single()
   if (!account) return null
 
-  const { data: p } = (await db
+  const { data: p } = await sb
     .from('b2b_products')
     .select(
       '*, b2b_product_market_links(id, marketplace, market_product_id, market_option, sale_price_krw, notes), b2b_product_supplier_links(id, supplier_site, supplier_product_url, supplier_unit_price, supplier_currency, is_primary, notes)',
     )
     .eq('id', id)
     .eq('account_id', account.id)
-    .maybeSingle()) as { data: ProductDetail | null }
+    .maybeSingle()
+    .returns<ProductDetail>()
 
   if (!p) notFound()
 
-  const { data: fwdRows } = await db
+  const { data: fwdRows } = await sb
     .from('forwarders')
     .select('id, name')
     .eq('is_active', true)
     .order('name', { ascending: true })
-  const forwarders = (fwdRows ?? []) as ForwarderOption[]
+    .returns<ForwarderOption[]>()
+  const forwarders = fwdRows ?? []
 
   const marketLinks: MarketLink[] = (p.b2b_product_market_links ?? []).map((m) => ({
     id: m.id,

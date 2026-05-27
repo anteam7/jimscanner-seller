@@ -17,14 +17,13 @@ export default async function NewProductPage() {
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: fwdRows } = await db
+  const { data: fwdRows } = await sb
     .from('forwarders')
     .select('id, name')
     .eq('is_active', true)
     .order('name', { ascending: true })
-  const forwarders = (fwdRows ?? []) as ForwarderOption[]
+    .returns<ForwarderOption[]>()
+  const forwarders = fwdRows ?? []
 
   return (
     <div className="p-8 space-y-6 max-w-4xl">
