@@ -229,6 +229,70 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
     })
   }, [])
 
+  // select 컬럼별 값 alias — 사용자가 라벨·value 외 한국어 변형·영문명을 paste 해도 enum 으로 변환
+  // (`HEADER_ALIASES` 가 컬럼명 매핑이라면 이건 셀 값 매핑)
+  const SELECT_VALUE_ALIASES: Record<string, Record<string, string[]>> = {
+    marketplace: {
+      coupang: ['쿠팡', 'Coupang', '쿠팡닷컴'],
+      smartstore: ['스마트스토어', '네이버', '네이버 스마트스토어', '네이버스마트스토어', 'Smart Store', 'Smartstore'],
+      auction: ['옥션', 'Auction'],
+      gmarket: ['지마켓', 'G마켓', 'Gmarket'],
+      '11st': ['11번가', '십일번가', 'Eleven Street', '11st'],
+      interpark: ['인터파크', 'Interpark'],
+      wemakeprice: ['위메프', 'Wemakeprice', 'WMP'],
+      tmon: ['티몬', '티켓몬스터', 'Tmon'],
+      kakao_gift: ['카카오 선물하기', '카카오선물하기', '카카오톡 선물하기', '카톡 선물하기'],
+      own_mall: ['자사몰', '자체몰', '독립몰', '브랜드몰'],
+      kakao_channel: ['카카오 채널', '카카오채널', '카톡 채널'],
+      instagram: ['인스타그램', '인스타', 'Instagram', 'IG'],
+      other: ['기타', '그외', '기타몰'],
+    },
+    supplier_site: {
+      amazon_us: ['미국 아마존', '아마존 미국', '아마존US', '아마존 US', 'Amazon US', 'Amazon.com', 'amazon.com', '아마존'],
+      amazon_jp: ['일본 아마존', '아마존 일본', 'Amazon JP', 'Amazon.co.jp', 'amazon.co.jp', '아마존JP'],
+      amazon_de: ['독일 아마존', '아마존 독일', 'Amazon DE', 'Amazon.de', 'amazon.de'],
+      amazon_uk: ['영국 아마존', '아마존 영국', 'Amazon UK', 'Amazon.co.uk', 'amazon.co.uk'],
+      amazon_ca: ['캐나다 아마존', '아마존 캐나다', 'Amazon CA', 'Amazon.ca', 'amazon.ca'],
+      rakuten_jp: ['라쿠텐', 'Rakuten', '라쿠텐 재팬', 'rakuten.co.jp'],
+      yahoo_jp: ['야후 재팬', '야후재팬', '야후 옥션', 'Yahoo Japan', 'Yahoo Auction', 'auctions.yahoo.co.jp'],
+      mercari_jp: ['메루카리', '메르카리', 'Mercari', 'mercari.com'],
+      zozotown: ['조조타운', '죠죠타운', 'Zozo', 'zozo.jp'],
+      taobao: ['타오바오', '淘宝', 'Taobao', 'taobao.com'],
+      tmall: ['티몰', '天猫', 'Tmall', 'tmall.com'],
+      aliexpress: ['알리익스프레스', '알리', 'AliExpress', 'Aliexpress', 'aliexpress.com'],
+      jd: ['징동', '징동닷컴', 'JD', 'JD.com', 'jd.com', '京东'],
+      pinduoduo: ['핀둬둬', '핀뚸뚸', 'Pinduoduo', 'PDD'],
+      ebay: ['이베이', 'ebay', 'eBay.com'],
+      walmart: ['월마트', 'walmart.com'],
+      target: ['타깃', '타켓', 'Target.com'],
+      shopee: ['쇼피', 'shopee.com'],
+      lazada: ['라자다', 'lazada.com'],
+      farfetch: ['파페치', 'farfetch.com'],
+      ssense: ['센스', 'ssense.com'],
+      matchesfashion: ['매치스패션', 'Matches', 'matches.com'],
+      mytheresa: ['마이테레사', 'My Theresa', 'mytheresa.com'],
+      other: ['기타', '그외', '기타 사이트'],
+    },
+    currency: {
+      USD: ['달러', '미국 달러', '미달러', '$', 'dollar', 'Dollar', 'US$', 'USD ($)'],
+      JPY: ['엔', '엔화', '일본 엔', '¥', 'yen', 'Yen', 'JPY (¥)'],
+      CNY: ['위안', '위안화', '인민폐', '元', '¥', 'yuan', 'Yuan', 'RMB', 'CNY (¥)'],
+      EUR: ['유로', '€', 'euro', 'Euro', 'EUR (€)'],
+      GBP: ['파운드', '영국 파운드', '£', 'pound', 'Pound', 'GBP (£)'],
+      HKD: ['홍콩달러', '홍콩 달러', 'HK$', 'HKD (HK$)'],
+      KRW: ['원', '원화', '한국 원', '₩', 'won', 'Won', 'KRW (₩)'],
+    },
+    forwarder_country: {
+      US: ['미국', 'USA', 'America', 'U.S.', 'U.S.A', '미주'],
+      JP: ['일본', 'Japan', 'JPN', '재팬'],
+      CN: ['중국', 'China', 'CHN', 'PRC'],
+      DE: ['독일', 'Germany', 'DEU', 'Deutschland'],
+      UK: ['영국', 'United Kingdom', 'Britain', 'GB', 'England'],
+      HK: ['홍콩', 'Hong Kong', 'HongKong'],
+      OTHER: ['기타', '그외'],
+    },
+  }
+
   // 마켓별 헤더 alias — 쿠팡·스마트스토어·옥션·11번가 등 다양한 한국어 헤더 매핑
   const HEADER_ALIASES: Record<string, string[]> = {
     market_order_number: ['주문번호', '상품주문번호', '마켓 주문번호', '결제번호', 'Order ID', 'Order Number'],
@@ -298,14 +362,28 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
       : columns.map((c) => c.key)
 
     // select 컬럼별 label → value reverse lookup ('쿠팡' → 'coupang')
+    // 1) opt.label / opt.value / lowercase 기본 매핑
+    // 2) SELECT_VALUE_ALIASES 의 한국어·영문 변형 alias 추가 매핑
     const reverseLookup: Record<string, Map<string, string>> = {}
     for (const col of columns) {
       if (col.type !== 'select' || !col.options) continue
       const m = new Map<string, string>()
       for (const opt of col.options) {
         m.set(opt.label, opt.value)
-        m.set(opt.value, opt.value) // value 그대로도 통과
         m.set(opt.label.toLowerCase(), opt.value)
+        m.set(opt.value, opt.value) // value 그대로도 통과
+        m.set(opt.value.toLowerCase(), opt.value)
+      }
+      // alias 병합 (이미 등록된 키는 덮어쓰지 않음 — opt.label 우선)
+      const aliases = SELECT_VALUE_ALIASES[col.key]
+      if (aliases) {
+        for (const [value, variants] of Object.entries(aliases)) {
+          for (const variant of variants) {
+            if (!m.has(variant)) m.set(variant, value)
+            const lower = variant.toLowerCase()
+            if (!m.has(lower)) m.set(lower, value)
+          }
+        }
       }
       reverseLookup[col.key] = m
     }
