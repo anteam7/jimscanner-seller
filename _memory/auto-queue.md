@@ -110,10 +110,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - decision_required: false
   - 완료: 2026-05-27 commit 47095a6
 
-- [ ] **#4 /imports navigation 정리 (L-5)** — empty state 의 "주문 매칭관리 통합 뷰" 화살표 link 가 자명하게
+- [x] **#4 /imports navigation 정리 (L-5)** — empty state 의 "주문 매칭관리 통합 뷰" 화살표 link 가 자명하게
   - estimated: 20m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-27 commit ce8b900
 
 - [ ] **#5 /orders row click highlight + scroll position (L-7)** — sessionStorage 로 마지막 클릭 row 추적, 돌아오면 highlight + scroll
   - estimated: 1h
