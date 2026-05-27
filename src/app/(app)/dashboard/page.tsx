@@ -7,6 +7,7 @@ import { getMarginLossAlerts, type MarginLossAlert } from '@/lib/b2b/margin-loss
 import { createClient } from '@/lib/auth/server'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
+import OnboardingModal from '@/components/b2b/OnboardingModal'
 
 export const metadata: Metadata = {
   title: '대시보드',
@@ -569,6 +570,13 @@ export default async function SellerDashboardPage() {
 
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-5xl">
+      {/* B3: 첫 로그인 환영 모달 (신규 셀러 + localStorage dismiss 추적) */}
+      <OnboardingModal
+        ceoName={account.ceo_name}
+        displayName={displayName}
+        isNewSeller={isNewSeller}
+      />
+
       {/* 인사말 — B: 시각적 무게감 강화 */}
       <div className="flex items-end justify-between flex-wrap gap-4">
         <div>
