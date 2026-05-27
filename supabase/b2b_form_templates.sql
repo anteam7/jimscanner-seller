@@ -34,7 +34,7 @@ BEGIN
   NEW.updated_at = now();
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS trg_b2b_form_templates_updated_at ON b2b_form_templates;
 CREATE TRIGGER trg_b2b_form_templates_updated_at

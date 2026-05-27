@@ -33,7 +33,7 @@ CREATE INDEX IF NOT EXISTS idx_b2b_products_account_active ON b2b_products(accou
 CREATE OR REPLACE FUNCTION tg_b2b_products_set_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN NEW.updated_at = now(); RETURN NEW; END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = public, pg_temp;
 
 DROP TRIGGER IF EXISTS trg_b2b_products_updated_at ON b2b_products;
 CREATE TRIGGER trg_b2b_products_updated_at

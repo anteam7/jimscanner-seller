@@ -411,7 +411,9 @@ create index if not exists idx_b2b_audit_action
 -- 12) updated_at 자동 갱신 트리거 (공통 함수 재사용)
 -- ─────────────────────────────────────────────
 create or replace function public.tg_b2b_touch_updated_at()
-returns trigger language plpgsql as $$
+returns trigger language plpgsql
+set search_path = public, pg_temp
+as $$
 begin
   new.updated_at = now();
   return new;
