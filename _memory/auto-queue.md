@@ -144,10 +144,12 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-28 commit a1d389b
   - 추가된 alias: marketplace 13×2-4 / supplier_site 24×3-4 / currency 7×한·영변형 / forwarder_country 7×변형. SELECT_VALUE_ALIASES 통해 reverseLookup 확장. '달러' → USD, 'Amazon US' → amazon_us 등 자동 변환.
 
-- [ ] **#8 `/api/announcements/active` graceful 제거 (cron-4 후속)** — b2b_announcements 테이블 있고 active row 있으면 정상 반환. graceful fallback 한 줄 제거 + 명시 에러
+- [x] **#8 `/api/announcements/active` graceful 제거 (cron-4 후속)** — b2b_announcements 테이블 있고 active row 있으면 정상 반환. graceful fallback 한 줄 제거 + 명시 에러
   - estimated: 20m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-28 commit 1f8cd22
+  - 변경: 42P01 silent fallback 제거 + `supabase as any` 캐스팅 제거 (types/supabase.ts 타입 활용)
 
 - [ ] **#9 B3 첫 로그인 onboarding modal** — 가입 후 첫 /dashboard 진입 시 1회 모달. localStorage 로 dismiss 추적.
   - estimated: 1.5h
@@ -223,7 +225,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **14개** (#7 완료)
+- P1 자율 가능: **14개** (#7, #8 완료)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 - 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
