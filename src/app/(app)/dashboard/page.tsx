@@ -5,6 +5,7 @@ import { MARKETPLACES } from '@/lib/b2b/order-options'
 import { getDashboardStats } from '@/lib/b2b/dashboard-data'
 import { getMarginLossAlerts, type MarginLossAlert } from '@/lib/b2b/margin-loss'
 import { createClient } from '@/lib/auth/server'
+import { createAdminClient } from '@/lib/auth/admin-supabase'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
 import OnboardingModal from '@/components/b2b/OnboardingModal'
@@ -215,6 +216,15 @@ function VerificationProgress({ level }: { level: number }) {
       </div>
     </div>
   )
+}
+
+type AgentRunRow = {
+  created_at: string
+  mode: string | null
+  agent_type: string | null
+  task_picked: string | null
+  task_status: string | null
+  change_summary: string | null
 }
 
 type Progress = {
@@ -554,6 +564,24 @@ export default async function SellerDashboardPage() {
     rates = null
   }
 
+  // #12: 최근 agent 활동 3건 (admin client — b2b_auto_runs RLS bypass)
+  let recentAgentRuns: AgentRunRow[] = []
+  try {
+    const admin = createAdminClient()
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adminAny = admin as any
+    const { data: agentRunsData } = await adminAny
+      .from('b2b_auto_runs')
+      .select('created_at, mode, agent_type, task_picked, task_status, change_summary')
+      .order('created_at', { ascending: false })
+      .limit(3)
+    if (Array.isArray(agentRunsData)) {
+      recentAgentRuns = agentRunsData as AgentRunRow[]
+    }
+  } catch {
+    recentAgentRuns = []
+  }
+
   // H3 — 마진 손실 SKU (환율이 있어야 계산 가능)
   let marginLossAlerts: MarginLossAlert[] = []
   if (rates) {
@@ -719,6 +747,9 @@ export default async function SellerDashboardPage() {
 
       {/* 최근 주문 */}
       <RecentOrdersCard orders={recentOrders} />
+
+      {/* #12: 최근 agent 활동 — 시스템이 일하고 있다는 transparency */}
+      {recentAgentRuns.length > 0 && <RecentAgentActivityCard runs={recentAgentRuns} />}
     </div>
   )
 }
@@ -991,6 +1022,74 @@ function RecentOrdersCard({
           })}
         </ul>
       </div>
+    </section>
+  )
+}
+
+function formatRunAgo(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const diffMin = Math.floor((Date.now() - d.getTime()) / 60000)
+  if (diffMin < 1) return '방금 전'
+  if (diffMin < 60) return `${diffMin}분 전`
+  const diffHr = Math.floor(diffMin / 60)
+  if (diffHr < 24) return `${diffHr}시간 전`
+  const diffDay = Math.floor(diffHr / 24)
+  if (diffDay < 7) return `${diffDay}일 전`
+  return d.toLocaleDateString('ko-KR', { month: 'numeric', day: 'numeric' })
+}
+
+const AGENT_MODE_META: Record<string, { label: string; tone: string }> = {
+  implementation: { label: '구현', tone: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  review: { label: '점검', tone: 'bg-amber-50 text-amber-700 border-amber-200' },
+  discovery: { label: '발견', tone: 'bg-sky-50 text-sky-700 border-sky-200' },
+}
+
+function RecentAgentActivityCard({ runs }: { runs: AgentRunRow[] }) {
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-slate-400 bg-gradient-to-br from-slate-50/60 to-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">최근 시스템 활동</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            짐스캐너가 자동으로 점검·개선하고 있는 작업 내역입니다
+          </p>
+        </div>
+      </div>
+      <ul className="space-y-2.5">
+        {runs.map((r, idx) => {
+          const meta = r.mode ? AGENT_MODE_META[r.mode] : null
+          const title = r.task_picked ?? '(이름 없음)'
+          const summary = r.change_summary ?? ''
+          const truncated = summary.length > 140 ? summary.slice(0, 140).trimEnd() + '…' : summary
+          const failed = r.task_status === 'failed'
+          return (
+            <li key={idx} className="flex items-start gap-3">
+              <span className="text-[10px] text-slate-400 tabular-nums shrink-0 w-12 mt-0.5">
+                {formatRunAgo(r.created_at)}
+              </span>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-1.5 flex-wrap">
+                  {meta && (
+                    <span className={`text-[10px] font-semibold border rounded px-1.5 py-0.5 ${meta.tone}`}>
+                      {meta.label}
+                    </span>
+                  )}
+                  {failed && (
+                    <span className="text-[10px] font-semibold border rounded px-1.5 py-0.5 bg-rose-50 text-rose-700 border-rose-200">
+                      실패
+                    </span>
+                  )}
+                  <p className="text-xs font-medium text-slate-800 truncate">{title}</p>
+                </div>
+                {truncated && (
+                  <p className="text-[11px] text-slate-500 mt-0.5 leading-relaxed">{truncated}</p>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
     </section>
   )
 }
