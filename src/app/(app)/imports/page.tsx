@@ -201,12 +201,13 @@ export default async function ImportsPage({
             <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">해외 주문 목록</span>
           </h1>
           <p className="mt-1 text-sm text-slate-600">
-            브라우저 확장이 수집한 해외 매입 (영수증) 목록. <b>영수증 1건씩 인라인 매칭</b> — 한 번에 보려면 →
+            브라우저 확장이 수집한 해외 매입 (영수증) 목록. <b>영수증 1건씩 인라인 매칭</b> — 마켓 주문과 함께 보려면 우측 통합 뷰를 사용하세요.
           </p>
         </div>
         <Link
           href="/orders/matching"
           className="inline-flex items-center gap-1.5 px-3 py-2 rounded-md text-sm font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 transition-colors whitespace-nowrap"
+          title="마켓 주문과 영수증을 같은 화면에서 매칭"
         >
           📋 주문매칭관리 통합 뷰
         </Link>
@@ -276,12 +277,21 @@ export default async function ImportsPage({
               📦
             </div>
             <p className="text-sm font-semibold text-slate-700">아직 수집된 영수증이 없습니다.</p>
-            <p className="mt-1 text-xs text-slate-500">
+            <p className="mt-2 text-xs text-slate-500 max-w-md mx-auto">
               <Link href="/settings/extension" className="text-indigo-700 hover:underline font-semibold underline-offset-2">
                 /settings/extension
-              </Link>{' '}
-              에서 확장 토큰을 발급하고 아마존 주문 페이지에서 가져오기를 시도해 보세요.
+              </Link>
+              {' '}에서 확장 토큰을 발급하고 아마존 주문 페이지에서 가져오기를 시도해 보세요.
             </p>
+            <div className="mt-5 flex items-center justify-center gap-2 text-xs">
+              <span className="text-slate-400">또는</span>
+              <Link
+                href="/orders/matching"
+                className="inline-flex items-center gap-1 px-2.5 py-1.5 rounded-md font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 transition-colors"
+              >
+                📋 주문매칭관리 통합 뷰로 이동
+              </Link>
+            </div>
           </div>
         ) : (
           <div className="overflow-x-auto">
