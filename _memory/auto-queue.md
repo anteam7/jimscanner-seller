@@ -181,12 +181,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### Audit 발견 2026-05-28 (self-audit cycle)
 
-- [ ] **#auto-A lint: ESLint config FlatCompat circular structure fix** _(audit 발견 2026-05-28)_
+- [x] **#auto-A lint: ESLint config FlatCompat circular structure fix** _(audit 발견 2026-05-28)_
   - estimated: 30m
   - prereq: 없음
   - decision_required: false
   - finding: `npm run lint` 가 `TypeError: Converting circular structure to JSON` 으로 죽음 — `eslint.config.mjs` 가 FlatCompat 으로 `next/core-web-vitals`, `next/typescript` extend 시 react plugin 순환 참조. ESLint 9.39 호환 형식으로 마이그레이션 필요 (`@next/eslint-plugin-next` 직접 import).
   - severity: high
+  - 완료: 2026-05-28
+  - fix: `eslint-config-next` v16.1.6 가 이미 flat config exports 제공 (`./core-web-vitals`, `./typescript`) — FlatCompat 제거하고 직접 import + spread. 추가로 `.next/**`, `node_modules/**` 등 ignores 명시.
+  - bonus: lint 가 다시 돌면서 33 errors / 19 warnings 의 pre-existing 이슈 노출 → `#auto-A-followup` 으로 별도 큐 항목 추가
 
 - [ ] **#auto-B db: b2b 트리거/함수 search_path 명시 (function_search_path_mutable)** _(audit 발견 2026-05-28)_
   - estimated: 30m
@@ -229,6 +232,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - decision_required: false
   - finding: Supabase advisor — b2b_order_items / b2b_orders / b2b_seller_health_snapshot 에 unused_index INFO. write 비용 감소 효과 있음 — 단 신규 테이블이라 사용 통계 부족 가능, 신중히 (3개월 운영 후 재검토 권장).
   - severity: low
+
+- [ ] **#auto-A-followup lint: 33 errors / 19 warnings 정리** _(#auto-A 후속 2026-05-28)_
+  - estimated: 2~3h (회차 분할 권장)
+  - prereq: #auto-A 완료
+  - decision_required: false
+  - finding: ESLint 다시 동작 후 노출된 pre-existing 이슈들. react-hooks/set-state-in-effect 다수 (QuotaBanner, SellerShell, OnboardingModal, /orders 페이지 등), react-hooks/immutability (ProductPicker 의 fetchResults forward-ref), @typescript-eslint/no-explicit-any (supabase functions 일부), unused eslint-disable directives 등.
+  - 권장 접근: severity 별로 한 회차에 한 카테고리씩 — (1) react-hooks/immutability + set-state-in-effect bug 가능성 우선, (2) any 캐스팅 정리, (3) unused-disable 청소
+  - severity: medium
 
 ### Brainstorm approved (2026-05-27)
 
@@ -281,7 +292,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **21개** (#7, #8, #9 완료. audit 2026-05-28 +7건: #auto-A~G)
+- P1 자율 가능: **21개** (#7, #8, #9, #auto-A 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
