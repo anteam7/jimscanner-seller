@@ -163,11 +163,13 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### 자체 점검·품질 (skill 활용)
 
-- [ ] **#10 매주 월요일 `/qa` 자동 실행** — 발견 critical/high 자동 fix, medium 이하는 P2 큐에 추가
+- [x] **#10 매주 월요일 `/qa` 자동 실행** — 발견 critical/high 자동 fix, medium 이하는 P2 큐에 추가
   - estimated: 30m setup + 1h 실행
   - prereq: 없음
   - decision_required: false (단 fix 가 STOP&ASK 범위면 issue 생성)
   - schedule: weekly Mon 03:00 KST
+  - 완료: 2026-05-28
+  - setup: `scripts/agent/weekly-qa-prompt.md` 작성 + README.md 에 파일 구조 갱신. Windows Task Scheduler 등록은 사용자가 prompt 끝의 PowerShell 명령으로 수행. 실제 주간 실행은 다음 월요일 KST 03:00 첫 fire.
 
 - [ ] **#11 매주 `/security-review` 자동 실행** — 새로 추가된 API route / 마이그레이션 위주 점검
   - schedule: weekly Wed 03:00 KST
