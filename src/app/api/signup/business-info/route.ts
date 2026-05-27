@@ -63,8 +63,7 @@ export async function POST(req: NextRequest) {
   if (!postalCode) return NextResponse.json({ error: '우편번호를 입력해 주세요.' }, { status: 400 })
   if (!address) return NextResponse.json({ error: '주소를 입력해 주세요.' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   // Check duplicate business_no (excluding current user)
   const { data: dupCheck } = await admin

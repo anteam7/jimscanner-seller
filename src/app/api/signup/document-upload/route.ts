@@ -42,8 +42,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '파일 크기는 5MB 이하여야 합니다.' }, { status: 413 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   // 버킷이 없으면 자동 생성 (이미 존재하면 무시)
   await admin.storage.createBucket(BUCKET, { public: false }).catch(() => {})

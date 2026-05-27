@@ -27,8 +27,7 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: '약관 동의 정보가 올바르지 않습니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   // Verify all required terms are included
   const { data: requiredTerms, error: termsError } = await admin
