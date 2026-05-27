@@ -104,10 +104,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - decision_required: false
   - 완료: 2026-05-27
 
-- [ ] **#3 /notifications 페이지네이션 (L-8)** — 최근 100건 → cursor 기반 50/page
+- [x] **#3 /notifications 페이지네이션 (L-8)** — 최근 100건 → cursor 기반 50/page
   - estimated: 45m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-27 commit 47095a6
 
 - [ ] **#4 /imports navigation 정리 (L-5)** — empty state 의 "주문 매칭관리 통합 뷰" 화살표 link 가 자명하게
   - estimated: 20m
