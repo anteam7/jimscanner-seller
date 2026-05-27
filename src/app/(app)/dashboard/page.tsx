@@ -101,6 +101,79 @@ function StatusBanner({ account }: { account: FullAccount }) {
   )
 }
 
+const HEALTH_HINT_ORDER: { flag: string; label: string; href?: string }[] = [
+  { flag: 'no_orders_14d', label: '최근 14일간 주문이 없습니다 — 새 주문 등록', href: '/orders/new' },
+  { flag: 'plan_canceled', label: '구독이 취소되었습니다 — 요금제 재선택', href: '/pricing' },
+  { flag: 'margin_failed', label: '마진 미입력/음수 주문이 있습니다 — 주문 확인', href: '/orders' },
+  { flag: 'verification_l1', label: '사업자 인증 미완료 — 인증 진행', href: '/signup/step-4' },
+  { flag: 'no_extension', label: '크롬 확장 미설치 — 확장 토큰 발급', href: '/settings/extension' },
+  { flag: 'orders_stuck', label: '7일 이상 정체된 주문 — 상태 확인', href: '/orders?status=pending' },
+]
+
+function HealthScoreCard({
+  score,
+  flags,
+  snapshotDate,
+}: {
+  score: number
+  flags: string[]
+  snapshotDate: string
+}) {
+  const tone =
+    score >= 80
+      ? { ring: 'border-l-emerald-500', text: 'text-emerald-700', bg: 'from-emerald-50/60 to-white', label: '양호' }
+      : score >= 60
+        ? { ring: 'border-l-sky-500', text: 'text-sky-700', bg: 'from-sky-50/60 to-white', label: '정상' }
+        : score >= 40
+          ? { ring: 'border-l-amber-500', text: 'text-amber-700', bg: 'from-amber-50/60 to-white', label: '주의' }
+          : { ring: 'border-l-rose-500', text: 'text-rose-700', bg: 'from-rose-50/60 to-white', label: '위험' }
+
+  const topHint = HEALTH_HINT_ORDER.find((h) => flags.includes(h.flag))
+
+  function formatSnapshotDate(s: string): string {
+    const d = new Date(s + 'T00:00:00')
+    if (Number.isNaN(d.getTime())) return s
+    return `${d.getMonth() + 1}월 ${d.getDate()}일 기준`
+  }
+
+  return (
+    <section
+      className={`rounded-xl border border-slate-200 border-l-[3px] ${tone.ring} bg-gradient-to-br ${tone.bg} shadow-sm p-5 flex items-center gap-5 flex-wrap`}
+    >
+      <div className="flex items-baseline gap-2">
+        <p className={`text-3xl font-bold tabular-nums ${tone.text}`}>{score}</p>
+        <p className="text-xs text-slate-500">/ 100</p>
+      </div>
+      <div className="flex-1 min-w-0">
+        <div className="flex items-center gap-2 flex-wrap">
+          <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">셀러 health</p>
+          <span className={`text-[10px] font-semibold ${tone.text} bg-white border border-slate-200 rounded px-1.5 py-0.5`}>
+            {tone.label}
+          </span>
+          <span className="text-[10px] text-slate-400">{formatSnapshotDate(snapshotDate)}</span>
+        </div>
+        {topHint ? (
+          topHint.href ? (
+            <Link
+              href={topHint.href}
+              className="mt-1 inline-flex items-center gap-1 text-sm font-medium text-slate-800 hover:text-indigo-700 transition-colors"
+            >
+              {topHint.label}
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 12 12" strokeWidth={2.5} stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" d="m3 2.5 4 3.5-4 3.5" />
+              </svg>
+            </Link>
+          ) : (
+            <p className="mt-1 text-sm font-medium text-slate-800">{topHint.label}</p>
+          )
+        ) : (
+          <p className="mt-1 text-sm text-slate-600">현재 발견된 이슈가 없습니다.</p>
+        )}
+      </div>
+    </section>
+  )
+}
+
 function VerificationProgress({ level }: { level: number }) {
   const steps = [
     { label: '이메일', done: level >= 1 },
@@ -424,7 +497,8 @@ export default async function SellerDashboardPage() {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
   const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes, oldUnmatchedRes,
-         tokenCountRes, myAddressCountRes, productCountRes, orderCountRes, matchedReceiptCountRes] = await Promise.all([
+         tokenCountRes, myAddressCountRes, productCountRes, orderCountRes, matchedReceiptCountRes,
+         healthSnapshotRes] = await Promise.all([
     db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'refund_requested'),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
@@ -435,6 +509,8 @@ export default async function SellerDashboardPage() {
     db.from('b2b_products').select('id', { count: 'exact', head: true }).eq('account_id', account.id).eq('is_active', true),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null),
     db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).not('matched_order_id', 'is', null),
+    // PH0-3: 본인 health score 최신 스냅샷 (오늘 또는 직전)
+    db.from('b2b_seller_health_snapshot').select('health_score, issue_flags, snapshot_date').eq('account_id', account.id).order('snapshot_date', { ascending: false }).limit(1).maybeSingle(),
   ])
   const actionQueue = {
     unmatchedReceipts: unmatchedReceiptsRes.count ?? 0,
@@ -452,6 +528,18 @@ export default async function SellerDashboardPage() {
   }
   // checklist 미완료 단계 있으면 항상 표시
   const showChecklist = !progress.hasToken || !progress.hasMyAddress || !progress.hasOrder || !progress.hasMatchedReceipt
+
+  // PH0-3: health score 미니카드 데이터 (snapshot 없으면 null → 숨김)
+  const healthSnapshot: { health_score: number | null; issue_flags: string[]; snapshot_date: string } | null =
+    healthSnapshotRes?.data
+      ? {
+          health_score: healthSnapshotRes.data.health_score ?? null,
+          issue_flags: Array.isArray(healthSnapshotRes.data.issue_flags)
+            ? (healthSnapshotRes.data.issue_flags as string[])
+            : [],
+          snapshot_date: healthSnapshotRes.data.snapshot_date,
+        }
+      : null
 
   // 환율 (실패 시 null) + 전일 비교
   let rates: ExchangeRates | null = null
@@ -497,6 +585,15 @@ export default async function SellerDashboardPage() {
 
       {/* 상태 배너 */}
       <StatusBanner account={account} />
+
+      {/* PH0-3: 본인 health score 미니카드 */}
+      {healthSnapshot && healthSnapshot.health_score != null && (
+        <HealthScoreCard
+          score={healthSnapshot.health_score}
+          flags={healthSnapshot.issue_flags}
+          snapshotDate={healthSnapshot.snapshot_date}
+        />
+      )}
 
       {/* 쿼터 경고 배너 */}
       <QuotaBanner />
