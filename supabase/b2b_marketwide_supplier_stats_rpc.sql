@@ -39,7 +39,10 @@ AS $$
   ORDER BY line_count DESC
 $$;
 
-GRANT EXECUTE ON FUNCTION public.b2b_marketwide_supplier_stats(integer) TO authenticated;
+-- authenticated 세션이 /analytics 에서 직접 .rpc() 호출 — authenticated 만 EXECUTE 유지 (#auto-C 2026-05-28)
+REVOKE EXECUTE ON FUNCTION public.b2b_marketwide_supplier_stats(integer) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.b2b_marketwide_supplier_stats(integer) FROM anon;
+GRANT  EXECUTE ON FUNCTION public.b2b_marketwide_supplier_stats(integer) TO authenticated;
 
 COMMENT ON FUNCTION public.b2b_marketwide_supplier_stats IS
   '익명 전체 셀러의 supplier_site 별 평균 판매가·중간값·평균 수량. p_min_lines 이상 라인이 있어야 노출 (k-anonymity 최소 보장).';

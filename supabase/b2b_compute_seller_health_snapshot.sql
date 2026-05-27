@@ -250,3 +250,8 @@ BEGIN
   );
 END
 $cron$;
+
+-- pg_cron / service_role 전용 — PUBLIC/anon/authenticated EXECUTE 차단 (#auto-C 2026-05-28)
+REVOKE EXECUTE ON FUNCTION public.b2b_compute_seller_health_snapshot(date) FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.b2b_compute_seller_health_snapshot(date) FROM anon;
+REVOKE EXECUTE ON FUNCTION public.b2b_compute_seller_health_snapshot(date) FROM authenticated;

@@ -43,3 +43,8 @@ SELECT cron.schedule(
   '5 0 * * *',
   $$SELECT public.b2b_reset_monthly_quotas();$$
 );
+
+-- pg_cron / service_role 전용 — PUBLIC/anon/authenticated EXECUTE 차단 (#auto-C 2026-05-28)
+REVOKE EXECUTE ON FUNCTION public.b2b_reset_monthly_quotas() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.b2b_reset_monthly_quotas() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.b2b_reset_monthly_quotas() FROM authenticated;

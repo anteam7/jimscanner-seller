@@ -54,3 +54,8 @@ SELECT a.id,
 FROM b2b_accounts a
 WHERE a.deleted_at IS NULL
   AND NOT EXISTS (SELECT 1 FROM b2b_subscriptions s WHERE s.account_id = a.id);
+
+-- 트리거 전용 함수 — PUBLIC/anon/authenticated EXECUTE 차단 (#auto-C 2026-05-28)
+REVOKE EXECUTE ON FUNCTION public.b2b_auto_provision_free_subscription() FROM PUBLIC;
+REVOKE EXECUTE ON FUNCTION public.b2b_auto_provision_free_subscription() FROM anon;
+REVOKE EXECUTE ON FUNCTION public.b2b_auto_provision_free_subscription() FROM authenticated;
