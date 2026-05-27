@@ -137,10 +137,12 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### next-steps.md 4순위 기술 부채
 
-- [ ] **#7 paste 한글 → enum reverse lookup 확장 (MK1 후속)** — `/orders/bulk` paste 시 한국어 마켓·상태·통화 값 들어와도 영문 enum 으로 변환
+- [x] **#7 paste 한글 → enum reverse lookup 확장 (MK1 후속)** — `/orders/bulk` paste 시 한국어 마켓·상태·통화 값 들어와도 영문 enum 으로 변환
   - estimated: 1h
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-28 commit a1d389b
+  - 추가된 alias: marketplace 13×2-4 / supplier_site 24×3-4 / currency 7×한·영변형 / forwarder_country 7×변형. SELECT_VALUE_ALIASES 통해 reverseLookup 확장. '달러' → USD, 'Amazon US' → amazon_us 등 자동 변환.
 
 - [ ] **#8 `/api/announcements/active` graceful 제거 (cron-4 후속)** — b2b_announcements 테이블 있고 active row 있으면 정상 반환. graceful fallback 한 줄 제거 + 명시 에러
   - estimated: 20m
@@ -221,7 +223,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **15개** (#12 + idea-3,4,5 추가, #2 완료)
+- P1 자율 가능: **14개** (#7 완료)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 - 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
