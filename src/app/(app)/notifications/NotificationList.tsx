@@ -39,10 +39,36 @@ function formatDate(iso: string): string {
   return `${yy}.${mm}.${dd} ${hh}:${mi}`
 }
 
-export default function NotificationList({ initialItems }: { initialItems: Notification[] }) {
+export default function NotificationList({
+  initialItems,
+  initialCursor,
+  pageSize,
+}: {
+  initialItems: Notification[]
+  initialCursor: string | null
+  pageSize: number
+}) {
   const router = useRouter()
   const [items, setItems] = useState(initialItems)
+  const [cursor, setCursor] = useState<string | null>(initialCursor)
   const [loading, setLoading] = useState(false)
+  const [loadingMore, setLoadingMore] = useState(false)
+
+  async function loadMore() {
+    if (!cursor || loadingMore) return
+    setLoadingMore(true)
+    try {
+      const res = await fetch(
+        `/api/notifications?limit=${pageSize}&cursor=${encodeURIComponent(cursor)}`,
+      )
+      if (!res.ok) return
+      const data: { notifications: Notification[]; next_cursor: string | null } = await res.json()
+      setItems((prev) => [...prev, ...data.notifications])
+      setCursor(data.next_cursor)
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   async function markAll() {
     setLoading(true)
@@ -101,37 +127,54 @@ export default function NotificationList({ initialItems }: { initialItems: Notif
           </p>
         </div>
       ) : (
-        <ul className="space-y-2">
-          {items.map((n) => (
-            <li key={n.id}>
+        <>
+          <ul className="space-y-2">
+            {items.map((n) => (
+              <li key={n.id}>
+                <button
+                  type="button"
+                  onClick={() => handleClick(n)}
+                  className={`w-full text-left rounded-lg bg-white shadow-sm border border-slate-200 border-l-[3px] ${TYPE_COLOR[n.type] ?? 'border-l-slate-300'} px-4 py-3 hover:shadow-md hover:border-slate-300 transition-all ${!n.read_at ? 'bg-indigo-50/30' : ''}`}
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-slate-100 rounded">
+                          {TYPE_LABEL[n.type] ?? n.type}
+                        </span>
+                        <p className={`text-sm truncate ${!n.read_at ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
+                          {n.title}
+                        </p>
+                      </div>
+                      {n.body && (
+                        <p className="mt-1 text-xs text-slate-600 line-clamp-2">{n.body}</p>
+                      )}
+                    </div>
+                    <div className="flex flex-col items-end gap-1 shrink-0">
+                      {!n.read_at && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
+                      <p className="text-[10px] text-slate-400 tabular-nums">{formatDate(n.created_at)}</p>
+                    </div>
+                  </div>
+                </button>
+              </li>
+            ))}
+          </ul>
+          {cursor && (
+            <div className="flex justify-center pt-2">
               <button
                 type="button"
-                onClick={() => handleClick(n)}
-                className={`w-full text-left rounded-lg bg-white shadow-sm border border-slate-200 border-l-[3px] ${TYPE_COLOR[n.type] ?? 'border-l-slate-300'} px-4 py-3 hover:shadow-md hover:border-slate-300 transition-all ${!n.read_at ? 'bg-indigo-50/30' : ''}`}
+                onClick={loadMore}
+                disabled={loadingMore}
+                className="h-9 px-4 text-xs font-semibold text-slate-700 bg-white border border-slate-200 rounded-md shadow-sm hover:shadow-md hover:border-slate-300 disabled:opacity-50 transition-all"
               >
-                <div className="flex items-start justify-between gap-3">
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-slate-100 rounded">
-                        {TYPE_LABEL[n.type] ?? n.type}
-                      </span>
-                      <p className={`text-sm truncate ${!n.read_at ? 'font-bold text-slate-900' : 'font-medium text-slate-700'}`}>
-                        {n.title}
-                      </p>
-                    </div>
-                    {n.body && (
-                      <p className="mt-1 text-xs text-slate-600 line-clamp-2">{n.body}</p>
-                    )}
-                  </div>
-                  <div className="flex flex-col items-end gap-1 shrink-0">
-                    {!n.read_at && <span className="w-2 h-2 rounded-full bg-indigo-500" />}
-                    <p className="text-[10px] text-slate-400 tabular-nums">{formatDate(n.created_at)}</p>
-                  </div>
-                </div>
+                {loadingMore ? '불러오는 중…' : `더 보기 (${pageSize}건씩)`}
               </button>
-            </li>
-          ))}
-        </ul>
+            </div>
+          )}
+          {!cursor && items.length >= pageSize && (
+            <p className="text-center text-[11px] text-slate-400 pt-2">모든 알림을 불러왔습니다.</p>
+          )}
+        </>
       )}
     </div>
   )

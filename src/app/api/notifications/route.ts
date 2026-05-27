@@ -1,6 +1,6 @@
 /**
- * GET /api/notifications?limit=20
- * 셀러 본인의 최근 알림 + unread_count.
+ * GET /api/notifications?limit=20&cursor=<iso_created_at>
+ * 셀러 본인의 최근 알림 + unread_count + next_cursor (cursor 기반 페이지네이션).
  */
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
@@ -14,7 +14,10 @@ export async function GET(request: Request) {
     data: { user },
   } = await sb.auth.getUser()
   if (!user) {
-    return NextResponse.json({ notifications: [], unread_count: 0 }, { status: 200 })
+    return NextResponse.json(
+      { notifications: [], unread_count: 0, next_cursor: null },
+      { status: 200 },
+    )
   }
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -25,23 +28,39 @@ export async function GET(request: Request) {
     .eq('user_id', user.id)
     .single()
   if (!account) {
-    return NextResponse.json({ notifications: [], unread_count: 0 }, { status: 200 })
+    return NextResponse.json(
+      { notifications: [], unread_count: 0, next_cursor: null },
+      { status: 200 },
+    )
   }
 
   const url = new URL(request.url)
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '20'), 1), 100)
+  const cursor = url.searchParams.get('cursor')
 
-  const { data: rows, error } = await db
+  let query = db
     .from('b2b_notifications')
     .select('id, type, title, body, link, read_at, created_at')
     .eq('account_id', account.id)
     .order('created_at', { ascending: false })
-    .limit(limit)
+    .limit(limit + 1)
+  if (cursor) {
+    query = query.lt('created_at', cursor)
+  }
+
+  const { data: rows, error } = await query
 
   if (error) {
-    // 테이블이 없거나 권한 문제 → 빈 응답 (graceful)
-    return NextResponse.json({ notifications: [], unread_count: 0 }, { status: 200 })
+    return NextResponse.json(
+      { notifications: [], unread_count: 0, next_cursor: null },
+      { status: 200 },
+    )
   }
+
+  const items = rows ?? []
+  const hasMore = items.length > limit
+  const pageItems = hasMore ? items.slice(0, limit) : items
+  const nextCursor = hasMore ? pageItems[pageItems.length - 1].created_at : null
 
   const { count: unreadCount } = await db
     .from('b2b_notifications')
@@ -50,7 +69,8 @@ export async function GET(request: Request) {
     .is('read_at', null)
 
   return NextResponse.json({
-    notifications: rows ?? [],
+    notifications: pageItems,
     unread_count: unreadCount ?? 0,
+    next_cursor: nextCursor,
   })
 }

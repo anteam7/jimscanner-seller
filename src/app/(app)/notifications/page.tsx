@@ -48,15 +48,24 @@ export default async function NotificationsPage() {
     )
   }
 
+  const PAGE_SIZE = 50
   const { data: rows } = await db
     .from('b2b_notifications')
     .select('id, type, title, body, link, read_at, created_at')
     .eq('account_id', account.id)
     .order('created_at', { ascending: false })
-    .limit(100)
+    .limit(PAGE_SIZE + 1)
 
-  const items: Notification[] = rows ?? []
-  const unreadCount = items.filter((n) => !n.read_at).length
+  const fetched: Notification[] = rows ?? []
+  const hasMore = fetched.length > PAGE_SIZE
+  const items = hasMore ? fetched.slice(0, PAGE_SIZE) : fetched
+  const initialCursor = hasMore ? items[items.length - 1].created_at : null
+
+  const { count: unreadCount } = await db
+    .from('b2b_notifications')
+    .select('id', { count: 'exact', head: true })
+    .eq('account_id', account.id)
+    .is('read_at', null)
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">
@@ -65,11 +74,11 @@ export default async function NotificationsPage() {
           <span className="bg-gradient-to-r from-indigo-600 to-sky-600 bg-clip-text text-transparent">알림</span>
         </h1>
         <p className="mt-1 text-sm text-slate-600">
-          최근 100건. 안 읽은 알림: <span className="font-bold text-indigo-700">{unreadCount}건</span>
+          안 읽은 알림: <span className="font-bold text-indigo-700">{unreadCount ?? 0}건</span>
         </p>
       </header>
 
-      <NotificationList initialItems={items} />
+      <NotificationList initialItems={items} initialCursor={initialCursor} pageSize={PAGE_SIZE} />
     </div>
   )
 }
