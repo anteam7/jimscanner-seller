@@ -50,14 +50,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - `supabase/b2b_seller_health_snapshot.sql` 작성 + Supabase MCP apply_migration
   - 완료: 2026-05-27
 
-- [ ] **#PH0-2 health snapshot 계산 SQL function + pg_cron 등록**
+- [x] **#PH0-2 health snapshot 계산 SQL function + pg_cron 등록**
   - estimated: 1h
   - prereq: #PH0-1
   - decision_required: false
   - `b2b_compute_seller_health_snapshot(p_date date)` SECURITY DEFINER 함수
   - 모든 active b2b_accounts loop, metric upsert
-  - pg_cron `b2b_seller_health_snapshot_daily` KST 04:00 등록
-  - 1회 backfill (오늘 날짜) 실행
+  - pg_cron `b2b_seller_health_snapshot_daily` KST 04:00 (UTC 19:00) 등록
+  - 1회 backfill (오늘 날짜) 실행 → 2 accounts upsert, health_score 55/65
+  - 완료: 2026-05-27
 
 - [ ] **#PH0-3 seller repo 측 dashboard 미니카드 — 본인 health score**
   - estimated: 30m
