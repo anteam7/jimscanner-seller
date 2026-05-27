@@ -32,7 +32,10 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## P0 — 사용자 결정 대기 (issue 답신 받기 전까지 skip)
 
-(현재 없음)
+- [ ] **#P0-1 Supabase 보안 advisor ERROR/Auth 설정 결정** _(self-audit 2026-05-28)_
+  - waiting_for: issue#7
+  - 항목: Postgres 업그레이드 / leaked password protection / MFA options / 비 b2b 테이블 RLS off / forwarder_min_rates security_definer_view
+  - 사용자 답변 받으면 항목별 AUTO-RUN 또는 handoff 분기
 
 ---
 
@@ -176,6 +179,57 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - prereq: b2b_auto_runs 에 row 1+ (cron 시작 후 자연 발생)
   - decision_required: false
 
+### Audit 발견 2026-05-28 (self-audit cycle)
+
+- [ ] **#auto-A lint: ESLint config FlatCompat circular structure fix** _(audit 발견 2026-05-28)_
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false
+  - finding: `npm run lint` 가 `TypeError: Converting circular structure to JSON` 으로 죽음 — `eslint.config.mjs` 가 FlatCompat 으로 `next/core-web-vitals`, `next/typescript` extend 시 react plugin 순환 참조. ESLint 9.39 호환 형식으로 마이그레이션 필요 (`@next/eslint-plugin-next` 직접 import).
+  - severity: high
+
+- [ ] **#auto-B db: b2b 트리거/함수 search_path 명시 (function_search_path_mutable)** _(audit 발견 2026-05-28)_
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase advisor — `tg_b2b_touch_updated_at`, `tg_b2b_form_templates_set_updated_at`, `tg_b2b_products_set_updated_at` 등 b2b 관련 함수에 `SET search_path = public, pg_temp` 누락. SQL injection 위험.
+  - severity: medium
+
+- [ ] **#auto-C db: b2b SECURITY DEFINER 함수 anon/authenticated EXECUTE REVOKE** _(audit 발견 2026-05-28)_
+  - estimated: 20m
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase advisor — `b2b_auto_provision_free_subscription`, `b2b_compute_seller_health_snapshot`, `b2b_marketwide_supplier_stats`, `b2b_reset_monthly_quotas` 가 anon/authenticated 에서 EXECUTE 가능. 의도된 호출자는 service_role / pg_cron 만.
+  - severity: high
+
+- [ ] **#auto-D db: b2b_auto_runs RLS policy 추가 (admin-only)** _(audit 발견 2026-05-28)_
+  - estimated: 15m
+  - prereq: 없음
+  - decision_required: false
+  - finding: RLS enabled 인데 policy 없음 → service_role 외 모두 0 row. admin SELECT policy 추가 + service_role 은 RLS bypass 로 INSERT 가능 유지.
+  - severity: medium
+
+- [ ] **#auto-E db: b2b 테이블 RLS `auth.uid()` initplan 최적화 (50건 WARN)** _(audit 발견 2026-05-28)_
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase performance advisor — b2b_accounts, b2b_orders, b2b_order_items 등 RLS policy 에서 `auth.uid()` 가 row 별 재평가. `(select auth.uid())` 패턴으로 교체하면 query plan 1회 evaluation. 행 많아질수록 영향 큼.
+  - severity: medium
+
+- [ ] **#auto-F db: b2b_form_template_columns multiple_permissive_policies 통합** _(audit 발견 2026-05-28)_
+  - estimated: 20m
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase advisor — 같은 role/cmd 에 permissive policy 5건 → OR 조건으로 통합하면 단순화 + 성능.
+  - severity: low
+
+- [ ] **#auto-G db: 미사용 인덱스 정리 검토 (b2b_*)** _(audit 발견 2026-05-28)_
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase advisor — b2b_order_items / b2b_orders / b2b_seller_health_snapshot 에 unused_index INFO. write 비용 감소 효과 있음 — 단 신규 테이블이라 사용 통계 부족 가능, 신중히 (3개월 운영 후 재검토 권장).
+  - severity: low
+
 ### Brainstorm approved (2026-05-27)
 
 - [ ] **#idea-3 환불 관리 (b2b_refunds + /refunds 페이지)** _(brainstorm approved 2026-05-27)_
@@ -227,7 +281,8 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **14개** (#7, #8, #9 완료)
+- P1 자율 가능: **21개** (#7, #8, #9 완료. audit 2026-05-28 +7건: #auto-A~G)
+- P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 - 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
