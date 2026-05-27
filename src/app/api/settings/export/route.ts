@@ -19,9 +19,7 @@ export async function GET() {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, email, business_name, business_no, ceo_name, phone, postal_code, address, detail_address, created_at')
     .eq('user_id', user.id)
@@ -29,18 +27,16 @@ export async function GET() {
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const accountId = account.id as string
+  const accountId = account.id
 
   const [orders, items, imports, addresses, products, domestic, mappings] = await Promise.all([
-    adb.from('b2b_orders').select('*').eq('account_id', accountId).is('deleted_at', null),
-    adb.from('b2b_order_items').select('*, b2b_orders!inner(account_id)').eq('b2b_orders.account_id', accountId),
-    adb.from('b2b_supplier_purchases').select('*').eq('account_id', accountId),
-    adb.from('b2b_forwarder_addresses').select('*').eq('account_id', accountId),
-    adb.from('b2b_products').select('*').eq('account_id', accountId),
-    adb.from('b2b_domestic_products').select('*').eq('account_id', accountId),
-    adb.from('b2b_product_mappings').select('*').eq('account_id', accountId),
+    admin.from('b2b_orders').select('*').eq('account_id', accountId).is('deleted_at', null),
+    admin.from('b2b_order_items').select('*, b2b_orders!inner(account_id)').eq('b2b_orders.account_id', accountId),
+    admin.from('b2b_supplier_purchases').select('*').eq('account_id', accountId),
+    admin.from('b2b_forwarder_addresses').select('*').eq('account_id', accountId),
+    admin.from('b2b_products').select('*').eq('account_id', accountId),
+    admin.from('b2b_domestic_products').select('*').eq('account_id', accountId),
+    admin.from('b2b_product_mappings').select('*').eq('account_id', accountId),
   ])
 
   const payload = {

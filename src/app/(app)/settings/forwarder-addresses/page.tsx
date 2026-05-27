@@ -43,9 +43,7 @@ export default async function ForwarderAddressesPage() {
   } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -53,9 +51,8 @@ export default async function ForwarderAddressesPage() {
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [{ data: addrRows }, { data: fwdRows }] = await Promise.all([
-    (admin as any)
+    admin
       .from('b2b_forwarder_addresses')
       .select(
         'id, account_id, forwarder_id, label, recipient_name, phone, address1, address2, city, state, zip, country, member_no, is_official, is_default, notes, created_at, forwarders(name, slug)',
@@ -63,16 +60,18 @@ export default async function ForwarderAddressesPage() {
       .or(`account_id.is.null,account_id.eq.${account.id}`)
       .order('is_default', { ascending: false })
       .order('is_official', { ascending: true })
-      .order('label', { ascending: true }),
-    (admin as any)
+      .order('label', { ascending: true })
+      .returns<AddressRow[]>(),
+    admin
       .from('forwarders')
       .select('id, name, slug')
       .eq('is_active', true)
-      .order('name', { ascending: true }),
+      .order('name', { ascending: true })
+      .returns<ForwarderOption[]>(),
   ])
 
-  const addresses = (addrRows ?? []) as AddressRow[]
-  const forwarders = (fwdRows ?? []) as ForwarderOption[]
+  const addresses = addrRows ?? []
+  const forwarders = fwdRows ?? []
 
   const myCount = addresses.filter((a) => a.account_id != null).length
   const officialCount = addresses.filter((a) => a.is_official).length

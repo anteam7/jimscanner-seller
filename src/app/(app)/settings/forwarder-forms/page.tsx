@@ -28,24 +28,22 @@ export default async function ForwarderFormsPage() {
   } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
-  const { data: snapshotsRaw } = await db
+  const { data: snapshotsRaw } = await sb
     .from('b2b_forwarder_form_snapshots')
     .select('id, forwarder_id, forwarder_slug, url, page_title, user_note, created_at, fields, forwarders(name, slug)')
     .eq('account_id', account.id)
     .order('created_at', { ascending: false })
     .limit(50)
+    .returns<(Snapshot & { forwarders?: { name: string; slug: string } | null })[]>()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const snapshots = (snapshotsRaw ?? []) as (Snapshot & { forwarders?: { name: string; slug: string } | null })[]
+  const snapshots = snapshotsRaw ?? []
 
   // 배대지별 그룹핑 카운트
   const byForwarder = new Map<string, number>()

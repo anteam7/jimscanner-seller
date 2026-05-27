@@ -28,9 +28,7 @@ export default async function ExtensionSettingsPage() {
   } = await sb.auth.getUser()
   if (!user) return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -38,15 +36,15 @@ export default async function ExtensionSettingsPage() {
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: tokenRows } = await (admin as any)
+  const { data: tokenRows } = await admin
     .from('b2b_seller_tokens')
     .select('id, label, token_prefix, last_used_at, created_at, revoked_at')
     .eq('account_id', account.id)
     .order('created_at', { ascending: false })
     .limit(20)
+    .returns<TokenRow[]>()
 
-  const tokens = (tokenRows ?? []) as TokenRow[]
+  const tokens = tokenRows ?? []
 
   return (
     <div className="max-w-3xl mx-auto p-4 md:p-8 space-y-6">

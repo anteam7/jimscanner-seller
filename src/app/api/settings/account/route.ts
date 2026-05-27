@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import type { Database } from '../../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -13,9 +14,7 @@ export async function GET() {
 
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, email, phone, postal_code, address, detail_address, business_name, ceo_name')
     .eq('user_id', user.id)
@@ -67,10 +66,8 @@ export async function PATCH(request: Request) {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
 
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, email')
     .eq('user_id', user.id)
@@ -83,14 +80,14 @@ export async function PATCH(request: Request) {
     if (!email || !email.includes('@')) {
       return NextResponse.json({ error: '올바른 이메일 주소를 입력해 주세요.' }, { status: 400 })
     }
-    const { error: emailErr } = await (admin as any).auth.admin.updateUserById(user.id, {
+    const { error: emailErr } = await admin.auth.admin.updateUserById(user.id, {
       email,
     })
     if (emailErr) {
       return NextResponse.json({ error: '이메일 변경 요청 중 오류가 발생했습니다: ' + emailErr.message }, { status: 500 })
     }
     // b2b_audit_log: email 변경 요청
-    await (admin as any).from('b2b_audit_log').insert({
+    await admin.from('b2b_audit_log').insert({
       account_id: account.id,
       user_id: user.id,
       action: 'account_info_updated',
@@ -101,7 +98,7 @@ export async function PATCH(request: Request) {
   }
 
   // b2b_accounts 업데이트 (phone, postal_code, address, detail_address)
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const updates: Database['public']['Tables']['b2b_accounts']['Update'] = { updated_at: new Date().toISOString() }
   const changedFields: string[] = []
   if (phone !== undefined) { updates.phone = phone || null; changedFields.push('phone') }
   if (postal_code !== undefined) { updates.postal_code = postal_code || null; changedFields.push('postal_code') }
@@ -109,14 +106,14 @@ export async function PATCH(request: Request) {
   if (detail_address !== undefined) { updates.detail_address = detail_address || null; changedFields.push('detail_address') }
 
   if (changedFields.length > 0) {
-    const { error: updateErr } = await (admin as any)
+    const { error: updateErr } = await admin
       .from('b2b_accounts')
       .update(updates)
       .eq('id', account.id)
 
     if (updateErr) return NextResponse.json({ error: '저장 중 오류가 발생했습니다.' }, { status: 500 })
 
-    await (admin as any).from('b2b_audit_log').insert({
+    await admin.from('b2b_audit_log').insert({
       account_id: account.id,
       user_id: user.id,
       action: 'account_info_updated',
