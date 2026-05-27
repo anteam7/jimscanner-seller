@@ -156,12 +156,14 @@ main repo agent 가 처리 후 close. 결과 알림 필요시 다음 회차에 i
      change_summary, next_direction,
      decision_needed, decision_issue_number
    ) VALUES (
-     'cron', 'jimscanner-seller-agent', '<task title>', 'completed',
+     'implementation', 'builder', '<task title>', 'completed',
      '<git rev-parse HEAD>', '<commit msg first line>', '[<json array>]'::jsonb,
      '<one line summary>', '<next P1 item title or empty>',
      false, NULL
    );
    ```
+   - `mode` enum: `implementation` (코드/큐 진행), `review` (audit), `discovery` (brainstorm)
+   - `agent_type` 체크 제약: `builder` / `review` / `discovery` 만 허용 — `jimscanner-seller-agent` 같은 값 넣으면 23514 violation
 
 ## 6. 큐 비었거나 idle 조건
 
