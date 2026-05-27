@@ -60,12 +60,13 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 1회 backfill (오늘 날짜) 실행 → 2 accounts upsert, health_score 55/65
   - 완료: 2026-05-27
 
-- [ ] **#PH0-3 seller repo 측 dashboard 미니카드 — 본인 health score**
+- [x] **#PH0-3 seller repo 측 dashboard 미니카드 — 본인 health score**
   - estimated: 30m
   - prereq: #PH0-1, #PH0-2 (snapshot row 있어야)
   - decision_required: false
   - `/dashboard` 우측에 본인 health score + 부족한 항목 hint 1개 미니카드
   - 셀러 본인이 어드민이 보는 metric 을 일부 미리 보게 함 (transparency)
+  - 완료: 2026-05-27 commit a9bde03
 
 ### main repo 측 작업 (handoff issue 로 위임)
 
