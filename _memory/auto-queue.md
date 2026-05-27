@@ -70,12 +70,13 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### main repo 측 작업 (handoff issue 로 위임)
 
-- [ ] **#PH0-4 [handoff] main repo `/admin/b2b/health` 페이지 신규**
+- [x] **#PH0-4 [handoff] main repo `/admin/b2b/health` 페이지 신규** _(handoff: jimpass-agent-platform#3, 2026-05-27)_
   - estimated: 5m (이 repo 측: issue 생성만)
   - prereq: #PH0-1 완료 (스키마 있어야 spec body 정확)
   - decision_required: false
   - 동작: `handoff-to-repo.mjs --to-repo anteam7/jimpass-agent-platform --spec-key phase0-admin-health-page --title "[from-seller] /admin/b2b/health 신규" --body "..." --labels "agent-handoff-from-seller,phase-0"`
   - body 에 포함: 테이블 스키마 / 4 KPI 카드 / row table / 필터 / 모바일 우선
+  - main repo agent 처리 대기 (issue close 되면 PH0-5 진행)
 
 - [ ] **#PH0-5 [handoff] main repo `/admin/b2b/health/[account_id]` detail 모달/페이지**
   - estimated: 5m (handoff issue 생성)
