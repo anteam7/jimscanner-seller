@@ -5,8 +5,7 @@ import { createAdminClient } from '@/lib/auth/admin-supabase'
  * true 반환 시 API에서 422 응답해야 함.
  */
 export async function isGracePeriodBlocked(userId: string): Promise<boolean> {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   const { data: account } = await admin
     .from('b2b_accounts')

@@ -41,8 +41,7 @@ export async function authenticateSellerToken(
 
   const hash = hashToken(raw)
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data } = await (admin as any)
+  const { data } = await admin
     .from('b2b_seller_tokens')
     .select('id, account_id, revoked_at')
     .eq('token_hash', hash)
@@ -51,8 +50,7 @@ export async function authenticateSellerToken(
   if (!data || data.revoked_at) return null
 
   // last_used_at 갱신 (fire-and-forget)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  ;(admin as any)
+  admin
     .from('b2b_seller_tokens')
     .update({ last_used_at: new Date().toISOString() })
     .eq('id', data.id)

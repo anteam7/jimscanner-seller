@@ -29,8 +29,6 @@ export type DashboardStats = {
 
 async function fetchDashboardStats(accountId: string): Promise<DashboardStats> {
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   const now = new Date()
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString()
@@ -43,37 +41,37 @@ async function fetchDashboardStats(accountId: string): Promise<DashboardStats> {
     { data: recentOrdersRaw },
     { data: statusRowsRaw },
   ] = await Promise.all([
-    adb
+    admin
       .from('b2b_orders')
       .select('id', { count: 'exact', head: true })
       .eq('account_id', accountId)
       .is('deleted_at', null)
       .gte('created_at', monthStart),
-    adb
+    admin
       .from('b2b_subscriptions')
       .select('plan_code, monthly_order_used, monthly_order_limit')
       .eq('account_id', accountId)
       .order('created_at', { ascending: false })
       .limit(1),
-    adb
+    admin
       .from('b2b_order_items')
       .select('sale_price_krw, b2b_orders!inner(account_id, deleted_at, created_at)')
       .eq('b2b_orders.account_id', accountId)
       .is('b2b_orders.deleted_at', null)
       .gte('b2b_orders.created_at', monthStart),
-    adb
+    admin
       .from('b2b_products')
       .select('id', { count: 'exact', head: true })
       .eq('account_id', accountId)
       .eq('is_active', true),
-    adb
+    admin
       .from('b2b_orders')
       .select('id, order_number, market_order_number, marketplace, status, buyer_name, created_at, b2b_order_items(product_name, sale_price_krw)')
       .eq('account_id', accountId)
       .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(5),
-    adb
+    admin
       .from('b2b_orders')
       .select('status')
       .eq('account_id', accountId)

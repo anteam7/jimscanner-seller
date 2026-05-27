@@ -25,10 +25,8 @@ export async function getMarginLossAlerts(
   rates: Record<string, { rate: number; unit: number }>,
 ): Promise<MarginLossAlert[]> {
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
-  const { data: skuRows } = await adb
+  const { data: skuRows } = await admin
     .from('b2b_products')
     .select('id, seller_sku, display_name, default_unit_price, default_currency')
     .eq('account_id', accountId)
@@ -66,7 +64,7 @@ export async function getMarginLossAlerts(
   const thirtyAgo = new Date()
   thirtyAgo.setDate(thirtyAgo.getDate() - 30)
 
-  const { data: itemRows } = await adb
+  const { data: itemRows } = await admin
     .from('b2b_order_items')
     .select('product_id, sale_price_krw, b2b_orders!inner(account_id, deleted_at, created_at)')
     .in('product_id', Array.from(skuKrw.keys()))
