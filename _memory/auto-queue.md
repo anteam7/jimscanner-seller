@@ -130,7 +130,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - estimated: 1h × 6 회차
   - prereq: 없음
   - decision_required: false
-  - progress: orders 모듈 완료 2026-05-27 commit 8ddd2f5 (types/supabase.ts regen + 13 파일). 남은: products, settings, imports, signup, billing, lib/b2b
+  - progress: orders (commit 8ddd2f5), products (commit 46c6b91) 완료. 남은: settings, imports, signup, billing, lib/b2b
 
 ### next-steps.md 4순위 기술 부채
 
