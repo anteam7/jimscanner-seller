@@ -12,6 +12,7 @@ type SettingCard = {
   href: string
   available: boolean
   badge?: string
+  disabledReason?: string
   icon: React.ReactNode
 }
 
@@ -50,6 +51,7 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
         href: '/settings/api-keys',
         available: false,
         badge: '준비 중',
+        disabledReason: 'L4 인증 후 사용 가능',
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 5.25a3 3 0 0 1 3 3m3 0a6 6 0 0 1-7.029 5.912c-.563-.097-1.159.026-1.563.43L10.5 17.25H8.25v2.25H6v2.25H2.25v-2.818c0-.597.237-1.17.659-1.591l6.499-6.499c.404-.404.527-1 .43-1.563A6 6 0 0 1 21.75 8.25Z" />
@@ -68,6 +70,7 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
         href: '/settings/team',
         available: false,
         badge: '준비 중',
+        disabledReason: 'L4 인증 후 사용 가능',
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 0 0 3.741-.479 3 3 0 0 0-4.682-2.72m.94 3.198.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0 1 12 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 0 1 6 18.719m12 0a5.971 5.971 0 0 0-.941-3.197m0 0A5.995 5.995 0 0 0 12 12.75a5.995 5.995 0 0 0-5.058 2.772m0 0a3 3 0 0 0-4.681 2.72 8.986 8.986 0 0 0 3.74.477m.94-3.197a5.971 5.971 0 0 0-.94 3.197M15 6.75a3 3 0 1 1-6 0 3 3 0 0 1 6 0Zm6 3a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Zm-13.5 0a2.25 2.25 0 1 1-4.5 0 2.25 2.25 0 0 1 4.5 0Z" />
@@ -86,6 +89,7 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
         href: '/settings/webhooks',
         available: false,
         badge: '준비 중',
+        disabledReason: 'L4 인증 후 사용 가능',
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M13.19 8.688a4.5 4.5 0 0 1 1.242 7.244l-4.5 4.5a4.5 4.5 0 0 1-6.364-6.364l1.757-1.757m13.35-.622 1.757-1.757a4.5 4.5 0 0 0-6.364-6.364l-4.5 4.5a4.5 4.5 0 0 0 1.242 7.244" />
@@ -98,6 +102,7 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
         href: '/settings/integrations/google-sheets',
         available: false,
         badge: '준비 중',
+        disabledReason: 'L4 인증 후 사용 가능',
         icon: (
           <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" d="M3.375 19.5h17.25m-17.25 0a1.125 1.125 0 0 1-1.125-1.125M3.375 19.5h7.5c.621 0 1.125-.504 1.125-1.125m-9.75 0V5.625m0 12.75v-1.5c0-.621.504-1.125 1.125-1.125m18.375 2.625V5.625m0 12.75c0 .621-.504 1.125-1.125 1.125m1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125m0 3.75h-7.5A1.125 1.125 0 0 1 12 18.375m9.75-12.75c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125m19.5 0v1.5c0 .621-.504 1.125-1.125 1.125M2.25 5.625v1.5c0 .621.504 1.125 1.125 1.125m0 0h17.25m-17.25 0h7.5c.621 0 1.125.504 1.125 1.125M3.375 8.25c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m17.25-3.75h-7.5c-.621 0-1.125.504-1.125 1.125m8.625-1.125c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M12 10.875v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 10.875c0 .621.504 1.125 1.125 1.125m-2.25 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125M13.125 12h7.5m-7.5 0c-.621 0-1.125.504-1.125 1.125M20.625 12c.621 0 1.125.504 1.125 1.125v1.5c0 .621-.504 1.125-1.125 1.125m-17.25 0h7.5M12 14.625v-1.5m0 1.5c0 .621-.504 1.125-1.125 1.125M12 14.625c0 .621.504 1.125 1.125 1.125m-2.25 0c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125m2.25-4.5h7.5" />
@@ -290,8 +295,9 @@ export default function SettingsPage() {
                 ) : (
                   <div
                     key={card.href}
-                    className="flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] border-l-slate-300 bg-white shadow-sm cursor-not-allowed opacity-60"
+                    className="group/disabled relative flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] border-l-slate-300 bg-white shadow-sm cursor-not-allowed opacity-50"
                     aria-disabled="true"
+                    title={card.disabledReason || card.badge || undefined}
                   >
                     <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
                       {card.icon}
@@ -303,6 +309,14 @@ export default function SettingsPage() {
                     {card.badge && (
                       <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
                         {card.badge}
+                      </span>
+                    )}
+                    {card.disabledReason && (
+                      <span
+                        role="tooltip"
+                        className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover/disabled:opacity-100 transition-opacity whitespace-nowrap rounded-md bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1.5 shadow-md z-10"
+                      >
+                        {card.disabledReason}
                       </span>
                     )}
                   </div>
