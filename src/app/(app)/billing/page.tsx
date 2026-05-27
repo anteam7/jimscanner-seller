@@ -58,16 +58,14 @@ export default async function BillingPage() {
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name, email')
     .eq('user_id', user.id)
     .single()
   if (!account) return null
 
-  const { data: sub } = (await db
+  const { data: sub } = (await sb
     .from('b2b_subscriptions')
     .select('id, status, period_start, period_end, next_billing_at, monthly_order_used, monthly_order_quota_override, cancelled_at, cancellation_reason, created_at, b2b_subscription_plans(plan_code, name_ko, description, price_krw_monthly, price_krw_yearly, monthly_order_quota, features)')
     .eq('account_id', account.id)

@@ -23,10 +23,7 @@ export async function GET() {
     return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -36,7 +33,7 @@ export async function GET() {
     return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
   }
 
-  const { data: sub } = await db
+  const { data: sub } = await sb
     .from('b2b_subscriptions')
     .select('status, period_end')
     .eq('account_id', account.id)
@@ -80,10 +77,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '기타 사유는 500자 이내로 입력해 주세요.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name')
     .eq('user_id', user.id)
@@ -93,7 +87,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
   }
 
-  const { data: sub } = await db
+  const { data: sub } = await sb
     .from('b2b_subscriptions')
     .select('id, status, period_end, discount_override_pct')
     .eq('account_id', account.id)
@@ -117,7 +111,7 @@ export async function POST(request: Request) {
     const currentEnd = sub.period_end ? new Date(sub.period_end) : new Date()
     const newPeriodEnd = new Date(currentEnd.getTime() + 90 * 24 * 60 * 60 * 1000).toISOString()
 
-    const { error: offerErr } = await db
+    const { error: offerErr } = await sb
       .from('b2b_subscriptions')
       .update({
         discount_override_pct: 30,
@@ -132,7 +126,7 @@ export async function POST(request: Request) {
     }
 
     try {
-      await db.from('b2b_audit_log').insert({
+      await sb.from('b2b_audit_log').insert({
         account_id: account.id,
         user_id: user.id,
         action: 'subscription_offer_accepted',
@@ -153,7 +147,7 @@ export async function POST(request: Request) {
 
   const expiresAt = sub.period_end ? new Date(sub.period_end) : null
 
-  const { error: cancelErr } = await db
+  const { error: cancelErr } = await sb
     .from('b2b_subscriptions')
     .update({
       status: 'cancelled',
@@ -169,7 +163,7 @@ export async function POST(request: Request) {
   }
 
   try {
-    await db.from('b2b_audit_log').insert({
+    await sb.from('b2b_audit_log').insert({
       account_id: account.id,
       user_id: user.id,
       action: 'subscription_cancelled',

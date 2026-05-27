@@ -1627,6 +1627,7 @@ export type Database = {
           cancellation_reason: string | null
           cancelled_at: string | null
           created_at: string
+          discount_override_pct: number | null
           id: string
           monthly_order_quota_override: number | null
           monthly_order_used: number
@@ -1642,6 +1643,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
+          discount_override_pct?: number | null
           id?: string
           monthly_order_quota_override?: number | null
           monthly_order_used?: number
@@ -1657,6 +1659,7 @@ export type Database = {
           cancellation_reason?: string | null
           cancelled_at?: string | null
           created_at?: string
+          discount_override_pct?: number | null
           id?: string
           monthly_order_quota_override?: number | null
           monthly_order_used?: number
