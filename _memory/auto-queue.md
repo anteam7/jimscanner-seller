@@ -98,10 +98,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - decision_required: false
   - 완료: 2026-05-27 commit 97c9127
 
-- [ ] **#2 /settings "준비 중" 4개 카드 disabled 처리 (L-4)** — API 키 관리·팀원 초대·웹훅·구글 시트 카드를 `opacity-50 cursor-not-allowed` + tooltip "L4 인증 후 사용 가능"
+- [x] **#2 /settings "준비 중" 4개 카드 disabled 처리 (L-4)** — API 키 관리·팀원 초대·웹훅·구글 시트 카드를 `opacity-50 cursor-not-allowed` + tooltip "L4 인증 후 사용 가능"
   - estimated: 30m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-05-27
 
 - [ ] **#3 /notifications 페이지네이션 (L-8)** — 최근 100건 → cursor 기반 50/page
   - estimated: 45m
@@ -158,6 +159,32 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - prereq: b2b_auto_runs 에 row 1+ (cron 시작 후 자연 발생)
   - decision_required: false
 
+### Brainstorm approved (2026-05-27)
+
+- [ ] **#idea-3 환불 관리 (b2b_refunds + /refunds 페이지)** _(brainstorm approved 2026-05-27)_
+  - estimated: 4-5h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#3
+  - DB 변경: b2b_refunds (order_id, reason, status, refund_amount_krw, requested_at, settled_at) + b2b_orders.status enum 'refund_requested' 추가
+
+- [ ] **#idea-4 다중 결제 카드 관리 (b2b_payment_cards)** _(brainstorm approved 2026-05-27)_
+  - estimated: 2-3h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#4
+  - DB 변경: b2b_payment_cards 테이블 + b2b_order_items.payment_card_id 추가
+  - UI: /settings/cards + dashboard 카드별 매입 합계 미니카드
+
+- [ ] **#idea-5 주문 ETA 예상 + /eta 캘린더** _(brainstorm approved 2026-05-27)_
+  - estimated: 3-4h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#5
+  - DB 변경: b2b_forwarders.avg_transit_days_to_kr 컬럼 추가 (사용자가 점진 보강)
+  - UI: /eta 페이지 + dashboard 미니카드 + ICS export endpoint
+  - 참조: 사용자가 issue#5 댓글에 33 배대지 양식 xlsx 5개 (japan_boat/japan_air/china_air/england/usa_air) 첨부 — 양식 변환 작업 시 함께 활용
+
 ---
 
 ## P2 — 도메인·운영 (사용자 액션 필요 — agent 가 알림만)
@@ -183,7 +210,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **12개**
+- P1 자율 가능: **15개** (#12 + idea-3,4,5 추가, #2 완료)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 - 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
