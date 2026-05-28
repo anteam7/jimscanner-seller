@@ -125,6 +125,8 @@ export default function AnnouncementBanner() {
       const key = localStorage.key(i)
       if (key?.startsWith('dismissed_ann_')) stored.add(key.slice('dismissed_ann_'.length))
     }
+    // mount 1회: localStorage dismissed ID sync + 활성 공지 fetch. cascading render 없음.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setDismissed(stored)
 
     fetch('/api/announcements/active')

@@ -91,6 +91,8 @@ export default function AccountSettingsPage() {
     setNewEmail(data.email)
   }, [])
 
+  // mount 1회 계정 정보 fetch. cascading render 없음.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAccount() }, [loadAccount])
 
   async function handleInfoSave(e: React.FormEvent) {

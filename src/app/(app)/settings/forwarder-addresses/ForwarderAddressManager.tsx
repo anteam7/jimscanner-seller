@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type ForwarderRef = { name: string | null; slug: string | null }
@@ -56,11 +56,12 @@ export default function ForwarderAddressManager({
 }) {
   const router = useRouter()
   const [rows, setRows] = useState(initialAddresses)
-
-  // router.refresh() 후 서버에서 새 props 받으면 client state 도 동기화
-  useEffect(() => {
+  // router.refresh() 후 서버 props 갱신 시 client state 동기화 (React 19 권장 "store previous prop" 패턴 — useEffect 대신 render 중 set)
+  const [prevInitial, setPrevInitial] = useState(initialAddresses)
+  if (initialAddresses !== prevInitial) {
+    setPrevInitial(initialAddresses)
     setRows(initialAddresses)
-  }, [initialAddresses])
+  }
 
   // POST/DELETE/PATCH 직후 즉시 반영 위한 직접 fetch
   async function reload() {

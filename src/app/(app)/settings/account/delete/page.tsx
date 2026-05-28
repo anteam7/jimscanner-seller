@@ -43,9 +43,9 @@ export default function AccountDeletePage() {
     }
   }, [])
 
-  useEffect(() => {
-    fetchSubscription()
-  }, [fetchSubscription])
+  // mount 1회 구독 정보 fetch. cascading render 없음.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { fetchSubscription() }, [fetchSubscription])
 
   async function handleDelete() {
     if (!password.trim()) {

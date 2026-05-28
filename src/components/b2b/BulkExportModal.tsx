@@ -25,6 +25,21 @@ type Props = {
   onSuccess?: () => void
 }
 
+function computeTemplateDefaults(
+  templates: ForwarderTemplateLite[],
+  templateId: string,
+): Record<string, string> {
+  const tpl = templates.find((t) => t.id === templateId)
+  if (!tpl) return {}
+  const next: Record<string, string> = {}
+  for (const c of tpl.columns) {
+    if (c.source_kind !== 'user_input') continue
+    const key = c.user_input_label ?? `col_${c.column_index}`
+    next[key] = c.constant_value ?? ''
+  }
+  return next
+}
+
 function countMissing(orders: SelectedOrderInfo[]): {
   customs: number
   postal: number
@@ -54,24 +69,21 @@ export default function BulkExportModal({
   onSuccess,
 }: Props) {
   const [templateId, setTemplateId] = useState<string>(templates[0]?.id ?? '')
-  const [userInputs, setUserInputs] = useState<Record<string, string>>({})
+  const [userInputs, setUserInputs] = useState<Record<string, string>>(() =>
+    computeTemplateDefaults(templates, templates[0]?.id ?? ''),
+  )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
-    const tpl = templates.find((t) => t.id === templateId)
-    if (!tpl) {
-      setUserInputs({})
-      return
-    }
-    const next: Record<string, string> = {}
-    for (const c of tpl.columns) {
-      if (c.source_kind !== 'user_input') continue
-      const key = c.user_input_label ?? `col_${c.column_index}`
-      next[key] = c.constant_value ?? ''
-    }
-    setUserInputs(next)
-  }, [templateId, templates])
+  // templateId / templates 변경 시 userInputs 재계산 (React 19 "render 중 set state" 패턴)
+  const [prevKey, setPrevKey] = useState<{ id: string; templates: ForwarderTemplateLite[] }>({
+    id: templateId,
+    templates,
+  })
+  if (prevKey.id !== templateId || prevKey.templates !== templates) {
+    setPrevKey({ id: templateId, templates })
+    setUserInputs(computeTemplateDefaults(templates, templateId))
+  }
 
   const tpl = useMemo(
     () => templates.find((t) => t.id === templateId) ?? null,

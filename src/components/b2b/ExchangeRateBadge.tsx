@@ -37,6 +37,8 @@ export default function ExchangeRateBadge() {
   }, [])
 
   useEffect(() => {
+    // mount 1회 fetch + 5분 폴링. setState 안정 (cascade 없음, polling 자체가 외부 시스템 sync).
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     load()
     const timer = setInterval(load, REFRESH_INTERVAL_MS)
     return () => clearInterval(timer)

@@ -43,6 +43,8 @@ export default function SecuritySettingsPage() {
     }
   }, [supabase])
 
+  // mount 1회 MFA factors fetch. cascading render 없음.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadFactors() }, [loadFactors])
 
   async function startEnroll() {

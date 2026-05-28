@@ -45,6 +45,8 @@ export default function CompliancePage() {
     }
   }, [])
 
+  // mount 1회 compliance 설정 fetch. cascading render 없음.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { load() }, [load])
 
   async function handleSave() {
