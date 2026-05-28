@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type Match = {
   id: string
@@ -46,7 +46,7 @@ export function MultiMatchPanel({ receiptId }: { receiptId: string }) {
   const [error, setError] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
 
-  async function load() {
+  const load = useCallback(async () => {
     setLoading(true)
     try {
       const res = await fetch(`/api/imports/supplier-orders/${receiptId}/matches`)
@@ -62,9 +62,9 @@ export function MultiMatchPanel({ receiptId }: { receiptId: string }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [receiptId])
 
-  useEffect(() => { void load() }, [receiptId]) // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { void load() }, [load])
 
   async function addMatch(orderId: string, amount?: number | null, note?: string) {
     const res = await fetch(`/api/imports/supplier-orders/${receiptId}/matches`, {
@@ -166,16 +166,7 @@ function SearchModal({
   const debounceRef = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => {
-    inputRef.current?.focus()
-    void doSearch('')
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function doSearch(query: string) {
+  const doSearch = useCallback(async (query: string) => {
     setLoading(true)
     try {
       const url = '/api/orders?limit=50' + (query ? `&q=${encodeURIComponent(query)}` : '')
@@ -186,7 +177,15 @@ function SearchModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    inputRef.current?.focus()
+    void doSearch('')
+    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [doSearch, onClose])
 
   function onChange(v: string) {
     setQ(v)

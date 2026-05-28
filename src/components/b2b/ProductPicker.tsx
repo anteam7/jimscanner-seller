@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 export type PickedProduct = {
   id: string
@@ -31,27 +31,7 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
 
-  useEffect(() => {
-    if (!open) return
-    const t = setTimeout(() => {
-      void fetchResults(q)
-    }, 200)
-    return () => clearTimeout(t)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [q, open])
-
-  useEffect(() => {
-    if (!open) return
-    function onDoc(e: MouseEvent) {
-      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
-        setOpen(false)
-      }
-    }
-    document.addEventListener('mousedown', onDoc)
-    return () => document.removeEventListener('mousedown', onDoc)
-  }, [open])
-
-  async function fetchResults(query: string) {
+  const fetchResults = useCallback(async (query: string) => {
     setLoading(true)
     try {
       const url = query.trim()
@@ -69,7 +49,26 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    if (!open) return
+    const t = setTimeout(() => {
+      void fetchResults(q)
+    }, 200)
+    return () => clearTimeout(t)
+  }, [q, open, fetchResults])
+
+  useEffect(() => {
+    if (!open) return
+    function onDoc(e: MouseEvent) {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', onDoc)
+    return () => document.removeEventListener('mousedown', onDoc)
+  }, [open])
 
   function openPanel() {
     setOpen(true)

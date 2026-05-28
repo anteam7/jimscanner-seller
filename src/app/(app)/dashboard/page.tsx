@@ -507,13 +507,18 @@ export default async function SellerDashboardPage() {
   // "오늘 행동 큐" — 셀러가 즉시 행동해야 하는 항목들
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const db = supabase as any
+  // server component: per-request side effects are intended (not React render purity)
+  // eslint-disable-next-line react-hooks/purity
+  const nowMs = Date.now()
+  const oneDayAgoIso = new Date(nowMs - 24 * 60 * 60 * 1000).toISOString()
+  const sevenDaysAgoIso = new Date(nowMs - 7 * 24 * 60 * 60 * 1000).toISOString()
   const [unmatchedReceiptsRes, refundRequestsRes, oldPendingRes, oldUnmatchedRes,
          tokenCountRes, myAddressCountRes, productCountRes, orderCountRes, matchedReceiptCountRes,
          healthSnapshotRes] = await Promise.all([
     db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null),
     db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'refund_requested'),
-    db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString()),
-    db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null).lt('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()),
+    db.from('b2b_orders').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('deleted_at', null).eq('status', 'pending').lt('created_at', oneDayAgoIso),
+    db.from('b2b_supplier_purchases').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('matched_order_id', null).lt('created_at', sevenDaysAgoIso),
     // Progress 5단계
     db.from('b2b_seller_tokens').select('id', { count: 'exact', head: true }).eq('account_id', account.id).is('revoked_at', null),
     db.from('b2b_forwarder_addresses').select('id', { count: 'exact', head: true }).eq('account_id', account.id),

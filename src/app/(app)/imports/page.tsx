@@ -143,6 +143,8 @@ export default async function ImportsPage({
     }[]
   }
 
+  // server component: per-request side effects are intended (not React render purity)
+  // eslint-disable-next-line react-hooks/purity
   const sixtyDaysAgo = new Date(Date.now() - 60 * 24 * 60 * 60 * 1000).toISOString()
   const { data: ordersRaw } = await sb
     .from('b2b_orders')

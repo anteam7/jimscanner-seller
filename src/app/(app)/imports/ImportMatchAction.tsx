@@ -1,7 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 
 type SearchResult = {
   id: string
@@ -191,19 +191,7 @@ function SearchModal({
   const debounceRef = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
 
-  useEffect(() => {
-    inputRef.current?.focus()
-    // 첫 진입 시 최근 주문 50건 로드
-    void doSearch('')
-    function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
-    }
-    document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
-
-  async function doSearch(query: string) {
+  const doSearch = useCallback(async (query: string) => {
     setLoading(true)
     try {
       const url = '/api/orders?limit=50' + (query ? `&q=${encodeURIComponent(query)}` : '')
@@ -219,7 +207,17 @@ function SearchModal({
     } finally {
       setLoading(false)
     }
-  }
+  }, [])
+
+  useEffect(() => {
+    inputRef.current?.focus()
+    void doSearch('')
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') onClose()
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [doSearch, onClose])
 
   function onChange(v: string) {
     setQ(v)
