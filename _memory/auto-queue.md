@@ -332,13 +332,20 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### Brainstorm approved (2026-05-28)
 
-- [ ] **#idea-8 운송장 자동 트래킹 hub (17track 1-click + status 자동 전이)** _(brainstorm approved 2026-05-28)_
+- [x] **#idea-8 운송장 자동 트래킹 hub (17track 1-click + status 자동 전이)** _(brainstorm approved 2026-05-28)_
   - estimated: 1.5-2h
   - prereq: 없음
   - decision_required: false
   - source: github issue#8
-  - DB 변경: b2b_order_items 에 tracking_number_overseas / tracked_carrier / tracking_updated_at 3 컬럼 + trigger (paid → in_transit)
-  - UI: /orders 라인별 운송장 입력 + 17track 외부 link 버튼 + bulk paste
+  - 완료: 2026-05-29 commit 0288335
+  - 구현:
+    - DB: `b2b_order_items.tracking_updated_at` 컬럼 + `tg_b2b_order_items_tracking_auto_transit` 트리거 (BEFORE INSERT/UPDATE OF tracking_number_overseas). 현지 트래킹 첫 입력 시 부모 b2b_orders.status `paid` → `in_transit` 자동 전이. 트리거 search_path=public,pg_temp 명시. SQL: `supabase/b2b_2026_05_29_tracking_auto_transit.sql`.
+    - 주의: `tracking_number_overseas` / `carrier` 컬럼은 이미 존재했음 (b2b_order_items_image_tracking_overseas.sql). 이번엔 `tracked_carrier` 별도 컬럼 대신 기존 `carrier` 컬럼 재사용 + 신규 `tracking_updated_at` 만 추가.
+    - TrackingEditor 확장: 해외 캐리어 14종 프리셋 (DHL/UPS/USPS/FedEx/EMS/Yamato/Sagawa/Japan Post/SF Express/EMS China/China Post/Royal Mail/DPD/Other) + 폼 내부에 17track 외부 link 추가. 현지·국내 캐리어 select 분리.
+    - 신규 페이지 `/orders/tracking-paste`: 엑셀에서 N행 paste → 키(매입 주문번호 또는 셀러 주문번호) + 운송장 + 캐리어 (선택). 한 줄당 탭/쉼표/다중공백 자동 인식. 기본 캐리어 fallback, 미리보기, 결과 (적용·매칭실패·형식오류) 분기 표시.
+    - 신규 API `POST /api/orders/tracking-bulk` (최대 500행): supplier_order_number 우선 매칭 → 없으면 셀러 order_number 매칭 (해당 주문 모든 라인). 소유권 검증 후 일괄 UPDATE. status_transitioned 결과 반환.
+    - `/orders` 헤더에 "운송장 일괄" 버튼 + SellerShell 주문관리 sub-item "운송장 일괄 입력" 추가.
+  - 후속 (소형): 17track 양방향 API 도입 (D3) — 운송 상태 자동 fetch + arrived_korea 자동 전이. 현재는 외부 link 만.
 
 - [ ] **#idea-9 dashboard 7일 매출 sparkline + WoW 비교** _(brainstorm approved 2026-05-28)_
   - estimated: 40-50m
@@ -389,7 +396,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b 완료. brainstorm approved 6건 중 5건 미진행)
+- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8 완료. brainstorm approved 6건 중 3건 미진행: #idea-9/10/11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
