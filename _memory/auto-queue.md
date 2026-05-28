@@ -313,13 +313,21 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 보안: PCI 회피 — 카드 번호 본번호/CVC/유효기간 저장 없음. 별칭·last4·결제일만 저장.
   - 후속 (소형): /settings/cards 에 이달 카드별 매입 합계 표시 (현재 dashboard 만), card 한도 vs 사용량 경고 banner.
 
-- [ ] **#idea-5 주문 ETA 예상 + /eta 캘린더** _(brainstorm approved 2026-05-27)_
+- [x] **#idea-5 주문 ETA 예상 + /eta 캘린더** _(brainstorm approved 2026-05-27)_
   - estimated: 3-4h
   - prereq: 없음
   - decision_required: false
   - source: github issue#5
-  - DB 변경: b2b_forwarders.avg_transit_days_to_kr 컬럼 추가 (사용자가 점진 보강)
-  - UI: /eta 페이지 + dashboard 미니카드 + ICS export endpoint
+  - 완료: 2026-05-28 commit 8e2effc
+  - 구현:
+    - DB: `b2b_forwarder_transit_defaults` 신규 테이블 (origin_country × method) + 22 국가 시드 (US/JP/CN/UK/DE/FR/IT/ES/AU/CA/HK/TW/SG/VN/TH/OTHER + JP boat/EMS, US/CN boat/express). RLS read authenticated/anon (글로벌 lookup), write service_role only. 트리거 search_path 명시. 원본 SQL `supabase/b2b_forwarder_transit_defaults.sql`.
+    - 주의: `b2b_forwarders` 컬럼 추가 대신 별도 lookup 테이블 — 원본 `forwarders` 는 main repo 소유이며 ETA 는 국가·운송수단 기준으로도 충분히 정확.
+    - `src/lib/b2b/eta.ts`: `computeOrderEta()` — forwarder_submitted_at 있으면 + transit_days, 없으면 order_date + 3(buffer) + transit_days. `classifyEtaBucket()` overdue/this_week/next_week/later (KST 기준).
+    - `/eta` 페이지 (서버 컴포넌트): 4 KPI 카드 + 버킷별 details/summary 그룹 목록. 추정 라인엔 amber `추정` 배지. 국가 미설정엔 ⚠ 표시.
+    - `/api/eta/ics` ICS endpoint: RFC 5545 VCALENDAR all-day event, 추정 라인엔 `CATEGORIES:추정`. /eta 페이지 헤더 다운로드 버튼.
+    - 대시보드 `EtaMiniCard`: 지연 또는 이번주 있을 때만 표시. 카운트 2개 + 다음 3건 미리보기.
+    - SellerShell 주문관리 sub-item 에 "도착 예정 (ETA)" 추가.
+  - 후속 (소형): forwarder_country UK/GB alias 통합, 셀러별 transit 평균 override 컬럼, 17track API 연동 시 실제 운송일 학습 → 시드 업데이트.
   - 참조: 사용자가 issue#5 댓글에 33 배대지 양식 xlsx 5개 (japan_boat/japan_air/china_air/england/usa_air) 첨부 — 양식 변환 작업 시 함께 활용
 
 ### Brainstorm approved (2026-05-28)
