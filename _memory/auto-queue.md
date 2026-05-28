@@ -250,21 +250,23 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - finding: Supabase advisor — b2b_order_items / b2b_orders / b2b_seller_health_snapshot 에 unused_index INFO. write 비용 감소 효과 있음 — 단 신규 테이블이라 사용 통계 부족 가능, 신중히 (3개월 운영 후 재검토 권장).
   - severity: low
 
-- [ ] **#auto-A-followup lint: 0 errors / 16 warnings 남음 (phase 1, 2, 3, 4 완료, 5/N)** _(#auto-A 후속 2026-05-28)_
+- [x] **#auto-A-followup lint: 0 errors / 0 warnings 도달 (phase 1~5 완료)** _(#auto-A 후속 2026-05-28)_
   - estimated: 30m 남음
   - prereq: #auto-A 완료
   - decision_required: false
-  - finding: ESLint 다시 동작 후 노출된 pre-existing 이슈들. errors 전건 청소 완료. 남은 warnings 는 모두 unused-vars / unused eslint-disable 카테고리.
-  - 권장 접근: phase 5 에서 unused-vars 일괄 청소 (한 회차 30분)
-  - severity: medium → low (errors 0 도달)
+  - finding: ESLint 다시 동작 후 노출된 pre-existing 이슈들. errors·warnings 전건 청소 완료.
+  - severity: medium → done
+  - 완료: 2026-05-28
   - progress:
     - phase 1 완료 (2026-05-28 commit de61094): react-hooks/immutability 4건 + server-component Date.now() purity 2건. 52 → 47 problems (33 errors → 29).
     - phase 2 (1/2) 완료 (2026-05-28 commit 6c3249b): set-state-in-effect 5건. 47 → 41 problems (29 → 24 errors).
     - phase 2 (2/2) 완료 (2026-05-28 commit 5b554c9): set-state-in-effect 9건 (6 eslint-disable + 3 render-time setState 리팩토링). 41 → 32 problems (24 → 15 errors).
     - phase 3 완료 (2026-05-28 commit bd87652): set-state-in-effect 6건. 32 → 26 problems (15 → 9 errors).
-    - phase 4 완료 (2026-05-28): no-explicit-any 6건 + no-html-link-for-pages 1건 + no-unescaped-entities 2건. pricing/page.tsx 는 supabase 타입 직접 사용 (cast 제거), api/auth/callback·password 는 createAdminClient typed 활용, api/settings/compliance 는 미적용 컬럼 참조라 cast 유지 + 명시 eslint-disable, billing-lifecycle (Deno edge fn) 은 db param 을 `ReturnType<typeof createClient>` 로 타입. settings/account/delete 는 next/Link, settings/extension 은 `&ldquo;/&rdquo;` HTML entity. 26 → 16 problems (9 → 0 errors).
-  - 남은 phase:
-    - phase 5: unused-vars 14건 warning 청소 (extension JS 2건, analytics/dashboard/orders/settings/compliance/announcements/signup step-2~4 등) + bulk header_aliases / select_value_aliases exhaustive-deps 2건 검토.
+    - phase 4 완료 (2026-05-28): no-explicit-any 6건 + no-html-link-for-pages 1건 + no-unescaped-entities 2건. 26 → 16 problems (9 → 0 errors).
+    - phase 5 완료 (2026-05-28): unused-vars 14건 + exhaustive-deps 2건 청소. 16 → 0 problems (0 → 0 errors / 16 → 0 warnings).
+      - dead code 제거: amazon-checkout currentCountry, generic-form-filler getPatternsModule, analytics marketByKey, dashboard OnboardingStep, orders/page StatusBadge·MarketplaceTag·formatKRW·formatDate·sumSale, settings/compliance Metadata import, signup step-2/3/4 Link imports.
+      - bulk SELECT_VALUE_ALIASES·HEADER_ALIASES 를 모듈 스코프로 이동하여 exhaustive-deps 2건 해소 (재생성 비용도 절감).
+      - eslint.config.mjs 에 `no-unused-vars` rule 명시 (argsIgnorePattern:^_ / ignoreRestSiblings:true) — `_tc` 같은 prefix 변수와 destructure rest 제외 패턴이 일관되게 통과.
 
 ### Brainstorm approved (2026-05-27)
 
