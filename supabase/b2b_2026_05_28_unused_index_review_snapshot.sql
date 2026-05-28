@@ -1,0 +1,55 @@
+-- 기록: 2026-05-28 #auto-G
+-- b2b_* 테이블 미사용 인덱스 검토 — drop 보류 + 재검토 기한 명시
+--
+-- 배경:
+--   Supabase performance advisor 가 b2b_order_items / b2b_orders /
+--   b2b_seller_health_snapshot 의 일부 인덱스를 unused_index (INFO) 로 플래그.
+--   write 비용 감소 효과 있음 — 단 우리 b2b 서비스는 2026-05-28 기준
+--   2 active accounts / 행 수 10건 미만이라 PostgreSQL 옵티마이저가 인덱스 대신
+--   seq scan 을 선택하는 정상 동작.
+--
+-- 결정:
+--   이번 회차에는 어떤 인덱스도 drop 하지 않는다. 행 수가 늘면 (예: 100건+)
+--   옵티마이저가 자연스럽게 인덱스를 쓰기 시작할 가능성이 높다.
+--   재검토 기한: 2026-08-28 (3개월 후) — 그때 다시 pg_stat_user_indexes
+--   에서 idx_scan = 0 인 인덱스 중 의도된 lookup 경로가 명확히 미사용인
+--   것만 선별적으로 drop.
+--
+-- 검토 대상 (advisor 플래그 + idx_scan = 0 인 b2b 인덱스):
+--
+-- ── b2b_order_items
+--   idx_b2b_items_supplier             — supplier_site 검색 (예: "라쿠텐" 만 조회)
+--   idx_b2b_items_tracking             — tracking_number lookup
+--   idx_b2b_items_product              — product_id (SKU) lookup
+--   idx_b2b_order_items_forwarder      — forwarder_id (라인별 배대지 선택)
+--
+-- ── b2b_orders
+--   uniq_b2b_orders_marketplace_order_no  — (marketplace, market_order_number) 유니크
+--   idx_b2b_orders_account_date           — (account_id, created_at DESC)
+--   idx_b2b_orders_marketplace            — marketplace 검색
+--   uniq_b2b_orders_account_number        — (account_id, market_order_number) 유니크
+--   idx_b2b_orders_client                 — client_id (B2B 거래처) lookup
+--
+-- ── b2b_seller_health_snapshot
+--   idx_b2b_seller_health_date         — snapshot_date 범위 검색 (트렌드 차트)
+--   idx_b2b_seller_health_account      — account_id 범위 검색
+--   idx_b2b_seller_health_score        — health_score 정렬 (어드민 위험 셀러 정렬)
+--
+-- 위 인덱스 중 uniq_* 는 데이터 무결성 보장용이라 idx_scan 과 무관하게 유지.
+-- 일반 idx_* 는 행 수가 늘면 의도된 쿼리에서 자연히 활용될 예정.
+--
+-- 검증 쿼리 (재검토 시 이걸로 다시 확인):
+--   SELECT schemaname, relname AS tablename, indexrelname AS indexname,
+--          idx_scan, idx_tup_read, idx_tup_fetch,
+--          pg_size_pretty(pg_relation_size(indexrelid)) AS size
+--   FROM pg_stat_user_indexes
+--   WHERE schemaname='public' AND relname LIKE 'b2b_%'
+--   ORDER BY idx_scan ASC, relname;
+--
+-- 재검토 시 drop 후보 선정 기준 (참고):
+--   1. idx_scan = 0 AND 해당 컬럼에 의도된 lookup 경로 없음 (코드에서 WHERE 조건 미발견)
+--   2. 동일 컬럼 set 의 다른 인덱스가 이미 충분
+--   3. uniq_ 접두사 아님 (무결성 보장 인덱스는 제외)
+--
+-- 본 파일은 기록 전용 — 실행할 DDL 없음.
+SELECT 1;

@@ -243,12 +243,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-28 commit 334760c
   - fix: Supabase MCP `apply_migration b2b_form_template_columns_split_modify_policy` — `template_columns_modify` (FOR ALL) DROP 후 INSERT/UPDATE/DELETE 3개 정책으로 split. SELECT 는 `template_columns_select` 한 곳에서만 평가. 의미·target role (public) 보존, auth.uid() initplan 패턴 (SELECT auth.uid()) 유지. 원본 `supabase/b2b_form_templates.sql` 과 `b2b_2026_05_28_rls_initplan_optimization.sql` 도 동기. 기록 SQL: `supabase/b2b_2026_05_28_form_template_columns_split_modify.sql`. 적용 후 같은 role/cmd 조합당 정책 수 = 1 확인.
 
-- [ ] **#auto-G db: 미사용 인덱스 정리 검토 (b2b_*)** _(audit 발견 2026-05-28)_
+- [x] **#auto-G db: 미사용 인덱스 정리 검토 (b2b_*)** _(audit 발견 2026-05-28)_
   - estimated: 30m
   - prereq: 없음
   - decision_required: false
   - finding: Supabase advisor — b2b_order_items / b2b_orders / b2b_seller_health_snapshot 에 unused_index INFO. write 비용 감소 효과 있음 — 단 신규 테이블이라 사용 통계 부족 가능, 신중히 (3개월 운영 후 재검토 권장).
   - severity: low
+  - 완료: 2026-05-28 (drop 없이 기록만)
+  - 결정: 2 active accounts / 행 10건 미만이라 옵티마이저가 seq scan 선택하는 정상 동작. 행 수 늘면 자연 활용 예상되어 이번 회차 drop 하지 않음. 재검토 기한 **2026-08-28**.
+  - 기록 SQL: `supabase/b2b_2026_05_28_unused_index_review_snapshot.sql` (드롭 후보 12개 + 검증 쿼리 + 선정 기준 명시).
 
 - [x] **#auto-A-followup lint: 0 errors / 0 warnings 도달 (phase 1~5 완료)** _(#auto-A 후속 2026-05-28)_
   - estimated: 30m 남음
@@ -353,7 +356,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **26개** (#7~12, #auto-A~E 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건. brainstorm approved 2026-05-28 +4건: #idea-8~11)
+- P1 자율 가능: **26개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. brainstorm approved 7건 미진행)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
