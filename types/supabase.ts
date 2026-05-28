@@ -1364,6 +1364,91 @@ export type Database = {
           },
         ]
       }
+      b2b_refunds: {
+        Row: {
+          account_id: string
+          approved_at: string | null
+          buyer_message: string | null
+          created_at: string
+          deleted_at: string | null
+          id: string
+          internal_notes: string | null
+          order_id: string
+          order_item_id: string | null
+          reason: string
+          reason_category: string | null
+          refund_amount_krw: number
+          refund_method: string | null
+          requested_at: string
+          settled_at: string | null
+          status: string
+          status_history: Json
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          approved_at?: string | null
+          buyer_message?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          order_id: string
+          order_item_id?: string | null
+          reason: string
+          reason_category?: string | null
+          refund_amount_krw?: number
+          refund_method?: string | null
+          requested_at?: string
+          settled_at?: string | null
+          status?: string
+          status_history?: Json
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          approved_at?: string | null
+          buyer_message?: string | null
+          created_at?: string
+          deleted_at?: string | null
+          id?: string
+          internal_notes?: string | null
+          order_id?: string
+          order_item_id?: string | null
+          reason?: string
+          reason_category?: string | null
+          refund_amount_krw?: number
+          refund_method?: string | null
+          requested_at?: string
+          settled_at?: string | null
+          status?: string
+          status_history?: Json
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_refunds_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_refunds_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_refunds_order_item_id_fkey"
+            columns: ["order_item_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_order_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2b_seller_health_snapshot: {
         Row: {
           account_id: string
