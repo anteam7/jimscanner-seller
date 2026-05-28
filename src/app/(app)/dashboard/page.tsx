@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { getExchangeRates, getYesterdayRates, type ExchangeRates } from '@/lib/b2b/exchange-rate'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
-import { getDashboardStats } from '@/lib/b2b/dashboard-data'
+import { getDashboardStats, getSevenDayTrend } from '@/lib/b2b/dashboard-data'
 import { getMarginLossAlerts, type MarginLossAlert } from '@/lib/b2b/margin-loss'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
@@ -319,18 +319,100 @@ function OnboardingGuide({ progress }: { progress?: Progress }) {
   )
 }
 
+function Sparkline({
+  values,
+  accent,
+}: {
+  values: number[]
+  accent: 'indigo' | 'emerald' | 'sky'
+}) {
+  if (values.length < 2) return null
+  const max = Math.max(...values, 0)
+  const min = Math.min(...values, 0)
+  const range = max - min
+  const W = 96
+  const H = 24
+  const stepX = values.length > 1 ? W / (values.length - 1) : W
+  const points = values.map((v, i) => {
+    const x = i * stepX
+    const y = range === 0 ? H / 2 : H - ((v - min) / range) * (H - 2) - 1
+    return `${x.toFixed(1)},${y.toFixed(1)}`
+  })
+  const lastX = (values.length - 1) * stepX
+  const lastY = range === 0 ? H / 2 : H - ((values[values.length - 1] - min) / range) * (H - 2) - 1
+  const stroke = {
+    indigo: 'stroke-indigo-500',
+    emerald: 'stroke-emerald-500',
+    sky: 'stroke-sky-500',
+  }[accent]
+  const dot = {
+    indigo: 'fill-indigo-600',
+    emerald: 'fill-emerald-600',
+    sky: 'fill-sky-600',
+  }[accent]
+  return (
+    <svg
+      width={W}
+      height={H}
+      viewBox={`0 0 ${W} ${H}`}
+      className="overflow-visible"
+      aria-hidden="true"
+    >
+      <polyline
+        fill="none"
+        strokeWidth={1.5}
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        className={stroke}
+        points={points.join(' ')}
+      />
+      <circle cx={lastX} cy={lastY} r={2} className={dot} />
+    </svg>
+  )
+}
+
+function WowChip({ pct }: { pct: number | null }) {
+  if (pct == null) {
+    return (
+      <span className="text-[10px] font-medium text-slate-400 bg-slate-50 border border-slate-200 rounded px-1.5 py-0.5">
+        전주 데이터 없음
+      </span>
+    )
+  }
+  const flat = Math.abs(pct) < 0.5
+  const positive = pct >= 0
+  const tone = flat
+    ? 'text-slate-500 bg-slate-50 border-slate-200'
+    : positive
+      ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+      : 'text-rose-700 bg-rose-50 border-rose-200'
+  const arrow = flat ? '–' : positive ? '▲' : '▼'
+  return (
+    <span className={`inline-flex items-center gap-0.5 text-[10px] font-semibold border rounded px-1.5 py-0.5 tabular-nums ${tone}`}>
+      {arrow} {Math.abs(pct).toFixed(pct >= 100 || pct <= -100 ? 0 : 1)}%
+      <span className="text-[9px] font-medium opacity-70 ml-0.5">전주比</span>
+    </span>
+  )
+}
+
 function StatCard({
   label,
   accent,
   value,
   sub,
   loading,
+  sparkline,
+  wowPct,
+  href,
 }: {
   label: string
   accent: 'indigo' | 'emerald' | 'sky'
   value?: string | null
   sub?: string | null
   loading?: boolean
+  sparkline?: number[]
+  wowPct?: number | null
+  href?: string
 }) {
   const accentMap = {
     indigo: 'from-indigo-50 to-white border-l-indigo-500',
@@ -342,8 +424,17 @@ function StatCard({
     emerald: 'text-emerald-700',
     sky: 'text-sky-700',
   }
+  const hasTrend = sparkline != null || wowPct !== undefined
+  const interactive = href != null
+  const Wrapper: React.ElementType = interactive ? Link : 'div'
+  const wrapperProps = interactive
+    ? { href: href as string }
+    : {}
   return (
-    <div className={`rounded-xl border border-slate-200 border-l-[3px] bg-gradient-to-br ${accentMap[accent]} p-5 shadow-sm hover:shadow-md transition-shadow`}>
+    <Wrapper
+      {...wrapperProps}
+      className={`block rounded-xl border border-slate-200 border-l-[3px] bg-gradient-to-br ${accentMap[accent]} p-5 shadow-sm transition-shadow ${interactive ? 'hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500' : 'hover:shadow-md'}`}
+    >
       <p className="text-xs font-medium text-slate-500 mb-2">{label}</p>
       {loading ? (
         <>
@@ -352,13 +443,21 @@ function StatCard({
         </>
       ) : (
         <>
-          <p className={`text-2xl font-bold tabular-nums ${valueColor[accent]}`}>
-            {value ?? '—'}
-          </p>
-          {sub && <p className="text-xs text-slate-500 mt-1">{sub}</p>}
+          <div className="flex items-end justify-between gap-3">
+            <p className={`text-2xl font-bold tabular-nums ${valueColor[accent]}`}>
+              {value ?? '—'}
+            </p>
+            {sparkline && sparkline.length > 1 && (
+              <Sparkline values={sparkline} accent={accent} />
+            )}
+          </div>
+          <div className="mt-1 flex items-center justify-between gap-2 flex-wrap">
+            {sub && <p className="text-xs text-slate-500">{sub}</p>}
+            {hasTrend && wowPct !== undefined && <WowChip pct={wowPct ?? null} />}
+          </div>
         </>
       )}
-    </div>
+    </Wrapper>
   )
 }
 
@@ -436,8 +535,14 @@ export default async function SellerDashboardPage() {
 
   const displayName = account.business_name ?? account.email
 
-  // 이번 달 통계 — 60초 캐싱 (account_id 기준)
-  const stats = await getDashboardStats(account.id)
+  // 이번 달 통계 + 7일 trend — 60초 캐싱 (account_id 기준)
+  // server component: per-request side effects are intended (not React render purity)
+  // eslint-disable-next-line react-hooks/purity
+  const nowMsForTrend = Date.now()
+  const [stats, sevenDayTrend] = await Promise.all([
+    getDashboardStats(account.id),
+    getSevenDayTrend(account.id, nowMsForTrend),
+  ])
   const monthOrderCount = stats.monthOrderCount
   const monthSaleKrw = stats.monthSaleKrw
   const skuCount = stats.skuCount
@@ -813,7 +918,7 @@ export default async function SellerDashboardPage() {
         </div>
       </section>
 
-      {/* 통계 — E: 카드 shadow + accent border */}
+      {/* 통계 — E: 카드 shadow + accent border + #idea-9 sparkline + WoW */}
       <section>
         <h2 className="text-sm font-semibold text-slate-900 mb-3">이번 달 현황</h2>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -821,13 +926,25 @@ export default async function SellerDashboardPage() {
             label="처리된 주문"
             accent="indigo"
             value={ordersValue}
-            sub={`${new Date().getMonth() + 1}월 1일 이후`}
+            sub={`최근 7일 ${sevenDayTrend.thisOrders}건`}
+            sparkline={sevenDayTrend.daily.slice(7).map((d) => d.orderCount)}
+            wowPct={sevenDayTrend.wowOrdersPct}
+            href="/analytics"
           />
           <StatCard
             label="이번 달 판매 합계 (KRW)"
             accent="emerald"
             value={saleValue}
-            sub={monthSaleKrw > 0 ? '주문 라인 합산' : 'sale_price_krw 입력 시 집계'}
+            sub={
+              sevenDayTrend.thisSaleKrw > 0
+                ? `최근 7일 ₩${Math.round(sevenDayTrend.thisSaleKrw).toLocaleString('ko-KR')}`
+                : monthSaleKrw > 0
+                  ? '주문 라인 합산'
+                  : 'sale_price_krw 입력 시 집계'
+            }
+            sparkline={sevenDayTrend.daily.slice(7).map((d) => d.saleKrw)}
+            wowPct={sevenDayTrend.wowSalePct}
+            href="/analytics"
           />
           <StatCard
             label="주문 할당량"

@@ -27,6 +27,22 @@ export type DashboardStats = {
   statusCounts: Record<string, number>
 }
 
+export type DailyBucket = {
+  date: string // YYYY-MM-DD (KST)
+  orderCount: number
+  saleKrw: number
+}
+
+export type SevenDayTrend = {
+  daily: DailyBucket[] // 14 entries, oldest first
+  thisOrders: number
+  prevOrders: number
+  thisSaleKrw: number
+  prevSaleKrw: number
+  wowOrdersPct: number | null // null when prevOrders === 0
+  wowSalePct: number | null
+}
+
 async function fetchDashboardStats(accountId: string): Promise<DashboardStats> {
   const admin = createAdminClient()
 
@@ -111,6 +127,95 @@ export async function getDashboardStats(accountId: string): Promise<DashboardSta
   const cached = unstable_cache(
     () => fetchDashboardStats(accountId),
     ['dashboard-stats', accountId],
+    { revalidate: 60, tags: [`dashboard:${accountId}`] },
+  )
+  return cached()
+}
+
+const KST_OFFSET_MS = 9 * 60 * 60 * 1000
+
+function kstDateKey(iso: string): string {
+  const t = new Date(iso).getTime()
+  if (!Number.isFinite(t)) return ''
+  const k = new Date(t + KST_OFFSET_MS)
+  const y = k.getUTCFullYear()
+  const m = String(k.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(k.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function kstTodayKey(nowMs: number): string {
+  const k = new Date(nowMs + KST_OFFSET_MS)
+  const y = k.getUTCFullYear()
+  const m = String(k.getUTCMonth() + 1).padStart(2, '0')
+  const d = String(k.getUTCDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
+function shiftKstDate(key: string, deltaDays: number): string {
+  const [y, m, d] = key.split('-').map(Number)
+  const base = Date.UTC(y, m - 1, d)
+  const shifted = new Date(base + deltaDays * 24 * 60 * 60 * 1000)
+  const yy = shifted.getUTCFullYear()
+  const mm = String(shifted.getUTCMonth() + 1).padStart(2, '0')
+  const dd = String(shifted.getUTCDate()).padStart(2, '0')
+  return `${yy}-${mm}-${dd}`
+}
+
+async function fetchSevenDayTrend(accountId: string, nowMs: number): Promise<SevenDayTrend> {
+  const admin = createAdminClient()
+  const fourteenDaysAgo = new Date(nowMs - 14 * 24 * 60 * 60 * 1000).toISOString()
+
+  const { data: ordersRaw } = await admin
+    .from('b2b_orders')
+    .select('created_at, b2b_order_items(sale_price_krw)')
+    .eq('account_id', accountId)
+    .is('deleted_at', null)
+    .gte('created_at', fourteenDaysAgo)
+
+  type Row = { created_at: string; b2b_order_items: { sale_price_krw: number | string | null }[] | null }
+  const buckets = new Map<string, { orderCount: number; saleKrw: number }>()
+  for (const row of (ordersRaw as Row[] | null) ?? []) {
+    const key = kstDateKey(row.created_at)
+    if (!key) continue
+    const b = buckets.get(key) ?? { orderCount: 0, saleKrw: 0 }
+    b.orderCount += 1
+    for (const it of row.b2b_order_items ?? []) {
+      const v = it.sale_price_krw
+      if (v == null || v === '') continue
+      const n = typeof v === 'number' ? v : Number(v)
+      if (Number.isFinite(n)) b.saleKrw += n
+    }
+    buckets.set(key, b)
+  }
+
+  const today = kstTodayKey(nowMs)
+  const daily: DailyBucket[] = []
+  for (let i = 13; i >= 0; i--) {
+    const date = shiftKstDate(today, -i)
+    const b = buckets.get(date)
+    daily.push({ date, orderCount: b?.orderCount ?? 0, saleKrw: b?.saleKrw ?? 0 })
+  }
+
+  const thisWeek = daily.slice(7)
+  const prevWeek = daily.slice(0, 7)
+  const thisOrders = thisWeek.reduce((a, b) => a + b.orderCount, 0)
+  const prevOrders = prevWeek.reduce((a, b) => a + b.orderCount, 0)
+  const thisSaleKrw = thisWeek.reduce((a, b) => a + b.saleKrw, 0)
+  const prevSaleKrw = prevWeek.reduce((a, b) => a + b.saleKrw, 0)
+
+  const wowOrdersPct = prevOrders > 0 ? ((thisOrders - prevOrders) / prevOrders) * 100 : null
+  const wowSalePct = prevSaleKrw > 0 ? ((thisSaleKrw - prevSaleKrw) / prevSaleKrw) * 100 : null
+
+  return { daily, thisOrders, prevOrders, thisSaleKrw, prevSaleKrw, wowOrdersPct, wowSalePct }
+}
+
+export async function getSevenDayTrend(accountId: string, nowMs: number): Promise<SevenDayTrend> {
+  // 캐시 키: account_id + KST 일자. 같은 날 안에서는 60초 캐시.
+  const dayKey = kstTodayKey(nowMs)
+  const cached = unstable_cache(
+    () => fetchSevenDayTrend(accountId, nowMs),
+    ['dashboard-trend-7d', accountId, dayKey],
     { revalidate: 60, tags: [`dashboard:${accountId}`] },
   )
   return cached()
