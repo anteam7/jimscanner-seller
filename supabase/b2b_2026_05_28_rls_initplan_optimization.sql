@@ -118,14 +118,32 @@ CREATE POLICY "template_columns_select" ON public.b2b_form_template_columns
        OR owner_account_id IN (SELECT id FROM public.b2b_accounts WHERE user_id = (SELECT auth.uid()))
   ));
 
+-- modify 는 INSERT/UPDATE/DELETE 분리 (SELECT 중복 평가 회피 — multiple_permissive_policies)
 DROP POLICY IF EXISTS "template_columns_modify" ON public.b2b_form_template_columns;
-CREATE POLICY "template_columns_modify" ON public.b2b_form_template_columns
-  FOR ALL TO public
+DROP POLICY IF EXISTS "template_columns_insert" ON public.b2b_form_template_columns;
+CREATE POLICY "template_columns_insert" ON public.b2b_form_template_columns
+  FOR INSERT TO public
+  WITH CHECK (template_id IN (
+    SELECT id FROM public.b2b_form_templates
+    WHERE owner_account_id IN (SELECT id FROM public.b2b_accounts WHERE user_id = (SELECT auth.uid()))
+  ));
+
+DROP POLICY IF EXISTS "template_columns_update" ON public.b2b_form_template_columns;
+CREATE POLICY "template_columns_update" ON public.b2b_form_template_columns
+  FOR UPDATE TO public
   USING (template_id IN (
     SELECT id FROM public.b2b_form_templates
     WHERE owner_account_id IN (SELECT id FROM public.b2b_accounts WHERE user_id = (SELECT auth.uid()))
   ))
   WITH CHECK (template_id IN (
+    SELECT id FROM public.b2b_form_templates
+    WHERE owner_account_id IN (SELECT id FROM public.b2b_accounts WHERE user_id = (SELECT auth.uid()))
+  ));
+
+DROP POLICY IF EXISTS "template_columns_delete" ON public.b2b_form_template_columns;
+CREATE POLICY "template_columns_delete" ON public.b2b_form_template_columns
+  FOR DELETE TO public
+  USING (template_id IN (
     SELECT id FROM public.b2b_form_templates
     WHERE owner_account_id IN (SELECT id FROM public.b2b_accounts WHERE user_id = (SELECT auth.uid()))
   ));

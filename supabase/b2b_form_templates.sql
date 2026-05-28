@@ -110,17 +110,39 @@ CREATE POLICY template_columns_select ON b2b_form_template_columns
     )
   );
 
+-- modify 는 INSERT/UPDATE/DELETE 별도 정책 — FOR ALL 로 두면 SELECT 도 평가되어
+-- template_columns_select 와 multiple_permissive_policies 충돌 (advisor 0008).
 DROP POLICY IF EXISTS template_columns_modify ON b2b_form_template_columns;
-CREATE POLICY template_columns_modify ON b2b_form_template_columns
-  FOR ALL USING (
+
+DROP POLICY IF EXISTS template_columns_insert ON b2b_form_template_columns;
+CREATE POLICY template_columns_insert ON b2b_form_template_columns
+  FOR INSERT WITH CHECK (
     template_id IN (
       SELECT id FROM b2b_form_templates
-      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = auth.uid())
+      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = (SELECT auth.uid()))
+    )
+  );
+
+DROP POLICY IF EXISTS template_columns_update ON b2b_form_template_columns;
+CREATE POLICY template_columns_update ON b2b_form_template_columns
+  FOR UPDATE USING (
+    template_id IN (
+      SELECT id FROM b2b_form_templates
+      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = (SELECT auth.uid()))
     )
   ) WITH CHECK (
     template_id IN (
       SELECT id FROM b2b_form_templates
-      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = auth.uid())
+      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = (SELECT auth.uid()))
+    )
+  );
+
+DROP POLICY IF EXISTS template_columns_delete ON b2b_form_template_columns;
+CREATE POLICY template_columns_delete ON b2b_form_template_columns
+  FOR DELETE USING (
+    template_id IN (
+      SELECT id FROM b2b_form_templates
+      WHERE owner_account_id IN (SELECT id FROM b2b_accounts WHERE user_id = (SELECT auth.uid()))
     )
   );
 
