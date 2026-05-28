@@ -298,13 +298,20 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
     - `SellerShell` 주문관리 sub-item 에 환불 관리 추가 + child path 도 그룹 활성화 (`childActive` 로직)
   - 후속 (소형): 대시보드 미니카드 (이달 환불 건수·금액), 페이지네이션 cursor (50건 초과 안내만 노출)
 
-- [ ] **#idea-4 다중 결제 카드 관리 (b2b_payment_cards)** _(brainstorm approved 2026-05-27)_
+- [x] **#idea-4 다중 결제 카드 관리 (b2b_payment_cards)** _(brainstorm approved 2026-05-27)_
   - estimated: 2-3h
   - prereq: 없음
   - decision_required: false
   - source: github issue#4
-  - DB 변경: b2b_payment_cards 테이블 + b2b_order_items.payment_card_id 추가
-  - UI: /settings/cards + dashboard 카드별 매입 합계 미니카드
+  - 완료: 2026-05-28 commit 0071ca3
+  - 구현:
+    - DB: b2b_payment_cards 테이블 (alias/brand/last4/color/credit_limit/billing_day 등) + b2b_order_items.payment_card_id FK. RLS initplan 패턴 + tg_b2b_payment_cards_touch trigger.
+    - API: /api/payment-cards (GET, POST), /api/payment-cards/[id] (PATCH, DELETE soft), /api/orders/[id]/items/[itemId]/payment-card (라인 매핑).
+    - UI: /settings/cards 페이지 + PaymentCardsManager 컴포넌트 (색상 6 프리셋, 보관·복귀·삭제). /settings 인덱스에 '재무·결제' 섹션 추가.
+    - UI: /orders/[id] 매입 라인에 LinePaymentCardSelector 인라인 매핑 컴포넌트.
+    - UI: /dashboard CardSpendCard — 이달 카드별 라인 수·통화별 매입 합계·KRW 합계.
+  - 보안: PCI 회피 — 카드 번호 본번호/CVC/유효기간 저장 없음. 별칭·last4·결제일만 저장.
+  - 후속 (소형): /settings/cards 에 이달 카드별 매입 합계 표시 (현재 dashboard 만), card 한도 vs 사용량 경고 banner.
 
 - [ ] **#idea-5 주문 ETA 예상 + /eta 캘린더** _(brainstorm approved 2026-05-27)_
   - estimated: 3-4h
