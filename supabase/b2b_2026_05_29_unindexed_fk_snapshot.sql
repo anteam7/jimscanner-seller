@@ -1,0 +1,33 @@
+-- self-audit 2026-05-29 snapshot — b2b_* 외래키 미인덱스 11건
+-- 결정: #auto-G (unused_index 검토) 와 동일하게 신규 테이블 위주이며 행 수 부족.
+-- 옵티마이저가 seq scan 선택하는 정상 동작. 행 수 늘면 자연 활용 예상.
+-- 재검토 기한: 2026-08-28 (#auto-G 와 동일)
+--
+-- 만약 그 시점에서도 unused 상태 유지되면 drop, 반대로 query 활용 시작되면 인덱스 추가.
+
+-- 후보 (Supabase performance advisor 0001_unindexed_foreign_keys 보고):
+-- 높은 활용 예상 (volume 우선):
+--   b2b_refunds.order_item_id           — refunds 라인별 조회
+--   b2b_shipments.order_id              — order → shipments JOIN
+--   b2b_shipments.forwarder_id          — forwarder 별 shipment 조회
+--   b2b_supplier_purchase_matches.order_item_id
+--   b2b_supplier_purchases.matched_order_id
+--
+-- 낮은 활용 예상 (관리/admin 전용):
+--   b2b_account_terms_consent.terms_version_id
+--   b2b_announcements.created_by
+--   b2b_audit_log.user_id
+--   b2b_forwarder_mappings.forwarder_id
+--   b2b_products.default_forwarder_id
+--   b2b_subscriptions.plan_id
+
+-- 검증 쿼리 (3개월 후 실행):
+-- SELECT
+--   schemaname, relname, indexrelname, idx_scan, idx_tup_read, idx_tup_fetch
+-- FROM pg_stat_user_indexes
+-- WHERE schemaname='public' AND relname LIKE 'b2b_%'
+-- ORDER BY relname, indexrelname;
+
+-- 행 수 컨텍스트 (snapshot 시점):
+-- SELECT relname, n_live_tup FROM pg_stat_user_tables
+-- WHERE schemaname='public' AND relname LIKE 'b2b_%' ORDER BY n_live_tup DESC LIMIT 20;

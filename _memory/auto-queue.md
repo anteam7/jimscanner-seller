@@ -253,6 +253,19 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 결정: 2 active accounts / 행 10건 미만이라 옵티마이저가 seq scan 선택하는 정상 동작. 행 수 늘면 자연 활용 예상되어 이번 회차 drop 하지 않음. 재검토 기한 **2026-08-28**.
   - 기록 SQL: `supabase/b2b_2026_05_28_unused_index_review_snapshot.sql` (드롭 후보 12개 + 검증 쿼리 + 선정 기준 명시).
 
+### Audit 발견 2026-05-29 (self-audit cycle)
+
+- [x] **#auto-H db: b2b 외래키 11건 미인덱스 (defer to 2026-08-28)** _(audit 발견 2026-05-29)_
+  - estimated: 20m (snapshot 기록만)
+  - prereq: 없음
+  - decision_required: false
+  - finding: Supabase performance advisor 0001_unindexed_foreign_keys — 11건. 높은 활용 예상: b2b_refunds.order_item_id / b2b_shipments.{order_id,forwarder_id} / b2b_supplier_purchase_matches.order_item_id / b2b_supplier_purchases.matched_order_id. 낮은 활용 예상: b2b_account_terms_consent / b2b_announcements / b2b_audit_log / b2b_forwarder_mappings / b2b_products.default_forwarder_id / b2b_subscriptions.plan_id.
+  - severity: low (행 수 적어 옵티마이저 seq scan 선택, 운영 부하 미관측)
+  - 완료: 2026-05-29 (snapshot 기록만, 실제 인덱스 추가 없음)
+  - 결정: #auto-G 와 동일 — 3개월 관찰 후 재검토 (**2026-08-28**). 그 때까지 행 수 늘면 자연 활용 시작, 활용 없으면 (a) low-volume 6건 무시 + (b) high-volume 5건 인덱스 추가 (b2b_refunds.order_item_id 부터).
+  - 기록 SQL: `supabase/b2b_2026_05_29_unindexed_fk_snapshot.sql` (11 후보 + 검증 쿼리 + 분류 기준).
+  - note: 보안 advisor WARN 1건 (b2b_marketwide_supplier_stats SECURITY DEFINER + authenticated EXECUTE) 은 #auto-C 결정에 따라 의도적 유지 (시장 집계 anonymized 데이터, /analytics 페이지 RPC 호출 필요).
+
 - [x] **#auto-A-followup lint: 0 errors / 0 warnings 도달 (phase 1~5 완료)** _(#auto-A 후속 2026-05-28)_
   - estimated: 30m 남음
   - prereq: #auto-A 완료
@@ -402,7 +415,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9/10 완료. brainstorm approved 6건 중 1건 미진행: #idea-11)
+- P1 자율 가능: **28개** (#7~12, #auto-A~H 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9/10 완료. brainstorm approved 6건 중 1건 미진행: #idea-11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
