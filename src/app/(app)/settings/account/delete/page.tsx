@@ -136,7 +136,7 @@ export default function AccountDeletePage() {
               <p className="text-sm text-amber-800/70 pl-6">
                 탈퇴 즉시 구독이 취소됩니다.
                 {subscription.current_period_end && (
-                  <> 환불은 제공되지 않으며, <a href="/support?type=refund_inquiry" className="underline hover:text-amber-800 transition-colors">환불 정책</a>을 참조해 주세요.</>
+                  <> 환불은 제공되지 않으며, <Link href="/support?type=refund_inquiry" className="underline hover:text-amber-800 transition-colors">환불 정책</Link>을 참조해 주세요.</>
                 )}
               </p>
             </div>

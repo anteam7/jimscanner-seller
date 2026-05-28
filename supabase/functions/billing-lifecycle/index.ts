@@ -235,8 +235,7 @@ Deno.serve(async (req) => {
 
 // ─── 중복 감사 로그 확인 ───────────────────────────────────────────────────────
 async function auditExists(
-  // deno-lint-ignore no-explicit-any
-  db: any,
+  db: ReturnType<typeof createClient>,
   accountId: string,
   action: string,
   todayStr: string,

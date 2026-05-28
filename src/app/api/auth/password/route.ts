@@ -55,15 +55,14 @@ export async function PATCH(request: Request) {
 
   // audit_log
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: account } = await (admin as any)
+  const { data: account } = await admin
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .maybeSingle()
 
   if (account) {
-    await (admin as any).from('b2b_audit_log').insert({
+    await admin.from('b2b_audit_log').insert({
       account_id: account.id,
       user_id: user.id,
       action: 'password_changed',

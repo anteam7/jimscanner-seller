@@ -98,6 +98,7 @@ export async function PATCH(request: Request) {
   if (typeof withdrawal_notice_enabled === 'boolean') updates.withdrawal_notice_enabled = withdrawal_notice_enabled
   if (withdrawal_notice_custom_text !== undefined) updates.withdrawal_notice_custom_text = withdrawal_notice_custom_text || null
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const { error: updateErr } = await (admin as any)
     .from('b2b_accounts')
     .update(updates)

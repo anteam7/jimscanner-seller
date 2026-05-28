@@ -64,7 +64,7 @@ export default async function ExtensionSettingsPage() {
           <li>아래에서 <b>API 토큰</b>을 발급합니다 (1회만 표시됨 — 안전한 곳에 저장).</li>
           <li>짐스캐너 확장을 Chrome 에 설치합니다 (베타 — 별도 안내).</li>
           <li>확장 popup 에 발급받은 토큰을 붙여넣고 저장.</li>
-          <li>amazon.com Your Orders 페이지에서 <b>"짐스캐너로 가져오기"</b> 버튼 클릭.</li>
+          <li>amazon.com Your Orders 페이지에서 <b>&ldquo;짐스캐너로 가져오기&rdquo;</b> 버튼 클릭.</li>
           <li><Link href="/imports" className="text-indigo-700 font-semibold underline underline-offset-2">/imports</Link> 에서 수집된 영수증을 확인.</li>
         </ol>
       </section>

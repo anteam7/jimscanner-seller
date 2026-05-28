@@ -15,15 +15,14 @@ export default async function PricingPage() {
   } = await supabase.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const [{ data: plans }, { data: accountData }] = await Promise.all([
-    (supabase as any)
+    supabase
       .from('b2b_subscription_plans')
       .select(
         'id, plan_code, name_ko, description, price_krw_monthly, price_krw_yearly, monthly_order_quota, required_verification_level, features, display_order'
       )
       .order('display_order'),
-    (supabase as any)
+    supabase
       .from('b2b_accounts')
       .select(
         'verification_level, b2b_subscriptions(b2b_subscription_plans(plan_code))'
@@ -32,11 +31,12 @@ export default async function PricingPage() {
       .single(),
   ])
 
-  const currentPlanCode: string =
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (accountData as any)?.b2b_subscriptions?.[0]?.b2b_subscription_plans?.plan_code ?? 'free'
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const verificationLevel: number = (accountData as any)?.verification_level ?? 0
+  const subscriptions = accountData?.b2b_subscriptions
+  const firstSub = Array.isArray(subscriptions) ? subscriptions[0] : subscriptions
+  const planRel = firstSub?.b2b_subscription_plans
+  const planRow = Array.isArray(planRel) ? planRel[0] : planRel
+  const currentPlanCode: string = planRow?.plan_code ?? 'free'
+  const verificationLevel: number = accountData?.verification_level ?? 0
 
   return (
     <PricingPageClient

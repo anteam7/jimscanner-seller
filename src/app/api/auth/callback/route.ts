@@ -35,7 +35,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.redirect(`${origin}/seller/login`)
   }
 
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
   const { data: account } = await admin
     .from('b2b_accounts')
     .select('business_no, verification_level, verification_status')
