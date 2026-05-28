@@ -522,6 +522,86 @@ export default async function SellerDashboardPage() {
     rates = null
   }
 
+  // #idea-4: 카드별 이달 매입 합계 (b2b_payment_cards 등록된 카드만)
+  type CardSpendRow = {
+    card_id: string
+    alias: string
+    last4: string | null
+    color: string | null
+    line_count: number
+    total_foreign: Record<string, number>  // {USD: 123.45, JPY: 5000}
+    total_krw: number
+  }
+  let cardSpends: CardSpendRow[] = []
+  try {
+    const adminCs = createAdminClient()
+    const monthStart = new Date()
+    monthStart.setDate(1)
+    monthStart.setHours(0, 0, 0, 0)
+    const { data: cardsList } = await adminCs
+      .from('b2b_payment_cards')
+      .select('id, alias, last4, color, is_active')
+      .eq('account_id', account.id)
+      .is('deleted_at', null)
+      .order('sort_order', { ascending: true })
+    const activeCards = (cardsList ?? []).filter((c) => c.is_active)
+    if (activeCards.length > 0) {
+      // 이달 라인 (소유 주문) join. supabase 의 inner-join 으로 account 격리
+      type LineRow = {
+        payment_card_id: string | null
+        unit_price_foreign: number | string | null
+        total_price_foreign: number | string | null
+        total_price_krw: number | string | null
+        quantity: number | null
+        currency: string | null
+        b2b_orders: { account_id: string; order_date: string } | null
+      }
+      const { data: linesRaw } = await adminCs
+        .from('b2b_order_items')
+        .select(
+          'payment_card_id, unit_price_foreign, total_price_foreign, total_price_krw, quantity, currency, b2b_orders!inner(account_id, order_date)',
+        )
+        .not('payment_card_id', 'is', null)
+        .gte('b2b_orders.order_date', monthStart.toISOString())
+        .eq('b2b_orders.account_id', account.id)
+      const lines = (linesRaw ?? []) as unknown as LineRow[]
+      const byCard = new Map<string, { lineCount: number; totalForeign: Record<string, number>; totalKrw: number }>()
+      for (const ln of lines) {
+        if (!ln.payment_card_id) continue
+        const bucket =
+          byCard.get(ln.payment_card_id) ?? { lineCount: 0, totalForeign: {}, totalKrw: 0 }
+        bucket.lineCount += 1
+        const qty = Number(ln.quantity ?? 1)
+        const unit = Number(ln.unit_price_foreign ?? 0)
+        const totalFx =
+          ln.total_price_foreign != null ? Number(ln.total_price_foreign) : unit * qty
+        if (Number.isFinite(totalFx) && totalFx > 0 && ln.currency) {
+          const cur = ln.currency.toUpperCase()
+          bucket.totalForeign[cur] = (bucket.totalForeign[cur] ?? 0) + totalFx
+        }
+        if (ln.total_price_krw != null) {
+          const krw = Number(ln.total_price_krw)
+          if (Number.isFinite(krw)) bucket.totalKrw += krw
+        }
+        byCard.set(ln.payment_card_id, bucket)
+      }
+      cardSpends = activeCards.map((c) => {
+        const b = byCard.get(c.id) ?? { lineCount: 0, totalForeign: {}, totalKrw: 0 }
+        return {
+          card_id: c.id,
+          alias: c.alias,
+          last4: c.last4 ?? null,
+          color: c.color ?? null,
+          line_count: b.lineCount,
+          total_foreign: b.totalForeign,
+          total_krw: b.totalKrw,
+        }
+      })
+    }
+  } catch {
+    cardSpends = []
+  }
+
   // #12: 최근 agent 활동 3건 (admin client — b2b_auto_runs RLS bypass)
   let recentAgentRuns: AgentRunRow[] = []
   try {
@@ -705,6 +785,9 @@ export default async function SellerDashboardPage() {
 
       {/* 최근 주문 */}
       <RecentOrdersCard orders={recentOrders} />
+
+      {/* #idea-4: 카드별 매입 합계 — 등록 카드가 있을 때만 */}
+      {cardSpends.length > 0 && <CardSpendCard spends={cardSpends} />}
 
       {/* #12: 최근 agent 활동 — 시스템이 일하고 있다는 transparency */}
       {recentAgentRuns.length > 0 && <RecentAgentActivityCard runs={recentAgentRuns} />}
@@ -1001,6 +1084,91 @@ const AGENT_MODE_META: Record<string, { label: string; tone: string }> = {
   implementation: { label: '구현', tone: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
   review: { label: '점검', tone: 'bg-amber-50 text-amber-700 border-amber-200' },
   discovery: { label: '발견', tone: 'bg-sky-50 text-sky-700 border-sky-200' },
+}
+
+const CARD_COLOR_CLS: Record<string, string> = {
+  indigo: 'bg-indigo-500',
+  emerald: 'bg-emerald-500',
+  amber: 'bg-amber-500',
+  rose: 'bg-rose-500',
+  sky: 'bg-sky-500',
+  slate: 'bg-slate-700',
+}
+
+type CardSpend = {
+  card_id: string
+  alias: string
+  last4: string | null
+  color: string | null
+  line_count: number
+  total_foreign: Record<string, number>
+  total_krw: number
+}
+
+function CardSpendCard({ spends }: { spends: CardSpend[] }) {
+  const totalLines = spends.reduce((s, x) => s + x.line_count, 0)
+  const totalKrw = spends.reduce((s, x) => s + x.total_krw, 0)
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-emerald-500 bg-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">이달 카드별 매입</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            라인에 매핑된 결제 카드 기준 — {new Date().getMonth() + 1}월 합계
+          </p>
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-[10px] text-slate-500 uppercase tracking-wider">총 매입 라인</p>
+          <p className="text-sm font-bold text-slate-900 tabular-nums">{totalLines}건</p>
+        </div>
+      </div>
+      <ul className="divide-y divide-slate-100">
+        {spends.map((c) => {
+          const colorCls = c.color && CARD_COLOR_CLS[c.color] ? CARD_COLOR_CLS[c.color] : 'bg-slate-400'
+          const fxEntries = Object.entries(c.total_foreign).filter(([, v]) => v > 0)
+          const hasSpend = c.line_count > 0
+          return (
+            <li key={c.card_id} className="py-2.5 flex items-start gap-3">
+              <span className={`w-1.5 h-10 rounded ${colorCls} flex-shrink-0 mt-0.5`} aria-hidden />
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <p className="text-sm font-semibold text-slate-900 truncate">{c.alias}</p>
+                  {c.last4 && (
+                    <span className="text-[11px] text-slate-500 tabular-nums">···· {c.last4}</span>
+                  )}
+                </div>
+                {hasSpend ? (
+                  <div className="mt-0.5 flex items-center gap-3 flex-wrap text-[11px] text-slate-600">
+                    <span className="text-slate-500">{c.line_count}건</span>
+                    {fxEntries.map(([cur, v]) => (
+                      <span key={cur} className="tabular-nums">
+                        {cur} {v.toLocaleString('ko-KR', { maximumFractionDigits: 2 })}
+                      </span>
+                    ))}
+                    {c.total_krw > 0 && (
+                      <span className="tabular-nums text-emerald-700 font-semibold">
+                        ₩ {c.total_krw.toLocaleString('ko-KR')}
+                      </span>
+                    )}
+                  </div>
+                ) : (
+                  <p className="mt-0.5 text-[11px] text-slate-400">이달 매입 없음</p>
+                )}
+              </div>
+            </li>
+          )
+        })}
+      </ul>
+      {totalKrw > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span className="text-slate-500">전체 합계 (KRW 입력분)</span>
+          <span className="font-bold text-emerald-700 tabular-nums">
+            ₩ {totalKrw.toLocaleString('ko-KR')}
+          </span>
+        </div>
+      )}
+    </section>
+  )
 }
 
 function RecentAgentActivityCard({ runs }: { runs: AgentRunRow[] }) {

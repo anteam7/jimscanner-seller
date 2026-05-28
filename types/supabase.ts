@@ -926,6 +926,7 @@ export type Database = {
           market_product_id: string | null
           notes: string | null
           order_id: string
+          payment_card_id: string | null
           product_id: string | null
           product_image_url: string | null
           product_name: string
@@ -957,6 +958,7 @@ export type Database = {
           market_product_id?: string | null
           notes?: string | null
           order_id: string
+          payment_card_id?: string | null
           product_id?: string | null
           product_image_url?: string | null
           product_name: string
@@ -988,6 +990,7 @@ export type Database = {
           market_product_id?: string | null
           notes?: string | null
           order_id?: string
+          payment_card_id?: string | null
           product_id?: string | null
           product_image_url?: string | null
           product_name?: string
@@ -1018,6 +1021,13 @@ export type Database = {
             columns: ["order_id"]
             isOneToOne: false
             referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_order_items_payment_card_id_fkey"
+            columns: ["payment_card_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_payment_cards"
             referencedColumns: ["id"]
           },
         ]
@@ -1148,6 +1158,65 @@ export type Database = {
             columns: ["forwarder_id"]
             isOneToOne: false
             referencedRelation: "forwarders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      b2b_payment_cards: {
+        Row: {
+          account_id: string
+          alias: string
+          billing_day: number | null
+          brand: string | null
+          color: string | null
+          created_at: string
+          credit_limit_krw: number | null
+          deleted_at: string | null
+          id: string
+          is_active: boolean
+          last4: string | null
+          notes: string | null
+          sort_order: number
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          alias: string
+          billing_day?: number | null
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          credit_limit_krw?: number | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          alias?: string
+          billing_day?: number | null
+          brand?: string | null
+          color?: string | null
+          created_at?: string
+          credit_limit_krw?: number | null
+          deleted_at?: string | null
+          id?: string
+          is_active?: boolean
+          last4?: string | null
+          notes?: string | null
+          sort_order?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_payment_cards_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
             referencedColumns: ["id"]
           },
         ]

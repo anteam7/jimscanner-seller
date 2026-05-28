@@ -6,6 +6,7 @@ import { createAdminClient } from '@/lib/auth/admin-supabase'
 import OrderStatusSelector from '@/components/b2b/OrderStatusSelector'
 import ForwarderExportButton from '@/components/b2b/ForwarderExportButton'
 import { TrackingEditor } from '@/components/b2b/TrackingEditor'
+import { LinePaymentCardSelector } from '@/components/b2b/LinePaymentCardSelector'
 import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
 
@@ -39,6 +40,8 @@ type OrderItem = {
   market_product_id: string | null
   market_option: string | null
   product_id: string | null
+  payment_card_id: string | null
+  b2b_payment_cards: { alias: string; last4: string | null } | null
 }
 
 type OrderDetail = {
@@ -206,7 +209,7 @@ export default async function OrderDetailPage({
   const { data: order } = (await supabase
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id)',
+      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id, payment_card_id, b2b_payment_cards(alias, last4))',
     )
     .eq('id', id)
     .eq('account_id', account.id)
@@ -519,6 +522,16 @@ export default async function OrderDetailPage({
                               initialTrackingNumber={it.tracking_number}
                               initialTrackingNumberOverseas={it.tracking_number_overseas}
                               initialCarrier={it.carrier}
+                            />
+                            <LinePaymentCardSelector
+                              orderId={order.id}
+                              itemId={it.id}
+                              initialCardId={it.payment_card_id}
+                              initialCardLabel={
+                                it.b2b_payment_cards
+                                  ? `${it.b2b_payment_cards.alias}${it.b2b_payment_cards.last4 ? ` ···· ${it.b2b_payment_cards.last4}` : ''}`
+                                  : null
+                              }
                             />
                             {it.image_url && (
                               <p className="text-xs text-slate-500 mt-1 truncate">
