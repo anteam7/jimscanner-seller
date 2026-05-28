@@ -982,6 +982,7 @@ export type Database = {
           total_price_krw: number | null
           tracking_number: string | null
           tracking_number_overseas: string | null
+          tracking_updated_at: string | null
           unit_price_foreign: number | null
           updated_at: string
           weight_kg: number | null
@@ -1014,6 +1015,7 @@ export type Database = {
           total_price_krw?: number | null
           tracking_number?: string | null
           tracking_number_overseas?: string | null
+          tracking_updated_at?: string | null
           unit_price_foreign?: number | null
           updated_at?: string
           weight_kg?: number | null
@@ -1046,6 +1048,7 @@ export type Database = {
           total_price_krw?: number | null
           tracking_number?: string | null
           tracking_number_overseas?: string | null
+          tracking_updated_at?: string | null
           unit_price_foreign?: number | null
           updated_at?: string
           weight_kg?: number | null

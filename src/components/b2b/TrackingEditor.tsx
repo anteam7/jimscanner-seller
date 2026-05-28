@@ -15,6 +15,23 @@ const KOREAN_CARRIERS = [
   '기타',
 ]
 
+const OVERSEAS_CARRIERS = [
+  { value: 'dhl',         label: 'DHL' },
+  { value: 'ups',         label: 'UPS' },
+  { value: 'usps',        label: 'USPS' },
+  { value: 'fedex',       label: 'FedEx' },
+  { value: 'ems',         label: 'EMS' },
+  { value: 'yamato',      label: 'Yamato (ヤマト)' },
+  { value: 'sagawa',      label: 'Sagawa (佐川)' },
+  { value: 'japan-post',  label: 'Japan Post' },
+  { value: 'sf-express',  label: 'SF Express (顺丰)' },
+  { value: 'ems-china',   label: 'EMS China' },
+  { value: 'china-post',  label: 'China Post' },
+  { value: 'royal-mail',  label: 'Royal Mail' },
+  { value: 'dpd',         label: 'DPD' },
+  { value: 'other',       label: '기타' },
+]
+
 type Props = {
   orderId: string
   itemId: string
@@ -39,6 +56,7 @@ export function TrackingEditor({
   const [error, setError] = useState<string | null>(null)
 
   const hasAny = !!(initialTrackingNumber || initialTrackingNumberOverseas || initialCarrier)
+  const trackingOverseasTrim = trackingOverseas.trim()
 
   async function save() {
     setSaving(true)
@@ -49,11 +67,11 @@ export function TrackingEditor({
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           tracking_number: trackingNumber.trim() || null,
-          tracking_number_overseas: trackingOverseas.trim() || null,
+          tracking_number_overseas: trackingOverseasTrim || null,
           carrier: carrier.trim() || null,
         }),
       })
-      const json = (await res.json().catch(() => ({}))) as { error?: string }
+      const json = (await res.json().catch(() => ({}))) as { error?: string; status_transitioned?: boolean }
       if (!res.ok) {
         setError(json.error ?? '업데이트 실패')
         return
@@ -82,6 +100,12 @@ export function TrackingEditor({
     )
   }
 
+  const isOverseasCarrierValue =
+    !!carrier && OVERSEAS_CARRIERS.some((c) => c.value === carrier)
+  const overseasSelectValue = isOverseasCarrierValue ? carrier : ''
+  const isKoreanCarrierValue = KOREAN_CARRIERS.includes(carrier)
+  const koreanSelectValue = isKoreanCarrierValue ? carrier : ''
+
   return (
     <div className="mt-2 p-3 rounded-md border border-indigo-200 bg-indigo-50/40 space-y-2">
       <div className="flex items-center justify-between">
@@ -96,22 +120,48 @@ export function TrackingEditor({
         </button>
       </div>
 
-      <label className="block">
-        <span className="block text-[10px] text-slate-600 mb-0.5">현지 트래킹 (매입처 → 배대지)</span>
-        <input
-          type="text"
-          value={trackingOverseas}
-          onChange={(e) => setTrackingOverseas(e.target.value)}
-          placeholder="9405..."
-          className="block w-full h-7 px-2 text-xs font-mono bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
-        />
-      </label>
+      <div className="space-y-1.5">
+        <label className="block">
+          <span className="block text-[10px] text-slate-600 mb-0.5">현지 트래킹 (매입처 → 배대지)</span>
+          <input
+            type="text"
+            value={trackingOverseas}
+            onChange={(e) => setTrackingOverseas(e.target.value)}
+            placeholder="9405..."
+            className="block w-full h-7 px-2 text-xs font-mono bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+          />
+        </label>
+        <label className="block">
+          <span className="block text-[10px] text-slate-600 mb-0.5">해외 캐리어</span>
+          <select
+            value={overseasSelectValue}
+            onChange={(e) => setCarrier(e.target.value)}
+            className="block w-full h-7 px-1.5 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
+          >
+            <option value="">선택 (DHL / UPS / FedEx / Yamato …)</option>
+            {OVERSEAS_CARRIERS.map((c) => (
+              <option key={c.value} value={c.value}>{c.label}</option>
+            ))}
+          </select>
+        </label>
+        {trackingOverseasTrim && (
+          <a
+            href={`https://t.17track.net/en#nums=${encodeURIComponent(trackingOverseasTrim)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-1 text-[11px] font-semibold text-indigo-700 hover:underline"
+            title="17track 외부 사이트에서 트래킹"
+          >
+            🔎 17track 에서 추적 →
+          </a>
+        )}
+      </div>
 
-      <div className="grid grid-cols-2 gap-2">
+      <div className="pt-1.5 mt-1.5 border-t border-indigo-100 grid grid-cols-2 gap-2">
         <label className="block">
           <span className="block text-[10px] text-slate-600 mb-0.5">국내 택배사</span>
           <select
-            value={carrier}
+            value={koreanSelectValue}
             onChange={(e) => setCarrier(e.target.value)}
             className="block w-full h-7 px-1.5 text-xs bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
           >
@@ -132,6 +182,10 @@ export function TrackingEditor({
           />
         </label>
       </div>
+
+      <p className="text-[10px] text-slate-500 leading-relaxed">
+        💡 현지 트래킹 입력 시 주문 상태가 <b>해외 매입 완료</b> 라면 자동으로 <b>한국행 운송 중</b> 으로 전이됩니다.
+      </p>
 
       {error && <p className="text-[11px] text-rose-700">{error}</p>}
 

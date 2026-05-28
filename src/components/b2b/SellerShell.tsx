@@ -42,6 +42,7 @@ const NAV_ITEMS = [
       { href: '/orders/new', label: '국내 주문 단건 등록' },
       { href: '/orders/bulk', label: '국내 주문 일괄 등록' },
       { href: '/orders/matching', label: '주문매칭관리' },
+      { href: '/orders/tracking-paste', label: '운송장 일괄 입력' },
       { href: '/refunds', label: '환불 관리' },
       { href: '/eta', label: '도착 예정 (ETA)' },
     ],
