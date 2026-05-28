@@ -234,12 +234,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-28 commit c042073
   - fix: Supabase MCP `apply_migration b2b_rls_initplan_optimization` — 30개 b2b_* 테이블 51 policies 모두 DROP + 동일 의미·target role 유지 + qual/with_check 안의 `auth.uid()` / `auth.role()` / `auth.jwt()` 를 `(SELECT auth.x())` 로 wrap. 기록 SQL: `supabase/b2b_2026_05_28_rls_initplan_optimization.sql`. 적용 후 advisor `auth_rls_initplan` 재확인 결과 b2b_* 0건 (51 → 0). 행 수 늘수록 RLS overhead 감소 효과.
 
-- [ ] **#auto-F db: b2b_form_template_columns multiple_permissive_policies 통합** _(audit 발견 2026-05-28)_
+- [x] **#auto-F db: b2b_form_template_columns multiple_permissive_policies 통합** _(audit 발견 2026-05-28)_
   - estimated: 20m
   - prereq: 없음
   - decision_required: false
-  - finding: Supabase advisor — 같은 role/cmd 에 permissive policy 5건 → OR 조건으로 통합하면 단순화 + 성능.
+  - finding: Supabase advisor — 같은 role/cmd 에 permissive policy 5건 (anon/authenticated/authenticator/dashboard_user/supabase_privileged_role) for SELECT. `template_columns_modify` (FOR ALL) + `template_columns_select` (FOR SELECT) 가 SELECT 시 동시 평가.
   - severity: low
+  - 완료: 2026-05-28 commit 334760c
+  - fix: Supabase MCP `apply_migration b2b_form_template_columns_split_modify_policy` — `template_columns_modify` (FOR ALL) DROP 후 INSERT/UPDATE/DELETE 3개 정책으로 split. SELECT 는 `template_columns_select` 한 곳에서만 평가. 의미·target role (public) 보존, auth.uid() initplan 패턴 (SELECT auth.uid()) 유지. 원본 `supabase/b2b_form_templates.sql` 과 `b2b_2026_05_28_rls_initplan_optimization.sql` 도 동기. 기록 SQL: `supabase/b2b_2026_05_28_form_template_columns_split_modify.sql`. 적용 후 같은 role/cmd 조합당 정책 수 = 1 확인.
 
 - [ ] **#auto-G db: 미사용 인덱스 정리 검토 (b2b_*)** _(audit 발견 2026-05-28)_
   - estimated: 30m
