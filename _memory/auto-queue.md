@@ -437,3 +437,4 @@ P1 모두 `[x]` (2026-05-29 #idea-11 완료로 P1 전건 소진) → 큐 비었�
 ### Fire 이력 (idle)
 
 - 2026-05-29: P1 소진 확인 + inbox polling (decision-needed 1 open=#7 user reply 대기 / idea 0 / handoff-from-main 0). Phase 0 잔여 #PH0-5·#PH0-6 은 main#3 (PH0-4 base page) open 이라 blocked → 핸드오프 보류. idle.
+- 2026-05-29 (2회차): inbox polling 동일 (decision-needed 1 open=#7 our 분석 댓글 user reply 대기 / idea 0 / handoff-from-main 0). main#3 여전히 open (0 comments — main agent 미처리) → Phase 0 계속 blocked. P1 pending 0건. idle.
