@@ -382,13 +382,19 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
     - UI: /products 목록에 `FavoriteStar` 컬럼 — optimistic toggle.
   - 후속 (소형): /products/[id] 상세 헤더에 별 토글, /orders/new 라인 안의 ProductPicker 드롭다운 결과 행에도 별 표시
 
-- [ ] **#idea-11 통관 가이드 inline hint — 주문 생성 시 카테고리 자동 매칭** _(brainstorm approved 2026-05-28)_
+- [x] **#idea-11 통관 가이드 inline hint — 주문 생성 시 카테고리 자동 매칭** _(brainstorm approved 2026-05-28)_
   - estimated: 1.5h
   - prereq: 없음
   - decision_required: false
   - source: github issue#11
-  - DB 변경: b2b_order_items.customs_category 컬럼 (있는지 확인 후 없으면 추가)
-  - UI: /orders/new + /orders/bulk 라인 입력에 CustomsCategoryHint inline 배너 + keyword 사전 (한·영·일 ~150)
+  - 완료: 2026-05-29 commit e7f7818
+  - 구현:
+    - DB: b2b_order_items.customs_category 컬럼 + CHECK 제약 (CUSTOMS_GUIDES 11종과 1:1). 기존 free-text `category` (상품 분류) 와 구분. 기록 SQL `supabase/b2b_2026_05_29_order_items_customs_category.sql`. types/supabase.ts 동기.
+    - lib: `customs-guide.ts` 에 `CUSTOMS_KEYWORDS` (한·영·일 ~180개) + `matchCustomsCategory()` (최장 키워드 우선 매칭) + `isValidCustomsCategory()` + `CUSTOMS_CATEGORIES`.
+    - UI: `CustomsCategoryHint.tsx` 신규 — /orders/new 각 라인 상품명 아래 inline 배너 (자동 인식 배지 + 목록통관 한도 + 신고기관 칩 + 제한 첫줄 + '변경' 토글로 override).
+    - UI: /orders/bulk 그리드 '상품/매입' 그룹에 '통관 분류' select 컬럼 + SELECT_VALUE_ALIASES (식품/뷰티/전자 등 paste alias).
+    - API: /api/orders + /api/orders/bulk 가 customs_category 저장. 명시값 없으면 상품명에서 서버측 자동 인식 (matchCustomsCategory).
+  - 후속 (소형): /orders/[id] 상세에 통관 분류 + CustomsGuidePanel 연동 표시, bulk 그리드 자동 인식 결과 placeholder 노출, 'other' 도 매칭 대상에 포함할지 검토.
 
 ---
 
@@ -415,8 +421,8 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **28개** (#7~12, #auto-A~H 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9/10 완료. brainstorm approved 6건 중 1건 미진행: #idea-11)
-- P0 결정 대기: **1개** (issue#7)
+- P1 자율 가능: **29개 전건 완료** (#7~12, #auto-A~H, #auto-A-followup, #idea-3a/3b/4/5/8/9/10/11 모두 [x]). → 다음 fire 시 P1 소진 idle.
+- P0 결정 대기: **1개** (issue#7 — 사용자 답신 대기 중)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 - 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
@@ -425,5 +431,5 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 종료 조건
 
-P1 모두 `[x]` → 다음 fire 시 큐 비었음 감지 → `chore(queue): P1 소진` commit 후 idle.
+P1 모두 `[x]` (2026-05-29 #idea-11 완료로 P1 전건 소진) → 다음 fire 시 큐 비었음 감지 → `chore(queue): P1 소진` commit 후 idle.
 사용자가 새 항목 추가하면 다음 fire 부터 다시 작동.
