@@ -7,8 +7,10 @@ import OrderStatusSelector from '@/components/b2b/OrderStatusSelector'
 import ForwarderExportButton from '@/components/b2b/ForwarderExportButton'
 import { TrackingEditor } from '@/components/b2b/TrackingEditor'
 import { LinePaymentCardSelector } from '@/components/b2b/LinePaymentCardSelector'
+import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
 import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
+import { getCustomsGuide } from '@/lib/b2b/customs-guide'
 
 export const metadata: Metadata = {
   title: '주문 상세',
@@ -40,6 +42,7 @@ type OrderItem = {
   market_product_id: string | null
   market_option: string | null
   product_id: string | null
+  customs_category: string | null
   payment_card_id: string | null
   b2b_payment_cards: { alias: string; last4: string | null } | null
 }
@@ -180,6 +183,28 @@ function InfoRow({ label, children }: { label: string; children: React.ReactNode
   )
 }
 
+function CustomsBadge({ category }: { category: string | null }) {
+  const guide = getCustomsGuide(category)
+  if (!guide) return null
+  return (
+    <span className="inline-flex flex-wrap items-center gap-1 mt-1.5">
+      <span className="inline-flex items-center rounded bg-amber-50 border border-amber-200 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
+        {guide.emoji} {guide.label}
+      </span>
+      {guide.list_limit_usd != null && (
+        <span className="inline-flex items-center rounded bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 text-[10px] font-medium text-emerald-700">
+          목록통관 ${guide.list_limit_usd}
+        </span>
+      )}
+      {guide.agency && (
+        <span className="inline-flex items-center rounded bg-rose-50 border border-rose-200 px-1.5 py-0.5 text-[10px] font-medium text-rose-700">
+          {guide.agency} 신고
+        </span>
+      )}
+    </span>
+  )
+}
+
 export default async function OrderDetailPage({
   params,
 }: {
@@ -209,7 +234,7 @@ export default async function OrderDetailPage({
   const { data: order } = (await supabase
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id, payment_card_id, b2b_payment_cards(alias, last4))',
+      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id, customs_category, payment_card_id, b2b_payment_cards(alias, last4))',
     )
     .eq('id', id)
     .eq('account_id', account.id)
@@ -481,6 +506,7 @@ export default async function OrderDetailPage({
                                 )}
                               </p>
                             )}
+                            <CustomsBadge category={it.customs_category} />
                             {it.product_url && (
                               <a
                                 href={it.product_url}
@@ -670,6 +696,9 @@ export default async function OrderDetailPage({
                 ) : '—'}
               </InfoRow>
             </dl>
+            <div className="mt-3 pt-3 border-t border-slate-100">
+              <CustomsGuidePanel />
+            </div>
           </section>
 
           {/* 액션 (양식 변환) */}
