@@ -250,21 +250,21 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - finding: Supabase advisor — b2b_order_items / b2b_orders / b2b_seller_health_snapshot 에 unused_index INFO. write 비용 감소 효과 있음 — 단 신규 테이블이라 사용 통계 부족 가능, 신중히 (3개월 운영 후 재검토 권장).
   - severity: low
 
-- [ ] **#auto-A-followup lint: 15 errors / 17 warnings 남음 (phase 1, 2 완료, 3/N)** _(#auto-A 후속 2026-05-28)_
-  - estimated: 1.5~2h 남음
+- [ ] **#auto-A-followup lint: 9 errors / 17 warnings 남음 (phase 1, 2, 3 완료, 4/N)** _(#auto-A 후속 2026-05-28)_
+  - estimated: 1h 남음
   - prereq: #auto-A 완료
   - decision_required: false
-  - finding: ESLint 다시 동작 후 노출된 pre-existing 이슈들. react-hooks/set-state-in-effect 다수 (QuotaBanner, SellerShell, OnboardingModal, /orders 페이지 등), react-hooks/immutability (ProductPicker 의 fetchResults forward-ref), @typescript-eslint/no-explicit-any (supabase functions 일부), unused eslint-disable directives 등.
-  - 권장 접근: severity 별로 한 회차에 한 카테고리씩 — (1) react-hooks/immutability + set-state-in-effect bug 가능성 우선, (2) any 캐스팅 정리, (3) unused-disable 청소
+  - finding: ESLint 다시 동작 후 노출된 pre-existing 이슈들. 남은 errors: @typescript-eslint/no-explicit-any (pricing, api/auth, api/settings, billing-lifecycle), next/no-html-link-for-pages (settings/account/delete), react/no-unescaped-entities (settings/extension), unused eslint-disable directive (pricing:18).
+  - 권장 접근: severity 별로 한 회차에 한 카테고리씩 — (1) any 캐스팅 정리, (2) unused-disable·unused-vars 청소
   - severity: medium
   - progress:
     - phase 1 완료 (2026-05-28 commit de61094): react-hooks/immutability 4건 (ProductPicker / ImportMatchAction / MultiMatchPanel / OrderMatchingClient SearchModal — useCallback hoist) + server-component Date.now() purity 2건 (dashboard / imports — 명시 주석 + eslint-disable). 52 → 47 problems (33 errors → 29).
     - phase 2 (1/2) 완료 (2026-05-28 commit 6c3249b): set-state-in-effect 5건 — OnboardingModal, OrderListClient, SellerShell, QuotaBanner, NotificationBell. eslint-disable + WHY. 47 → 41 problems (29 → 24 errors).
     - phase 2 (2/2) 완료 (2026-05-28 commit 5b554c9): set-state-in-effect 9건 — ExchangeRateBadge / AnnouncementBanner / settings (account/delete, account, compliance, security) 6건 eslint-disable + WHY 주석; ForwarderAddressManager / BulkExportModal / ForwarderExportModal 3건은 "prev-prop diff" render-time setState 패턴으로 진짜 리팩토링 (useEffect 제거 + computeTemplateDefaults 헬퍼). 41 → 32 problems (24 → 15 errors).
+    - phase 3 완료 (2026-05-28 commit bd87652): set-state-in-effect 6건 — ImportMatchAction:214, MultiMatchPanel:67/184, OrderMatchingClient:273 (4건 모달 mount prefill), NewOrderForm:120 (주문번호 제안), ProductMatchingClient:70 (preset prop sync). 모두 eslint-disable + WHY. 32 → 26 problems (15 → 9 errors).
   - 남은 phase:
-    - phase 3: set-state-in-effect 6건 — imports/ImportMatchAction:214, imports/[id]/MultiMatchPanel:67,184, orders/matching/OrderMatchingClient:273, orders/new/NewOrderForm:120, products/matching/ProductMatchingClient:70.
-    - phase 4: unused-vars 14건 warning + unused eslint-disable 청소.
-    - phase 5: billing-lifecycle/index.ts any cast 정리 (deno 환경 typescript any) + 기타 no-explicit-any 6건.
+    - phase 4: no-explicit-any 6건 (pricing×2, api/auth/callback, api/auth/password, api/settings/compliance, billing-lifecycle/index.ts) + next/no-html-link-for-pages 1건 + react/no-unescaped-entities 2건 + unused eslint-disable 1건.
+    - phase 5: unused-vars 14건 warning 청소.
 
 ### Brainstorm approved (2026-05-27)
 
