@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/auth/server'
 import ProductForm, { type ForwarderOption, type MarketLink, type SupplierLink } from '@/components/b2b/ProductForm'
+import FavoriteStar from '@/components/b2b/FavoriteStar'
 
 export const metadata: Metadata = {
   title: 'SKU 편집',
@@ -27,6 +28,7 @@ type ProductDetail = {
   image_url: string | null
   notes: string | null
   is_active: boolean
+  is_favorite: boolean | null
   b2b_product_market_links: {
     id: string
     marketplace: string
@@ -123,7 +125,10 @@ export default async function ProductEditPage({
           </svg>
         </Link>
         <div className="flex-1 min-w-0">
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight truncate">{p.display_name}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold text-slate-900 tracking-tight truncate">{p.display_name}</h1>
+            <FavoriteStar productId={p.id} initial={p.is_favorite ?? false} size="md" />
+          </div>
           <p className="text-sm text-slate-600 mt-1 font-mono">{p.seller_sku}</p>
         </div>
       </div>
