@@ -25,7 +25,6 @@
   const BTN_ID = 'jimscanner-form-filler-btn'
   const PANEL_ID = 'jimscanner-form-filler-panel'
 
-  function getPatternsModule() { return window.__JIMSCANNER_FIELD_PATTERNS__ }
   function getClassifierModule() { return window.__JIMSCANNER_FIELD_CLASSIFIER__ }
 
   // ─── React-controlled input/select 값 설정 ──────────────────────────────

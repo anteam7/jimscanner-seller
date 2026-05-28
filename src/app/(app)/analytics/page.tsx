@@ -222,8 +222,6 @@ export default async function AnalyticsPage() {
   } catch {
     marketStats = []
   }
-  const marketByKey = new Map(marketStats.map((m) => [m.supplier_site, m]))
-
   // 전체 6개월 합계 — 환율 누락 라인이 있으면 총 마진/마진율은 신뢰 못 함
   const totalSale = months.reduce((acc, m) => acc + m.saleKrw, 0)
   const totalPurchase = months.reduce((acc, m) => acc + m.purchaseKrw, 0)

@@ -65,52 +65,6 @@ const STATUS_FILTERS: { value: string; label: string }[] = [
   { value: 'disputed', label: '분쟁 중' },
 ]
 
-function StatusBadge({ status }: { status: string }) {
-  const meta = STATUS_META[status] ?? STATUS_META.pending
-  return (
-    <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${meta.cls}`}>
-      {meta.label}
-    </span>
-  )
-}
-
-function MarketplaceTag({ value }: { value: string | null }) {
-  if (!value) return <span className="text-slate-400 text-xs">—</span>
-  return (
-    <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-700 whitespace-nowrap">
-      {MARKETPLACE_LABEL[value] ?? value}
-    </span>
-  )
-}
-
-function formatKRW(value: number | string | null): string {
-  if (value == null || value === '') return '—'
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return '—'
-  return new Intl.NumberFormat('ko-KR').format(n) + '원'
-}
-
-function formatDate(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-}
-
-function sumSale(items: { sale_price_krw: number | string | null }[]): number | null {
-  let total = 0
-  let any = false
-  for (const it of items) {
-    const v = it.sale_price_krw
-    if (v == null || v === '') continue
-    const n = typeof v === 'number' ? v : Number(v)
-    if (Number.isFinite(n)) {
-      total += n
-      any = true
-    }
-  }
-  return any ? total : null
-}
-
 function EmptyState() {
   return (
     <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-12 text-center">

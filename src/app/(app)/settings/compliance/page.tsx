@@ -1,12 +1,8 @@
 'use client'
 
-import type { Metadata } from 'next'
 import { useCallback, useEffect, useState } from 'react'
 
 export const dynamic = 'force-dynamic'
-
-// Metadata can't be exported from 'use client'; declared separately for reference.
-// export const metadata: Metadata = { title: '법규 컴플라이언스 | 짐스캐너 B2B', robots: { index: false } }
 
 const DEFAULT_NOTICE =
   '구매하신 상품을 수령한 날로부터 7일 이내 청약 철회가 가능합니다 (전자상거래법 제17조).'

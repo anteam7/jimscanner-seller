@@ -327,12 +327,10 @@
   // 활성 탭은 currentTab 클로저 변수로 관리
   let currentTab = 'mine'
   let allAddresses = []
-  let currentCountry = 'US'
   let sellerInfo = null // { phone, business_name }
 
   function renderList(addresses, country) {
     allAddresses = addresses
-    currentCountry = country
     const mine = addresses.filter((a) => a.account_id != null)
     const official = addresses.filter((a) => a.is_official === true)
     // 첫 진입: 내 주소가 있으면 mine, 없으면 official

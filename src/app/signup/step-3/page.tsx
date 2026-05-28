@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
-import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/auth/client'
 import { SignupProgress } from '@/components/b2b/SignupProgress'

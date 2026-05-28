@@ -312,53 +312,6 @@ function OnboardingGuide({ progress }: { progress?: Progress }) {
   )
 }
 
-function OnboardingStep({
-  step,
-  color,
-  title,
-  desc,
-  href,
-  cta,
-  optional,
-}: {
-  step: string
-  color: 'emerald' | 'sky' | 'indigo'
-  title: string
-  desc: string
-  href: string
-  cta: string
-  optional?: boolean
-}) {
-  const map = {
-    emerald: { border: 'border-l-emerald-500', txt: 'text-emerald-700', bg: 'bg-emerald-50' },
-    sky: { border: 'border-l-sky-500', txt: 'text-sky-700', bg: 'bg-sky-50' },
-    indigo: { border: 'border-l-indigo-500', txt: 'text-indigo-700', bg: 'bg-indigo-50' },
-  }
-  const c = map[color]
-  return (
-    <div className={`rounded-xl border border-slate-200 border-l-[3px] ${c.border} bg-white p-4 flex flex-col h-full shadow-sm`}>
-      <div className="flex items-center gap-2 mb-2">
-        <span className={`inline-flex items-center justify-center w-6 h-6 rounded-full ${c.bg} ${c.txt} text-xs font-bold`}>
-          {step}
-        </span>
-        <p className="text-sm font-semibold text-slate-900">{title}</p>
-        {optional && (
-          <span className="text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 ml-auto">
-            선택
-          </span>
-        )}
-      </div>
-      <p className="text-xs text-slate-600 leading-relaxed flex-1 mb-3">{desc}</p>
-      <Link
-        href={href}
-        className={`inline-flex items-center justify-center gap-1 ${c.bg} ${c.txt} hover:brightness-95 text-xs font-semibold rounded-md py-1.5 transition-all`}
-      >
-        {cta}
-      </Link>
-    </div>
-  )
-}
-
 function StatCard({
   label,
   accent,
