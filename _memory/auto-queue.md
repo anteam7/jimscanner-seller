@@ -347,13 +347,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
     - `/orders` 헤더에 "운송장 일괄" 버튼 + SellerShell 주문관리 sub-item "운송장 일괄 입력" 추가.
   - 후속 (소형): 17track 양방향 API 도입 (D3) — 운송 상태 자동 fetch + arrived_korea 자동 전이. 현재는 외부 link 만.
 
-- [ ] **#idea-9 dashboard 7일 매출 sparkline + WoW 비교** _(brainstorm approved 2026-05-28)_
+- [x] **#idea-9 dashboard 7일 매출 sparkline + WoW 비교** _(brainstorm approved 2026-05-28)_
   - estimated: 40-50m
   - prereq: 없음
   - decision_required: false
   - source: github issue#9
   - DB 변경: 없음
-  - UI: 4 통계 카드에 인라인 SVG sparkline + 전주 대비 % 칩
+  - 완료: 2026-05-29 commit b56172c
+  - 구현: `getSevenDayTrend()` (KST 14일 일별 버킷 + WoW %) + StatCard 에 inline SVG sparkline · WoW 칩 · /analytics href. "처리된 주문" / "이번 달 판매" 2 카드 적용. 주문할당량 카드는 daily trend 무의미하여 sparkline 미적용.
 
 - [ ] **#idea-10 자주 사는 매입 SKU 즐겨찾기 / 최근 매입 quick-pick** _(brainstorm approved 2026-05-28)_
   - estimated: 2-2.5h
@@ -396,7 +397,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8 완료. brainstorm approved 6건 중 3건 미진행: #idea-9/10/11)
+- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9 완료. brainstorm approved 6건 중 2건 미진행: #idea-10/11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
