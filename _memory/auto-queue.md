@@ -356,13 +356,18 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-29 commit b56172c
   - 구현: `getSevenDayTrend()` (KST 14일 일별 버킷 + WoW %) + StatCard 에 inline SVG sparkline · WoW 칩 · /analytics href. "처리된 주문" / "이번 달 판매" 2 카드 적용. 주문할당량 카드는 daily trend 무의미하여 sparkline 미적용.
 
-- [ ] **#idea-10 자주 사는 매입 SKU 즐겨찾기 / 최근 매입 quick-pick** _(brainstorm approved 2026-05-28)_
+- [x] **#idea-10 자주 사는 매입 SKU 즐겨찾기 / 최근 매입 quick-pick** _(brainstorm approved 2026-05-28)_
   - estimated: 2-2.5h
   - prereq: 없음
   - decision_required: false
   - source: github issue#10
-  - DB 변경: b2b_products.is_favorite + last_purchased_at 추가
-  - UI: /orders/new 에 SKUQuickPick 드롭다운, GET /api/products/quick-pick
+  - 완료: 2026-05-29 commit 54cfd38
+  - 구현:
+    - DB: b2b_products.is_favorite / last_purchased_at + 2 partial 인덱스 (favorite-only / last_purchased_at). b2b_order_items AFTER INSERT/UPDATE OF product_id 트리거 (SECURITY DEFINER, search_path 명시, anon/authenticated EXECUTE REVOKE). 기존 라인 backfill 포함. 원본 SQL `supabase/b2b_products.sql` 동기.
+    - API: GET /api/products/quick-pick (favorites 8 + recents 8, fav 우선) / PATCH /api/products/[id]/favorite 토글.
+    - UI: `SKUQuickPick` 칩 행을 /orders/new ③ 섹션 상단에 표시. 클릭 1번으로 빈 라인 찾아 자동 채움 (없으면 새 라인 append). 첫 라인이 비어있을 때만 주문 단위 배대지 default 적용.
+    - UI: /products 목록에 `FavoriteStar` 컬럼 — optimistic toggle.
+  - 후속 (소형): /products/[id] 상세 헤더에 별 토글, /orders/new 라인 안의 ProductPicker 드롭다운 결과 행에도 별 표시
 
 - [ ] **#idea-11 통관 가이드 inline hint — 주문 생성 시 카테고리 자동 매칭** _(brainstorm approved 2026-05-28)_
   - estimated: 1.5h
@@ -397,7 +402,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9 완료. brainstorm approved 6건 중 2건 미진행: #idea-10/11)
+- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b/4/5/8/9/10 완료. brainstorm approved 6건 중 1건 미진행: #idea-11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
