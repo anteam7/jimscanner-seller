@@ -225,12 +225,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-28 commit b92ce7b
   - fix: Supabase MCP `apply_migration b2b_auto_runs_admin_select_policy` — `authenticated` role 중 JWT email 이 admin (anseunghyok@gmail.com) 인 경우만 SELECT. service_role 은 BYPASSRLS 권한으로 cron INSERT/UPDATE 그대로 유지. 원본 `supabase/b2b_auto_runs.sql` 에도 정책 inline 동기. 기록 SQL: `supabase/b2b_2026_05_28_auto_runs_admin_select_policy.sql`. 적용 후 advisor `rls_enabled_no_policy` 가 `b2b_auto_runs` 플래그 해제됨 확인. 추가 admin 필요 시 OR 조건 확장 또는 `b2b_admins(email)` 테이블 도입 권장.
 
-- [ ] **#auto-E db: b2b 테이블 RLS `auth.uid()` initplan 최적화 (50건 WARN)** _(audit 발견 2026-05-28)_
+- [x] **#auto-E db: b2b 테이블 RLS `auth.uid()` initplan 최적화 (50건 WARN)** _(audit 발견 2026-05-28)_
   - estimated: 1h
   - prereq: 없음
   - decision_required: false
   - finding: Supabase performance advisor — b2b_accounts, b2b_orders, b2b_order_items 등 RLS policy 에서 `auth.uid()` 가 row 별 재평가. `(select auth.uid())` 패턴으로 교체하면 query plan 1회 evaluation. 행 많아질수록 영향 큼.
   - severity: medium
+  - 완료: 2026-05-28 commit c042073
+  - fix: Supabase MCP `apply_migration b2b_rls_initplan_optimization` — 30개 b2b_* 테이블 51 policies 모두 DROP + 동일 의미·target role 유지 + qual/with_check 안의 `auth.uid()` / `auth.role()` / `auth.jwt()` 를 `(SELECT auth.x())` 로 wrap. 기록 SQL: `supabase/b2b_2026_05_28_rls_initplan_optimization.sql`. 적용 후 advisor `auth_rls_initplan` 재확인 결과 b2b_* 0건 (51 → 0). 행 수 늘수록 RLS overhead 감소 효과.
 
 - [ ] **#auto-F db: b2b_form_template_columns multiple_permissive_policies 통합** _(audit 발견 2026-05-28)_
   - estimated: 20m
@@ -339,7 +341,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **26개** (#7~12, #auto-A~D 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건. brainstorm approved 2026-05-28 +4건: #idea-8~11)
+- P1 자율 가능: **26개** (#7~12, #auto-A~E 완료. audit 2026-05-28 +7건: #auto-A~G. #auto-A-followup +1건. brainstorm approved 2026-05-28 +4건: #idea-8~11)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
