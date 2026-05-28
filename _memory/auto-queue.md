@@ -259,8 +259,9 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - severity: medium
   - progress:
     - phase 1 완료 (2026-05-28 commit de61094): react-hooks/immutability 4건 (ProductPicker / ImportMatchAction / MultiMatchPanel / OrderMatchingClient SearchModal — useCallback hoist) + server-component Date.now() purity 2건 (dashboard / imports — 명시 주석 + eslint-disable). 52 → 47 problems (33 errors → 29).
+    - phase 2 (1/2) 완료 (2026-05-28 commit 6c3249b): set-state-in-effect 5건 — OnboardingModal (localStorage mount sync), OrderListClient (sessionStorage highlight cue), SellerShell (pathname → close sidebar), QuotaBanner (mount fetch), NotificationBell (mount + interval 폴링). 각 케이스 안전 confirmed → eslint-disable-next-line + WHY 주석. 47 → 41 problems (29 → 24 errors).
   - 남은 phase:
-    - phase 2: set-state-in-effect ~10건 (QuotaBanner, SellerShell, OnboardingModal, NotificationBell, ForwarderExportModal, ExchangeRateBadge, BulkExportModal, AnnouncementBanner, OrderListClient, ProductMatchingClient, settings 페이지들). 패턴 별 useEffect → 외부 동기화로 재설계 또는 안전 confirmed 한 경우 명시 주석.
+    - phase 2 (2/2): 남은 set-state-in-effect ~5건 (ForwarderExportModal, ExchangeRateBadge, AnnouncementBanner, BulkExportModal, settings 페이지들). ForwarderExportModal 은 templateId → userInputs 재계산이라 key reset 패턴으로 진짜 리팩토링 필요.
     - phase 3: unused-vars + unused eslint-disable 청소 (~15건 warning).
     - phase 4: billing-lifecycle/index.ts any cast 정리 (deno 환경 typescript any).
 
