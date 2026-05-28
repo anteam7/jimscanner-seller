@@ -28,4 +28,15 @@ create index if not exists idx_b2b_auto_runs_mode
 
 -- RLS: admin only via service_role
 alter table public.b2b_auto_runs enable row level security;
--- anon · authenticated 모두 read 정책 없음 → service_role 만 접근
+-- service_role 은 BYPASSRLS 권한 → cron INSERT/UPDATE 가능.
+-- authenticated 중 admin email 만 SELECT 가능 (anseunghyok@gmail.com).
+-- 추가 admin 필요 시 OR 조건 확장 또는 b2b_admins 테이블 도입.
+-- 2026-05-28 #auto-D: rls_enabled_no_policy 경고 해소 + admin direct read 대비.
+
+drop policy if exists "b2b_auto_runs_admin_select" on public.b2b_auto_runs;
+create policy "b2b_auto_runs_admin_select" on public.b2b_auto_runs
+  for select
+  to authenticated
+  using (
+    (auth.jwt() ->> 'email')::text = 'anseunghyok@gmail.com'
+  );
