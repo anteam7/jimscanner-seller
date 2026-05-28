@@ -421,15 +421,19 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **29개 전건 완료** (#7~12, #auto-A~H, #auto-A-followup, #idea-3a/3b/4/5/8/9/10/11 모두 [x]). → 다음 fire 시 P1 소진 idle.
-- P0 결정 대기: **1개** (issue#7 — 사용자 답신 대기 중)
+- P1 자율 가능: **29개 전건 완료** (#7~12, #auto-A~H, #auto-A-followup, #idea-3a/3b/4/5/8/9/10/11 모두 [x]). → P1 소진 idle.
+- Phase 0 잔여: **2개** (#PH0-5 detail page, #PH0-6 KPI 카드) — 둘 다 main repo 핸드오프이며 **base 페이지 핸드오프 (jimpass-agent-platform#3, PH0-4) 가 아직 open** 이라 blocked. main#3 close 되면 그 때 handoff issue 생성.
+- P0 결정 대기: **1개** (issue#7 — 사용자 답신 대기 중. 직전 agent 후속 질문에 대한 user reply 미수신)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
-- 예상 자율 진행 시간: P1 합계 ~10시간 (회차당 30분~1시간씩 약 15회차)
 
 ---
 
 ## 종료 조건
 
-P1 모두 `[x]` (2026-05-29 #idea-11 완료로 P1 전건 소진) → 다음 fire 시 큐 비었음 감지 → `chore(queue): P1 소진` commit 후 idle.
+P1 모두 `[x]` (2026-05-29 #idea-11 완료로 P1 전건 소진) → 큐 비었음 감지 → `chore(queue): P1 소진` commit 후 idle.
 사용자가 새 항목 추가하면 다음 fire 부터 다시 작동.
+
+### Fire 이력 (idle)
+
+- 2026-05-29: P1 소진 확인 + inbox polling (decision-needed 1 open=#7 user reply 대기 / idea 0 / handoff-from-main 0). Phase 0 잔여 #PH0-5·#PH0-6 은 main#3 (PH0-4 base page) open 이라 blocked → 핸드오프 보류. idle.
