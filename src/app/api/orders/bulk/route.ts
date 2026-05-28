@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
+import { isValidCustomsCategory, matchCustomsCategory } from '@/lib/b2b/customs-guide'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -42,6 +43,7 @@ type BulkRowInput = {
   market_option?: unknown
   product_name?: unknown
   product_id?: unknown
+  customs_category?: unknown
   quantity?: unknown
   supplier_site?: unknown
   product_url?: unknown
@@ -143,6 +145,7 @@ type NormalizedRow = {
     sale_price_krw: number | null
     market_product_id: string | null
     market_option: string | null
+    customs_category: string | null
   }
 }
 
@@ -194,6 +197,11 @@ function normalizeRow(row: BulkRowInput, idx: number): { ok: true; row: Normaliz
   const unitPrice = nonNegNumber(row.unit_price_foreign)
   const totalForeign = unitPrice != null ? Number((unitPrice * quantity).toFixed(2)) : null
 
+  // 통관 분류: 명시값이 유효하면 사용, 없으면 상품명에서 자동 인식
+  const customsCategory = isValidCustomsCategory(row.customs_category)
+    ? row.customs_category
+    : matchCustomsCategory(productName)?.category ?? null
+
   return {
     ok: true,
     row: {
@@ -227,6 +235,7 @@ function normalizeRow(row: BulkRowInput, idx: number): { ok: true; row: Normaliz
         sale_price_krw: nonNegBigint(row.sale_price_krw),
         market_product_id: str(row.market_product_id, 128),
         market_option: str(row.market_option, 200),
+        customs_category: customsCategory,
       },
     },
   }

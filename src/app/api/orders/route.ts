@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
+import { isValidCustomsCategory, matchCustomsCategory } from '@/lib/b2b/customs-guide'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -39,6 +40,7 @@ type ItemInput = {
   image_url?: unknown
   tracking_number_overseas?: unknown
   forwarder_id?: unknown
+  customs_category?: unknown
 }
 
 type CreateOrderBody = {
@@ -223,9 +225,14 @@ export async function POST(request: Request) {
     const supplierSite =
       supplierSiteRaw && VALID_SUPPLIER_SITES.includes(supplierSiteRaw) ? supplierSiteRaw : null
     const salePriceKrw = nonNegBigint(it.sale_price_krw)
+    // 통관 분류: 클라이언트 값이 유효하면 사용, 없으면 상품명에서 자동 인식
+    const customsCategory = isValidCustomsCategory(it.customs_category)
+      ? it.customs_category
+      : matchCustomsCategory(productName)?.category ?? null
     return {
       display_order: idx,
       product_name: productName,
+      customs_category: customsCategory,
       product_url: str(it.product_url, 500),
       quantity,
       currency,

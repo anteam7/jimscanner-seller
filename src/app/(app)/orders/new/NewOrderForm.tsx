@@ -12,6 +12,8 @@ import {
 import ProductPicker, { type PickedProduct } from '@/components/b2b/ProductPicker'
 import SKUQuickPick from '@/components/b2b/SKUQuickPick'
 import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
+import { CustomsCategoryHint } from '@/components/b2b/CustomsCategoryHint'
+import { matchCustomsCategory } from '@/lib/b2b/customs-guide'
 
 function suggestOrderNumber(): string {
   const now = new Date()
@@ -72,6 +74,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
     imageUrl: string
     trackingNumberOverseas: string
     forwarderId: string  // 라인별 배대지 (선택). 빈값이면 주문 forwarder 사용.
+    customsCategory: string  // 통관 분류. 빈값이면 상품명에서 자동 인식.
   }
   function blankLine(): LineItem {
     return {
@@ -90,6 +93,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
       imageUrl: '',
       trackingNumberOverseas: '',
       forwarderId: '',
+      customsCategory: '',
     }
   }
   const [lines, setLines] = useState<LineItem[]>([blankLine()])
@@ -299,6 +303,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
             image_url: l.imageUrl.trim() || null,
             tracking_number_overseas: l.trackingNumberOverseas.trim() || null,
             forwarder_id: l.forwarderId || null,
+            customs_category:
+              l.customsCategory || matchCustomsCategory(l.productName)?.category || null,
           })),
         }),
       })
@@ -517,6 +523,11 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
               <Field label="상품명" htmlFor={`product_name_${i}`} required>
                 <input id={`product_name_${i}`} type="text" required maxLength={300} value={line.productName} onChange={(e) => patchLine(i, { productName: e.target.value })} placeholder="예: Nike Air Force 1 Low '07" className={inputCls} />
               </Field>
+              <CustomsCategoryHint
+                productName={line.productName}
+                value={line.customsCategory}
+                onChange={(v) => patchLine(i, { customsCategory: v })}
+              />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <Field label="해외 사이트 상품 URL" htmlFor={`product_url_${i}`}>
                   <input id={`product_url_${i}`} type="url" maxLength={500} value={line.productUrl} onChange={(e) => patchLine(i, { productUrl: e.target.value })} placeholder="https://" className={inputCls} />

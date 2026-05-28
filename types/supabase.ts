@@ -960,6 +960,7 @@ export type Database = {
           category: string | null
           created_at: string
           currency: string | null
+          customs_category: string | null
           display_order: number
           forwarder_id: string | null
           id: string
@@ -993,6 +994,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           currency?: string | null
+          customs_category?: string | null
           display_order?: number
           forwarder_id?: string | null
           id?: string
@@ -1026,6 +1028,7 @@ export type Database = {
           category?: string | null
           created_at?: string
           currency?: string | null
+          customs_category?: string | null
           display_order?: number
           forwarder_id?: string | null
           id?: string

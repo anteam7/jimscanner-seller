@@ -4,6 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MARKETPLACES, SUPPLIER_SITES, CURRENCIES } from '@/lib/b2b/order-options'
+import { CUSTOMS_CATEGORY_OPTIONS } from '@/lib/b2b/customs-guide'
 
 type SkuLite = {
   id: string
@@ -72,6 +73,7 @@ function buildColumns(forwarders: ForwarderOption[]): ColumnDef[] {
     { key: 'market_product_id', label: '마켓 상품번호', type: 'text', width: 130, group: '상품/매입' },
     { key: 'market_option', label: '마켓 옵션', type: 'text', width: 130, group: '상품/매입', placeholder: '색/사이즈' },
     { key: 'product_name', label: '상품명', type: 'text', width: 240, group: '상품/매입', required: true },
+    { key: 'customs_category', label: '통관 분류', type: 'select', width: 120, group: '상품/매입', options: CUSTOMS_CATEGORY_OPTIONS },
     { key: 'quantity', label: '갯수', type: 'number', width: 70, group: '상품/매입' },
     { key: 'supplier_site', label: '매입처', type: 'select', width: 140, group: '상품/매입', options: SUPPLIER_OPTIONS },
     { key: 'product_url', label: '매입 링크', type: 'text', width: 200, group: '상품/매입', placeholder: 'https://' },
@@ -167,6 +169,19 @@ const SELECT_VALUE_ALIASES: Record<string, Record<string, string[]>> = {
     UK: ['영국', 'United Kingdom', 'Britain', 'GB', 'England'],
     HK: ['홍콩', 'Hong Kong', 'HongKong'],
     OTHER: ['기타', '그외'],
+  },
+  customs_category: {
+    food: ['식품', '음식', '푸드'],
+    cosmetic: ['화장품', '뷰티', '코스메틱'],
+    electronics: ['전자제품', '전자', '가전'],
+    clothing: ['의류', '잡화', '옷', '패션'],
+    kids: ['아동', '유아', '아동용품', '유아용품', '키즈'],
+    health: ['건강보조식품', '건강', '영양제', '건강기능식품'],
+    watch: ['시계', '명품', '주얼리'],
+    alcohol: ['주류', '술'],
+    tobacco: ['담배', '전자담배'],
+    home: ['생활용품', '생활', '홈'],
+    other: ['기타'],
   },
 }
 

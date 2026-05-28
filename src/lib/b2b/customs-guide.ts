@@ -137,3 +137,94 @@ export function getCustomsGuide(category: string | null | undefined): CustomsGui
 }
 
 export const CUSTOMS_CATEGORY_OPTIONS = CUSTOMS_GUIDES.map((g) => ({ value: g.category, label: `${g.emoji} ${g.label}` }))
+
+export const CUSTOMS_CATEGORIES = CUSTOMS_GUIDES.map((g) => g.category)
+
+export function isValidCustomsCategory(v: unknown): v is string {
+  return typeof v === 'string' && CUSTOMS_CATEGORIES.includes(v)
+}
+
+/**
+ * 카테고리별 키워드 사전 (한·영·일). 상품명에서 통관 카테고리를 자동 인식하는 데 사용.
+ * 'other' 는 매칭 대상에서 제외 (fallback) — 명시 키워드가 없으면 매칭 안 됨 = null.
+ */
+export const CUSTOMS_KEYWORDS: Record<string, string[]> = {
+  food: [
+    '식품', '음식', '과자', '초콜릿', '초콜렛', '커피', '라면', '소스', '향신료', '꿀',
+    '시리얼', '캔디', '젤리', '분유', '이유식', '간식', '견과', '올리브유', '스낵',
+    'food', 'snack', 'chocolate', 'coffee', 'candy', 'cookie', 'sauce', 'honey', 'cereal', 'noodle', 'olive oil',
+    'お菓子', 'チョコ', 'コーヒー', '食品', '飴', 'クッキー', 'スナック',
+  ],
+  cosmetic: [
+    '화장품', '스킨', '로션', '크림', '세럼', '앰플', '마스크팩', '립스틱', '파운데이션',
+    '쿠션', '선크림', '자외선차단', '향수', '네일', '매니큐어', '아이섀도', '비비크림', '토너', '에센스',
+    'cosmetic', 'skincare', 'lotion', 'cream', 'serum', 'lipstick', 'foundation', 'perfume', 'sunscreen', 'mascara', 'toner', 'essence',
+    '化粧品', 'スキンケア', 'クリーム', '香水', '口紅', '日焼け止め', '美容液',
+  ],
+  electronics: [
+    '전자', '가전', '노트북', '컴퓨터', '키보드', '마우스', '이어폰', '헤드폰', '스피커',
+    '충전기', '배터리', '카메라', '드론', '태블릿', '모니터', '블루투스', '스마트워치', '게임기', '콘솔', '공유기', '셋톱',
+    'electronic', 'laptop', 'headphone', 'earphone', 'earbud', 'charger', 'battery', 'camera', 'drone', 'tablet', 'monitor', 'keyboard', 'mouse', 'speaker', 'console', 'airpods',
+    '家電', 'イヤホン', 'カメラ', '充電器', 'バッテリー', 'パソコン', 'スピーカー',
+  ],
+  clothing: [
+    '의류', '셔츠', '티셔츠', '바지', '청바지', '자켓', '재킷', '코트', '니트', '원피스',
+    '스커트', '운동화', '스니커즈', '구두', '가방', '지갑', '벨트', '모자', '양말', '후드', '패딩', '맨투맨',
+    'clothing', 'shirt', 'pants', 'jeans', 'jacket', 'coat', 'dress', 'shoes', 'sneaker', 'bag', 'wallet', 'hat', 'socks', 'hoodie', 'jumper',
+    '服', 'シャツ', '靴', 'バッグ', '財布', 'スニーカー', 'ジャケット',
+  ],
+  kids: [
+    '유아', '아동', '어린이', '장난감', '완구', '기저귀', '젖병', '유모차', '카시트', '아기',
+    '블록', '인형', '보행기', '치발기', '아기띠',
+    'kids', 'baby', 'toy', 'diaper', 'stroller', 'carseat', 'infant', 'lego', 'doll',
+    'おもちゃ', 'ベビー', '子供', 'おむつ', '人形',
+  ],
+  health: [
+    '영양제', '비타민', '오메가', '홍삼', '프로바이오틱', '유산균', '콜라겐', '단백질', '보충제',
+    '루테인', '마그네슘', '글루코사민', '밀크씨슬', '아연',
+    'supplement', 'vitamin', 'omega', 'probiotic', 'collagen', 'protein', 'lutein', 'magnesium', 'glucosamine',
+    'サプリ', 'ビタミン', '健康', 'プロテイン', 'コラーゲン',
+  ],
+  watch: [
+    '시계', '명품', '롤렉스', '목걸이', '반지', '귀걸이', '주얼리', '보석', '다이아', '팔찌', '브로치',
+    'watch', 'rolex', 'jewelry', 'jewellery', 'necklace', 'ring', 'earring', 'luxury', 'diamond', 'bracelet',
+    '時計', 'ジュエリー', 'ネックレス', '指輪', 'ブレスレット',
+  ],
+  alcohol: [
+    '주류', '와인', '위스키', '맥주', '보드카', '사케', '샴페인', '리큐르', '브랜디', '데낄라', '데킬라',
+    'alcohol', 'wine', 'whisky', 'whiskey', 'beer', 'vodka', 'sake', 'champagne', 'brandy', 'tequila', 'liqueur',
+    '酒', 'ワイン', 'ウイスキー', 'ビール', '日本酒', 'シャンパン',
+  ],
+  tobacco: [
+    '담배', '전자담배', '액상', '연초', '시가', '니코틴', '궐련',
+    'tobacco', 'cigarette', 'vape', 'cigar', 'nicotine', 'e-liquid',
+    'たばこ', 'タバコ', '電子タバコ', 'リキッド',
+  ],
+  home: [
+    '주방', '가구', '침구', '수건', '이불', '베개', '냄비', '프라이팬', '청소', '세제',
+    '텀블러', '그릇', '식기', '수납', '커튼', '러그', '조명', '디퓨저',
+    'kitchen', 'furniture', 'bedding', 'towel', 'pillow', 'pot', 'pan', 'cleaning', 'detergent', 'tumbler', 'cookware', 'cutlery', 'curtain', 'diffuser',
+    '家具', 'キッチン', '寝具', 'タオル', '食器',
+  ],
+}
+
+/**
+ * 상품명에서 통관 카테고리 자동 인식.
+ * 가장 긴 (= 가장 구체적인) 매칭 키워드를 우선. 매칭 없으면 null.
+ */
+export function matchCustomsCategory(
+  text: string | null | undefined,
+): { category: string; keyword: string } | null {
+  if (!text) return null
+  const hay = text.toLowerCase()
+  let best: { category: string; keyword: string; len: number } | null = null
+  for (const [category, words] of Object.entries(CUSTOMS_KEYWORDS)) {
+    for (const w of words) {
+      const lw = w.toLowerCase()
+      if (hay.includes(lw) && (!best || lw.length > best.len)) {
+        best = { category, keyword: w, len: lw.length }
+      }
+    }
+  }
+  return best ? { category: best.category, keyword: best.keyword } : null
+}
