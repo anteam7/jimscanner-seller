@@ -25,10 +25,9 @@ export default function QuotaBanner() {
     }
   }
 
-  useEffect(() => {
-    load()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])
+  // mount 시 1회 fetch + 폴링 없음. cascading render 위험 없음.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { load() }, [])
 
   // 초기 로딩 실패 시에만 에러 배너 표시 (기존 데이터가 있으면 무시)
   if (fetchError && !data) {

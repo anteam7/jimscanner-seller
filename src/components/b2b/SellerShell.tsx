@@ -192,10 +192,9 @@ export default function SellerShell({
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
 
-  // 경로 바뀌면 모바일 사이드바 닫기
-  useEffect(() => {
-    setMobileOpen(false)
-  }, [pathname])
+  // 경로 바뀌면 모바일 사이드바 닫기 — 라우터(외부 시스템) 변경에 대한 UI 동기화
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  useEffect(() => { setMobileOpen(false) }, [pathname])
 
   // ESC 키로 닫기 + 열렸을 때 body scroll lock
   useEffect(() => {

@@ -18,6 +18,8 @@ export default function OnboardingModal({ ceoName, displayName, isNewSeller }: P
     if (!isNewSeller) return
     try {
       const dismissed = window.localStorage.getItem(DISMISS_KEY)
+      // 1회성 mount 시 localStorage 동기화 — cascading render 위험 없음
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (!dismissed) setOpen(true)
     } catch {
       // localStorage unavailable (private mode 등) — 그냥 안 띄움

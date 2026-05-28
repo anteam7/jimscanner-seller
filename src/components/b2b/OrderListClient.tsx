@@ -129,6 +129,8 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
     sessionStorage.removeItem(LAST_SCROLL_KEY)
     const exists = orders.some((o) => o.id === lastId)
     if (!exists) return
+    // sessionStorage 기반 1회성 UI cue (highlight + scroll) — 외부 store 동기화 의도
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlightId(lastId)
     requestAnimationFrame(() => {
       const row = rowRefs.current.get(lastId)

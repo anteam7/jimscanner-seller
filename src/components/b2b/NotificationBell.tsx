@@ -57,8 +57,9 @@ export default function NotificationBell() {
     }
   }, [])
 
-  // 첫 로드 + 60초마다 갱신
+  // 첫 로드 + 60초마다 갱신 — interval (외부 timer) 으로부터 데이터 sync
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     refresh()
     const t = setInterval(refresh, 60000)
     return () => clearInterval(t)
