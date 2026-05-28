@@ -42,6 +42,7 @@ const NAV_ITEMS = [
       { href: '/orders/new', label: '국내 주문 단건 등록' },
       { href: '/orders/bulk', label: '국내 주문 일괄 등록' },
       { href: '/orders/matching', label: '주문매칭관리' },
+      { href: '/refunds', label: '환불 관리' },
     ],
   },
   {
@@ -263,8 +264,15 @@ export default function SellerShell({
         {/* 내비게이션 */}
         <nav className="flex-1 px-3 py-4 space-y-0.5 overflow-y-auto" aria-label="주요 메뉴">
           {NAV_ITEMS.map((item) => {
+            const children = 'children' in item ? item.children : undefined
+            const childActive =
+              children?.some((sub) =>
+                sub.exact
+                  ? pathname === sub.href
+                  : pathname === sub.href || pathname.startsWith(sub.href + '/'),
+              ) ?? false
             const isActive =
-              pathname === item.href || pathname.startsWith(item.href + '/')
+              pathname === item.href || pathname.startsWith(item.href + '/') || childActive
 
             if (!item.available) {
               return (
@@ -280,7 +288,6 @@ export default function SellerShell({
               )
             }
 
-            const children = 'children' in item ? item.children : undefined
             const showChildren = children && isActive
 
             return (

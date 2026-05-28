@@ -86,6 +86,7 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   delivered:           { label: '구매자 수령', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   completed:           { label: '구매 확정', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
   cancelled:           { label: '취소', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  refund_requested:    { label: '환불 요청', cls: 'bg-amber-50 text-amber-800 border-amber-200' },
   refunded:            { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
@@ -673,6 +674,16 @@ export default async function OrderDetailPage({
                 buyer_customs_code: order.buyer_customs_code,
               }}
             />
+            <Link
+              href={`/refunds/new?order_id=${order.id}`}
+              prefetch={false}
+              className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-md text-xs font-medium text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 transition-colors"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3" />
+              </svg>
+              환불 요청 등록
+            </Link>
           </section>
 
           {/* 비용 메타 */}
