@@ -870,6 +870,48 @@ export type Database = {
           },
         ]
       }
+      b2b_forwarder_transit_defaults: {
+        Row: {
+          avg_transit_days: number
+          created_at: string
+          id: string
+          is_active: boolean
+          max_transit_days: number | null
+          method: string
+          min_transit_days: number | null
+          notes: string | null
+          origin_country: string
+          source: string
+          updated_at: string
+        }
+        Insert: {
+          avg_transit_days: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_transit_days?: number | null
+          method?: string
+          min_transit_days?: number | null
+          notes?: string | null
+          origin_country: string
+          source?: string
+          updated_at?: string
+        }
+        Update: {
+          avg_transit_days?: number
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          max_transit_days?: number | null
+          method?: string
+          min_transit_days?: number | null
+          notes?: string | null
+          origin_country?: string
+          source?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       b2b_notifications: {
         Row: {
           account_id: string

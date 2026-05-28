@@ -9,6 +9,13 @@ import { createAdminClient } from '@/lib/auth/admin-supabase'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
 import QuotaBanner from '@/components/b2b/QuotaBanner'
 import OnboardingModal from '@/components/b2b/OnboardingModal'
+import {
+  buildEtaLookup,
+  classifyEtaBucket,
+  computeOrderEta,
+  formatKstDate,
+  type TransitDefault,
+} from '@/lib/b2b/eta'
 
 export const metadata: Metadata = {
   title: '대시보드',
@@ -602,6 +609,63 @@ export default async function SellerDashboardPage() {
     cardSpends = []
   }
 
+  // #idea-5: ETA 미니카드 — 지연 + 이번주 도착 예정 (active 주문만)
+  let etaSummary: { overdue: number; thisWeek: number; nextThree: Array<{ id: string; ref: string; days: number; eta: string; buyer: string | null }> } = {
+    overdue: 0, thisWeek: 0, nextThree: [],
+  }
+  try {
+    const ACTIVE_STATUS = ['draft', 'pending', 'paid', 'purchasing', 'shipping', 'refund_requested']
+    const [{ data: etaOrdersRaw }, { data: etaDefaultsRaw }] = await Promise.all([
+      supabase
+        .from('b2b_orders')
+        .select('id, order_number, market_order_number, buyer_name, forwarder_country, forwarder_submitted_at, order_date, created_at, status')
+        .eq('account_id', account.id)
+        .is('deleted_at', null)
+        .in('status', ACTIVE_STATUS)
+        .order('created_at', { ascending: false })
+        .limit(200),
+      supabase
+        .from('b2b_forwarder_transit_defaults')
+        .select('origin_country, method, avg_transit_days, min_transit_days, max_transit_days')
+        .eq('is_active', true),
+    ])
+    const lookup = buildEtaLookup((etaDefaultsRaw ?? []) as TransitDefault[])
+    const nowDate = new Date()
+    let overdue = 0
+    let thisWeek = 0
+    const upcoming: Array<{ id: string; ref: string; days: number; eta: Date; buyer: string | null }> = []
+    for (const o of etaOrdersRaw ?? []) {
+      const { eta } = computeOrderEta(o, lookup)
+      const bucket = classifyEtaBucket(eta, nowDate)
+      if (bucket === 'overdue') overdue++
+      else if (bucket === 'this_week') thisWeek++
+      if (bucket === 'this_week' || bucket === 'overdue') {
+        const remaining = Math.round((eta.getTime() - nowDate.getTime()) / (24 * 60 * 60 * 1000))
+        upcoming.push({
+          id: o.id,
+          ref: o.market_order_number ?? o.order_number,
+          days: remaining,
+          eta,
+          buyer: o.buyer_name,
+        })
+      }
+    }
+    upcoming.sort((a, b) => a.eta.getTime() - b.eta.getTime())
+    etaSummary = {
+      overdue,
+      thisWeek,
+      nextThree: upcoming.slice(0, 3).map((u) => ({
+        id: u.id,
+        ref: u.ref,
+        days: u.days,
+        eta: formatKstDate(u.eta),
+        buyer: u.buyer,
+      })),
+    }
+  } catch {
+    etaSummary = { overdue: 0, thisWeek: 0, nextThree: [] }
+  }
+
   // #12: 최근 agent 활동 3건 (admin client — b2b_auto_runs RLS bypass)
   let recentAgentRuns: AgentRunRow[] = []
   try {
@@ -782,6 +846,15 @@ export default async function SellerDashboardPage() {
         <ExchangeRatesCard rates={rates} yesterday={yesterdayRates} />
         <StatusPipelineCard counts={statusCounts} total={monthOrderCount ?? 0} />
       </section>
+
+      {/* #idea-5: 도착 예정 (ETA) 미니카드 — 지연/이번주 있을 때만 */}
+      {(etaSummary.overdue > 0 || etaSummary.thisWeek > 0) && (
+        <EtaMiniCard
+          overdue={etaSummary.overdue}
+          thisWeek={etaSummary.thisWeek}
+          upcoming={etaSummary.nextThree}
+        />
+      )}
 
       {/* 최근 주문 */}
       <RecentOrdersCard orders={recentOrders} />
@@ -1103,6 +1176,78 @@ type CardSpend = {
   line_count: number
   total_foreign: Record<string, number>
   total_krw: number
+}
+
+function EtaMiniCard({
+  overdue,
+  thisWeek,
+  upcoming,
+}: {
+  overdue: number
+  thisWeek: number
+  upcoming: Array<{ id: string; ref: string; days: number; eta: string; buyer: string | null }>
+}) {
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">도착 예정 (ETA)</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            배대지·국가별 평균 운송일수 기준
+          </p>
+        </div>
+        <Link
+          href="/eta"
+          prefetch={false}
+          className="text-[11px] font-medium text-indigo-700 hover:text-indigo-900 whitespace-nowrap"
+        >
+          전체 보기 →
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="rounded-lg border border-rose-200 bg-rose-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-rose-700 uppercase tracking-wider">지연</p>
+          <p className="mt-0.5 text-xl font-bold text-rose-700 tabular-nums">{overdue}건</p>
+        </div>
+        <div className="rounded-lg border border-indigo-200 bg-indigo-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-indigo-700 uppercase tracking-wider">이번 주</p>
+          <p className="mt-0.5 text-xl font-bold text-indigo-700 tabular-nums">{thisWeek}건</p>
+        </div>
+      </div>
+      {upcoming.length > 0 && (
+        <ul className="divide-y divide-slate-100 border-t border-slate-100 -mb-1">
+          {upcoming.map((u) => (
+            <li key={u.id} className="py-2 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/orders/${u.id}`}
+                  prefetch={false}
+                  className="text-sm font-medium text-slate-900 hover:text-indigo-700 transition-colors truncate block"
+                >
+                  {u.ref}
+                </Link>
+                <p className="text-[11px] text-slate-500 truncate">
+                  {u.buyer ?? '—'}
+                </p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-medium text-slate-700 tabular-nums">{u.eta}</p>
+                <p className="text-[10px] tabular-nums">
+                  {u.days < 0 ? (
+                    <span className="text-rose-700 font-semibold">{Math.abs(u.days)}일 지연</span>
+                  ) : u.days === 0 ? (
+                    <span className="text-indigo-700 font-semibold">오늘</span>
+                  ) : (
+                    <span className="text-slate-500">{u.days}일 후</span>
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
 }
 
 function CardSpendCard({ spends }: { spends: CardSpend[] }) {
