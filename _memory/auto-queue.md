@@ -282,17 +282,21 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 변경: Supabase MCP `apply_migration b2b_refunds_table` — 18 컬럼 (account_id/order_id/order_item_id, reason/reason_category, status/status_history, refund_amount_krw/refund_method, buyer_message/internal_notes, requested_at/approved_at/settled_at, audit), 3 인덱스 (account_date, order, status), `tg_b2b_refunds_touch` updated_at trigger, RLS `b2b_refunds tenant rw` (initplan 패턴 `(select auth.uid())`), `b2b_orders_status_check` 에 'refund_requested' 추가. 원본 SQL `supabase/b2b_refunds.sql`. `types/supabase.ts` 동기.
   - 후속: `#idea-3b` UI 페이지
 
-- [ ] **#idea-3b 환불 관리 Phase 2 — /refunds 페이지 + /orders 연결** _(brainstorm approved 2026-05-27, 2026-05-28 split)_
+- [x] **#idea-3b 환불 관리 Phase 2 — /refunds 페이지 + /orders 연결** _(brainstorm approved 2026-05-27, 2026-05-28 split)_
   - estimated: 3-4h
   - prereq: #idea-3a 완료
   - decision_required: false
   - source: github issue#3
-  - 구현 sketch:
-    - `/refunds` 목록 (필터: status / 기간 / 사유 카테고리) + cursor 페이지네이션
-    - `/refunds/new?order_id=...` 또는 `/orders/[id]` 상세에서 "환불 요청" 액션 → row 생성 + 주문 status 'refund_requested' 변경
-    - `/refunds/[id]` 상세 — status 전이 액션 (approve / settle / deny / cancel) + status_history 누적
-    - 대시보드 미니카드 — 이달 환불 건수·금액 (선택)
-    - 디자인: `_memory/design-system.md` 패턴 (shadow-sm + accent border-l)
+  - 완료: 2026-05-28 commit f43497a
+  - 구현:
+    - `/refunds` 목록 페이지 (status 필터 칩 + 50건/페이지, 빈 상태 + 주문 목록 CTA)
+    - `/refunds/new?order_id=…` 폼 (라인 선택, 사유 카테고리, 금액, 방법, 구매자 메시지, 내부 메모)
+    - `/refunds/[id]` 상세 (status 이력 타임라인 + 액션 사이드바)
+    - `POST /api/refunds` (소유권 검증 + b2b_orders.status `refund_requested` 전이)
+    - `PATCH /api/refunds/[id]` (status 전이 + status_history 누적, settled→`refunded`, denied/cancelled 시 주문 `refund_requested`→`completed` 복귀)
+    - `/orders/[id]` 사이드바에 환불 요청 등록 버튼 + STATUS_META `refund_requested` 라벨 추가
+    - `SellerShell` 주문관리 sub-item 에 환불 관리 추가 + child path 도 그룹 활성화 (`childActive` 로직)
+  - 후속 (소형): 대시보드 미니카드 (이달 환불 건수·금액), 페이지네이션 cursor (50건 초과 안내만 노출)
 
 - [ ] **#idea-4 다중 결제 카드 관리 (b2b_payment_cards)** _(brainstorm approved 2026-05-27)_
   - estimated: 2-3h
@@ -370,7 +374,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a 완료. brainstorm approved 6건 + #idea-3b 미진행)
+- P1 자율 가능: **27개** (#7~12, #auto-A~G 완료. #auto-A-followup 완료. #idea-3a/3b 완료. brainstorm approved 6건 중 5건 미진행)
 - P0 결정 대기: **1개** (issue#7)
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
