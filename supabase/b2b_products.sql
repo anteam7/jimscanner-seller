@@ -22,6 +22,8 @@ CREATE TABLE IF NOT EXISTS b2b_products (
   image_url                text,
   notes                    text,
   is_active                boolean NOT NULL DEFAULT true,
+  is_favorite              boolean NOT NULL DEFAULT false,
+  last_purchased_at        timestamptz,
   created_at               timestamptz NOT NULL DEFAULT now(),
   updated_at               timestamptz NOT NULL DEFAULT now(),
   UNIQUE (account_id, seller_sku)
@@ -29,6 +31,12 @@ CREATE TABLE IF NOT EXISTS b2b_products (
 
 CREATE INDEX IF NOT EXISTS idx_b2b_products_account ON b2b_products(account_id) WHERE is_active = true;
 CREATE INDEX IF NOT EXISTS idx_b2b_products_account_active ON b2b_products(account_id, is_active);
+CREATE INDEX IF NOT EXISTS idx_b2b_products_account_favorite
+  ON b2b_products(account_id, updated_at DESC)
+  WHERE is_active = true AND is_favorite = true;
+CREATE INDEX IF NOT EXISTS idx_b2b_products_account_last_purchased
+  ON b2b_products(account_id, last_purchased_at DESC NULLS LAST)
+  WHERE is_active = true;
 
 CREATE OR REPLACE FUNCTION tg_b2b_products_set_updated_at()
 RETURNS TRIGGER AS $$
@@ -39,6 +47,28 @@ DROP TRIGGER IF EXISTS trg_b2b_products_updated_at ON b2b_products;
 CREATE TRIGGER trg_b2b_products_updated_at
   BEFORE UPDATE ON b2b_products
   FOR EACH ROW EXECUTE FUNCTION tg_b2b_products_set_updated_at();
+
+-- 주문 라인이 product_id 와 연결될 때 last_purchased_at 자동 갱신 (#idea-10)
+CREATE OR REPLACE FUNCTION tg_b2b_order_items_touch_product_last_purchased()
+RETURNS TRIGGER AS $$
+BEGIN
+  IF NEW.product_id IS NOT NULL THEN
+    UPDATE b2b_products
+       SET last_purchased_at = now()
+     WHERE id = NEW.product_id
+       AND (last_purchased_at IS NULL OR last_purchased_at < now());
+  END IF;
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public, pg_temp;
+
+REVOKE EXECUTE ON FUNCTION tg_b2b_order_items_touch_product_last_purchased() FROM PUBLIC, anon, authenticated;
+
+DROP TRIGGER IF EXISTS trg_b2b_order_items_touch_product_last_purchased ON b2b_order_items;
+CREATE TRIGGER trg_b2b_order_items_touch_product_last_purchased
+  AFTER INSERT OR UPDATE OF product_id ON b2b_order_items
+  FOR EACH ROW
+  EXECUTE FUNCTION tg_b2b_order_items_touch_product_last_purchased();
 
 -- ============================================================
 -- 2. b2b_product_market_links : 같은 SKU 가 여러 마켓에 등록된 경우

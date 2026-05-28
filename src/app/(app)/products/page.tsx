@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { SUPPLIER_SITES } from '@/lib/b2b/order-options'
+import FavoriteStar from '@/components/b2b/FavoriteStar'
 
 export const metadata: Metadata = {
   title: '해외 상품관리',
@@ -20,6 +21,8 @@ type ProductRow = {
   default_currency: string | null
   default_unit_price: number | string | null
   is_active: boolean
+  is_favorite: boolean
+  last_purchased_at: string | null
   updated_at: string
 }
 
@@ -65,7 +68,7 @@ export default async function ProductsPage({
 
   let qb = sb
     .from('b2b_products')
-    .select('id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, is_active, updated_at')
+    .select('id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, is_active, is_favorite, last_purchased_at, updated_at')
     .eq('account_id', account.id)
     .eq('is_active', true)
     .order('updated_at', { ascending: false })
@@ -154,6 +157,7 @@ export default async function ProductsPage({
             <table className="w-full text-sm">
               <thead className="bg-slate-50 border-b border-slate-200">
                 <tr className="text-left">
+                  <th className="px-2 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider w-8" aria-label="즐겨찾기"></th>
                   <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">SKU</th>
                   <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider">상품명</th>
                   <th className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">분류</th>
@@ -165,6 +169,9 @@ export default async function ProductsPage({
               <tbody className="divide-y divide-slate-100">
                 {products.map((p) => (
                   <tr key={p.id} className="hover:bg-slate-50/70">
+                    <td className="px-2 py-3 whitespace-nowrap">
+                      <FavoriteStar productId={p.id} initial={p.is_favorite} />
+                    </td>
                     <td className="px-4 py-3 whitespace-nowrap">
                       <Link href={`/products/${p.id}`} className="font-mono text-xs font-semibold text-indigo-700 hover:text-indigo-800">
                         {p.seller_sku}

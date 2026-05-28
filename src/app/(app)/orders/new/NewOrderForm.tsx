@@ -10,6 +10,7 @@ import {
   type Currency,
 } from '@/lib/b2b/order-options'
 import ProductPicker, { type PickedProduct } from '@/components/b2b/ProductPicker'
+import SKUQuickPick from '@/components/b2b/SKUQuickPick'
 import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
 
 function suggestOrderNumber(): string {
@@ -210,6 +211,43 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   }
   function onClearProduct(i: number) {
     patchLine(i, { productId: null, productSku: null })
+  }
+
+  /** 즐겨찾기·최근 SKU 칩 클릭 → 빈 라인 또는 새 라인에 적용 */
+  function onQuickPick(p: PickedProduct) {
+    setLines((prev) => {
+      // 빈 라인 (productName 비어있고 productId 없음) 찾기
+      const blankIdx = prev.findIndex(
+        (l) => !l.productId && l.productName.trim().length === 0,
+      )
+      const targetIdx = blankIdx >= 0 ? blankIdx : prev.length
+      const base = blankIdx >= 0 ? prev[targetIdx] : blankLine()
+      const patched: LineItem = {
+        ...base,
+        productId: p.id,
+        productSku: p.seller_sku,
+        productName: p.display_name,
+        supplierSite: p.default_supplier_site ?? base.supplierSite,
+        currency: (p.default_currency as Currency) || base.currency,
+        unitPrice:
+          p.default_unit_price != null && String(p.default_unit_price).length > 0
+            ? String(p.default_unit_price)
+            : base.unitPrice,
+        weightKg:
+          p.default_weight_kg != null && String(p.default_weight_kg).length > 0
+            ? String(p.default_weight_kg)
+            : base.weightKg,
+      }
+      if (blankIdx >= 0) {
+        return prev.map((l, idx) => (idx === targetIdx ? patched : l))
+      }
+      return [...prev, patched]
+    })
+    // 첫 라인일 때 주문 단위 배대지 default 적용
+    if (lines.length === 1 && !lines[0].productId && !lines[0].productName.trim()) {
+      if (p.default_forwarder_id) setForwarderId(p.default_forwarder_id)
+      if (p.default_forwarder_country) setForwarderCountry(p.default_forwarder_country)
+    }
   }
 
   const allLinesValid = lines.every(
@@ -425,6 +463,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           description="한 마켓 주문에 N개 상품을 매입한 경우 라인을 추가합니다."
           rightChip={`${lines.length} 라인`}
         >
+          <SKUQuickPick onPick={onQuickPick} />
           <CustomsGuidePanel />
           {lines.map((line, i) => (
             <div
