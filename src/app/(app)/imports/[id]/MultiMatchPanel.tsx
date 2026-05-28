@@ -64,6 +64,8 @@ export function MultiMatchPanel({ receiptId }: { receiptId: string }) {
     }
   }, [receiptId])
 
+  // mount 시 1회 receipt 의 match list fetch — RSC 가 아니라 client interactive 영역이라 useEffect 필요
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { void load() }, [load])
 
   async function addMatch(orderId: string, amount?: number | null, note?: string) {
@@ -181,6 +183,8 @@ function SearchModal({
 
   useEffect(() => {
     inputRef.current?.focus()
+    // 검색 모달 mount 시 1회 빈 query 로 prefill — debounced input 외부에서 일어나야 함
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void doSearch('')
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)

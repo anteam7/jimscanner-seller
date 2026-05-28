@@ -67,6 +67,8 @@ export function ProductMatchingClient({
   useEffect(() => {
     if (presetDomestic && presetDomestic !== selectedDomesticId) {
       const exists = domesticProducts.find((d) => d.id === presetDomestic)
+      // URL query 의 presetDomestic 변경 시 selection 동기화 — 외부 prop sync 패턴
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       if (exists) setSelectedDomesticId(presetDomestic)
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

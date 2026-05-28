@@ -270,6 +270,8 @@ function SearchModal({
 
   useEffect(() => {
     inputRef.current?.focus()
+    // 검색 모달 mount 시 1회 빈 query 로 prefill — debounced input 외부에서 일어나야 함
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     void doSearch('')
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
     document.addEventListener('keydown', onKey)

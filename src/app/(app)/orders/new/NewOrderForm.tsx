@@ -117,6 +117,8 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
   type RatesMap = Record<string, { rate: number; unit: number }>
   const [rates, setRates] = useState<RatesMap | null>(null)
   useEffect(() => {
+    // 폼 mount 시 1회 주문번호 자동 제안 (YYYYMMDD-HHMM-NNN 형식) — 사용자 수정 가능
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setOrderNumber(suggestOrderNumber())
     fetch('/api/exchange-rate')
       .then((r) => (r.ok ? r.json() : null))
