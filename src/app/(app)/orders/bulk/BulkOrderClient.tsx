@@ -777,6 +777,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                             <SkuPickerCell
                               value={row[c.key] ?? ''}
                               skuCode={row._sku_code ?? null}
+                              rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
                               onPick={(p) => applySkuToRow(ridx, p)}
                               onClearSku={() => {
@@ -794,6 +795,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                             <Cell
                               col={c}
                               value={row[c.key] ?? ''}
+                              rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
                               autoLabel={autoCustomsLabel(row['product_name'])}
                             />
@@ -801,6 +803,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                             <Cell
                               col={c}
                               value={row[c.key] ?? ''}
+                              rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
                             />
                           )}
@@ -872,18 +875,22 @@ function Cell({
   value,
   onChange,
   autoLabel,
+  rowNumber,
 }: {
   col: ColumnDef
   value: string
   onChange: (v: string) => void
   autoLabel?: string | null
+  rowNumber: number
 }) {
+  const ariaLabel = `${col.label} (${rowNumber}행)`
   if (col.type === 'select') {
     const emptyLabel = autoLabel ?? '—'
     return (
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        aria-label={ariaLabel}
         title={!value && autoLabel ? '비우면 상품명에서 자동 인식됩니다' : undefined}
         className={`block w-full h-7 px-1.5 text-xs bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${
           !value && autoLabel ? 'text-emerald-600' : 'text-slate-900'
@@ -901,6 +908,7 @@ function Cell({
       type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      aria-label={ariaLabel}
       placeholder={col.placeholder}
       step={col.type === 'number' ? 'any' : undefined}
       className={`block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${col.type === 'number' ? 'text-right tabular-nums' : ''}`}
@@ -912,12 +920,14 @@ function Cell({
 function SkuPickerCell({
   value,
   skuCode,
+  rowNumber,
   onChange,
   onPick,
   onClearSku,
 }: {
   value: string
   skuCode: string | null
+  rowNumber: number
   onChange: (v: string) => void
   onPick: (p: SkuLite) => void
   onClearSku: () => void
@@ -1015,6 +1025,7 @@ function SkuPickerCell({
         }}
         onKeyDown={onKeyDown}
         placeholder="상품명 또는 SKU 검색"
+        aria-label={`상품명 또는 SKU 검색 (${rowNumber}행)`}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open}
