@@ -25,9 +25,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '잘못된 요청 형식입니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -39,7 +37,7 @@ export async function POST(request: Request) {
   const now = new Date().toISOString()
 
   if (body.all === true) {
-    const { error } = await db
+    const { error } = await sb
       .from('b2b_notifications')
       .update({ read_at: now })
       .eq('account_id', account.id)
@@ -55,7 +53,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'ids 또는 all 이 필요합니다.' }, { status: 400 })
   }
 
-  const { error } = await db
+  const { error } = await sb
     .from('b2b_notifications')
     .update({ read_at: now })
     .eq('account_id', account.id)
