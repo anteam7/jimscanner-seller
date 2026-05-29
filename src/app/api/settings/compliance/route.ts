@@ -13,10 +13,7 @@ export async function GET() {
 
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, withdrawal_notice_enabled, withdrawal_notice_custom_text')
     .eq('user_id', user.id)
@@ -26,14 +23,14 @@ export async function GET() {
 
   const since30d = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()
 
-  const { data: notices } = await db
+  const { data: notices } = await sb
     .from('b2b_withdrawal_notices')
     .select('delivery_status')
     .eq('account_id', account.id)
     .gte('sent_at', since30d)
 
   const total = notices?.length ?? 0
-  const sent = notices?.filter((n: { delivery_status: string }) => n.delivery_status === 'sent').length ?? 0
+  const sent = notices?.filter((n) => n.delivery_status === 'sent').length ?? 0
 
   return NextResponse.json({
     withdrawal_notice_enabled: account.withdrawal_notice_enabled ?? true,
@@ -83,10 +80,8 @@ export async function PATCH(request: Request) {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
 
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -94,12 +89,15 @@ export async function PATCH(request: Request) {
 
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() }
+  const updates: {
+    updated_at: string
+    withdrawal_notice_enabled?: boolean
+    withdrawal_notice_custom_text?: string | null
+  } = { updated_at: new Date().toISOString() }
   if (typeof withdrawal_notice_enabled === 'boolean') updates.withdrawal_notice_enabled = withdrawal_notice_enabled
   if (withdrawal_notice_custom_text !== undefined) updates.withdrawal_notice_custom_text = withdrawal_notice_custom_text || null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: updateErr } = await (admin as any)
+  const { error: updateErr } = await admin
     .from('b2b_accounts')
     .update(updates)
     .eq('id', account.id)

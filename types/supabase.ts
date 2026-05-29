@@ -208,6 +208,8 @@ export type Database = {
           verification_level: number
           verification_rejected_reason: string | null
           verification_status: string
+          withdrawal_notice_custom_text: string | null
+          withdrawal_notice_enabled: boolean
         }
         Insert: {
           address?: string | null
@@ -238,6 +240,8 @@ export type Database = {
           verification_level?: number
           verification_rejected_reason?: string | null
           verification_status?: string
+          withdrawal_notice_custom_text?: string | null
+          withdrawal_notice_enabled?: boolean
         }
         Update: {
           address?: string | null
@@ -268,6 +272,8 @@ export type Database = {
           verification_level?: number
           verification_rejected_reason?: string | null
           verification_status?: string
+          withdrawal_notice_custom_text?: string | null
+          withdrawal_notice_enabled?: boolean
         }
         Relationships: []
       }
@@ -2229,6 +2235,64 @@ export type Database = {
           version_code?: string
         }
         Relationships: []
+      }
+      b2b_withdrawal_notices: {
+        Row: {
+          account_id: string
+          channel: string
+          client_id: string | null
+          content_snapshot: string
+          delivery_status: string
+          id: string
+          order_id: string
+          recipient_contact: string | null
+          sent_at: string
+        }
+        Insert: {
+          account_id: string
+          channel?: string
+          client_id?: string | null
+          content_snapshot: string
+          delivery_status?: string
+          id?: string
+          order_id: string
+          recipient_contact?: string | null
+          sent_at?: string
+        }
+        Update: {
+          account_id?: string
+          channel?: string
+          client_id?: string | null
+          content_snapshot?: string
+          delivery_status?: string
+          id?: string
+          order_id?: string
+          recipient_contact?: string | null
+          sent_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_withdrawal_notices_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_withdrawal_notices_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "b2b_withdrawal_notices_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "b2b_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       centers: {
         Row: {

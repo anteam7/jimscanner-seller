@@ -1312,6 +1312,12 @@ alter table public.b2b_subscriptions
 -- 23) 청약철회 고지 발송 기록 (전자상거래법 §17)
 -- UNIQUE(order_id): 주문당 1회만 고지, 중복 발송 방지
 -- ─────────────────────────────────────────────
+-- 셀러별 자동 고지 on/off + 커스텀 문구 (settings/compliance route 가 참조)
+alter table public.b2b_accounts
+  add column if not exists withdrawal_notice_enabled boolean not null default true;
+alter table public.b2b_accounts
+  add column if not exists withdrawal_notice_custom_text text;
+
 create table if not exists public.b2b_withdrawal_notices (
   id                uuid primary key default gen_random_uuid(),
   account_id        uuid not null references public.b2b_accounts(id) on delete cascade,
@@ -1335,9 +1341,13 @@ create policy "b2b-withdrawal-notices: owner select"
   on public.b2b_withdrawal_notices for select
   using (
     account_id in (
-      select id from public.b2b_accounts where user_id = auth.uid()
+      select id from public.b2b_accounts where user_id = (select auth.uid())
     )
   );
+
+-- route 가 account_id + sent_at >= 30d 로 조회 → 복합 인덱스
+create index if not exists idx_b2b_withdrawal_notices_account_sent
+  on public.b2b_withdrawal_notices (account_id, sent_at desc);
 
 -- ─────────────────────────────────────────────
 -- 24) b2b_offers.offer_accepted_at 컬럼 추가
