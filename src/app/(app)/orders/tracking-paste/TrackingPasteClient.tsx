@@ -201,6 +201,7 @@ SLR-2025-00042\tEK123456789CN\tems-china`}
           value={text}
           onChange={(e) => setText(e.target.value)}
           rows={10}
+          aria-label="운송장 붙여넣기 (한 줄당: 주문번호, 운송장 번호, 캐리어)"
           placeholder={'예) 112-7891234-5678901\t9405511299223123456789\tusps'}
           className="block w-full text-sm font-mono bg-white border border-slate-200 rounded-md p-3 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 leading-snug"
         />

@@ -122,6 +122,7 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
               type="search"
               value={q}
               onChange={(e) => setQ(e.target.value)}
+              aria-label="등록된 SKU 검색 (SKU 코드 또는 상품명)"
               placeholder="SKU 코드 / 상품명 검색"
               className="w-full px-2.5 py-1.5 text-sm border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
             />
