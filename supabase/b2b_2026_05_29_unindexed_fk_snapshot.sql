@@ -1,9 +1,14 @@
--- self-audit 2026-05-29 snapshot — b2b_* 외래키 미인덱스 11건
+-- self-audit 2026-05-29 snapshot — b2b_* 외래키 미인덱스 12건
 -- 결정: #auto-G (unused_index 검토) 와 동일하게 신규 테이블 위주이며 행 수 부족.
 -- 옵티마이저가 seq scan 선택하는 정상 동작. 행 수 늘면 자연 활용 예상.
 -- 재검토 기한: 2026-08-28 (#auto-G 와 동일)
 --
 -- 만약 그 시점에서도 unused 상태 유지되면 drop, 반대로 query 활용 시작되면 인덱스 추가.
+--
+-- 갱신 2026-05-29 (14회차): 13회차 (commit 7cc0840) 의 b2b_withdrawal_notices 적용으로
+-- 미인덱스 FK 가 11 → 12 건으로 증가. 신규: b2b_withdrawal_notices.client_id (ON DELETE SET NULL).
+-- 같은 테이블의 account_id (idx_b2b_withdrawal_notices_account_sent) / order_id 는 covering index 존재 → advisor 미플래그.
+-- 결정 변동 없음: 동일하게 2026-08-28 재검토까지 deferred (행 0건, seq scan 정상).
 
 -- 후보 (Supabase performance advisor 0001_unindexed_foreign_keys 보고):
 -- 높은 활용 예상 (volume 우선):
@@ -20,6 +25,7 @@
 --   b2b_forwarder_mappings.forwarder_id
 --   b2b_products.default_forwarder_id
 --   b2b_subscriptions.plan_id
+--   b2b_withdrawal_notices.client_id    — 청약철회 고지 대상 고객 참조 (admin/발송 이력 전용, 14회차 추가)
 
 -- 검증 쿼리 (3개월 후 실행):
 -- SELECT
