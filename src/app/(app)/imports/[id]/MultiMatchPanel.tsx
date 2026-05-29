@@ -202,7 +202,7 @@ function SearchModal({
       <div className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
           <h3 className="text-sm font-bold text-slate-900">매칭할 주문 검색</h3>
-          <button type="button" onClick={onClose} className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
+          <button type="button" onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
         </div>
         <div className="px-5 py-3 border-b border-slate-100">
           <input ref={inputRef} type="text" value={q} onChange={(e) => onChange(e.target.value)}
