@@ -440,6 +440,7 @@ export default function TemplateMappingEditor({
                       type="text"
                       value={c.column_label}
                       onChange={(e) => patchCol(idx, { column_label: e.target.value })}
+                      aria-label="컬럼 헤더 라벨"
                       className="w-full rounded border border-slate-200 px-2 py-1 text-sm focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none"
                     />
                   </td>
@@ -592,6 +593,7 @@ function ValueField({
           value={col.constant_value ?? ''}
           onChange={(e) => onChange({ constant_value: e.target.value })}
           placeholder="고정 값"
+          aria-label="고정 값"
           className={wrap}
         />
       )
@@ -602,6 +604,7 @@ function ValueField({
           value={col.composite_template ?? ''}
           onChange={(e) => onChange({ composite_template: e.target.value })}
           placeholder="{buyer_address} {buyer_detail_address}"
+          aria-label="조합 템플릿"
           className={wrap}
         />
       )
@@ -614,6 +617,7 @@ function ValueField({
             value={col.user_input_label ?? ''}
             onChange={(e) => onChange({ user_input_label: e.target.value })}
             placeholder="질문 라벨 (예: 브랜드)"
+            aria-label="질문 라벨"
             className={wrap}
           />
           <input
@@ -627,6 +631,7 @@ function ValueField({
               })
             }
             placeholder="옵션 enum (콤마 구분, 비면 자유 입력)"
+            aria-label="옵션 enum (콤마 구분)"
             className={wrap}
           />
           <input
@@ -634,6 +639,7 @@ function ValueField({
             value={col.constant_value ?? ''}
             onChange={(e) => onChange({ constant_value: e.target.value })}
             placeholder="기본 값 (옵션)"
+            aria-label="기본 값"
             className={wrap}
           />
         </div>
