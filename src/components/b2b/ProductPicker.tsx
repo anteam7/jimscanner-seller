@@ -13,6 +13,7 @@ export type PickedProduct = {
   default_forwarder_id: string | null
   default_forwarder_country: string | null
   default_weight_kg: number | string | null
+  is_favorite?: boolean | null
 }
 
 type Props = {
@@ -43,7 +44,12 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
         return
       }
       const j = (await r.json()) as { products: PickedProduct[] }
-      setResults(j.products ?? [])
+      // 즐겨찾기 SKU 를 상단으로 (검색 순서는 유지, 즐겨찾기만 안정 정렬로 올림)
+      const list = j.products ?? []
+      const sorted = [...list].sort(
+        (a, b) => (b.is_favorite ? 1 : 0) - (a.is_favorite ? 1 : 0),
+      )
+      setResults(sorted)
     } catch {
       setResults([])
     } finally {
@@ -149,7 +155,18 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
                       }}
                       className="w-full text-left px-3 py-2 hover:bg-indigo-50/60 transition-colors"
                     >
-                      <p className="text-sm text-slate-900 truncate">{p.display_name}</p>
+                      <p className="flex items-center gap-1.5 text-sm text-slate-900">
+                        {p.is_favorite && (
+                          <svg
+                            className="w-3.5 h-3.5 shrink-0 fill-amber-500"
+                            viewBox="0 0 20 20"
+                            aria-label="즐겨찾기"
+                          >
+                            <path d="M9.04 2.927c.3-.92 1.62-.92 1.92 0l1.5 4.612h4.85c.969 0 1.371 1.24.588 1.81l-3.926 2.852 1.5 4.612c.3.921-.755 1.688-1.539 1.118L10 14.98l-3.926 2.852c-.784.57-1.838-.197-1.539-1.118l1.5-4.612L2.108 9.35c-.783-.57-.38-1.81.588-1.81h4.85l1.5-4.612z" />
+                          </svg>
+                        )}
+                        <span className="truncate">{p.display_name}</span>
+                      </p>
                       <p className="text-[11px] text-slate-500 mt-0.5">
                         <span className="font-mono">{p.seller_sku}</span>
                         {p.default_supplier_site && (

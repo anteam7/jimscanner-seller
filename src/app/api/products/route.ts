@@ -64,7 +64,7 @@ export async function GET(request: Request) {
   let qb = sb
     .from('b2b_products')
     .select(
-      'id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, default_forwarder_id, default_weight_kg, image_url, is_active, created_at, updated_at',
+      'id, seller_sku, display_name, english_name, category, default_supplier_site, default_currency, default_unit_price, default_forwarder_id, default_weight_kg, image_url, is_active, is_favorite, created_at, updated_at',
     )
     .eq('account_id', account.id)
     .order('updated_at', { ascending: false })
