@@ -4,7 +4,7 @@ import { useEffect, useMemo, useRef, useState, useCallback } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { MARKETPLACES, SUPPLIER_SITES, CURRENCIES } from '@/lib/b2b/order-options'
-import { CUSTOMS_CATEGORY_OPTIONS } from '@/lib/b2b/customs-guide'
+import { CUSTOMS_CATEGORY_OPTIONS, matchCustomsCategory, getCustomsGuide } from '@/lib/b2b/customs-guide'
 
 type SkuLite = {
   id: string
@@ -790,6 +790,13 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                                 })
                               }}
                             />
+                          ) : c.key === 'customs_category' ? (
+                            <Cell
+                              col={c}
+                              value={row[c.key] ?? ''}
+                              onChange={(v) => updateCell(ridx, c.key, v)}
+                              autoLabel={autoCustomsLabel(row['product_name'])}
+                            />
                           ) : (
                             <Cell
                               col={c}
@@ -851,16 +858,38 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
   )
 }
 
+// 상품명에서 통관 분류 자동 인식 → 빈 셀 placeholder 라벨 (서버측 자동 저장 결과 미리보기)
+function autoCustomsLabel(productName: string | undefined): string | null {
+  const m = matchCustomsCategory(productName)
+  if (!m) return null
+  const g = getCustomsGuide(m.category)
+  return g ? `자동: ${g.emoji} ${g.label}` : null
+}
+
 // ─── 셀 ────────────────────────────────────────────────────────────────
-function Cell({ col, value, onChange }: { col: ColumnDef; value: string; onChange: (v: string) => void }) {
+function Cell({
+  col,
+  value,
+  onChange,
+  autoLabel,
+}: {
+  col: ColumnDef
+  value: string
+  onChange: (v: string) => void
+  autoLabel?: string | null
+}) {
   if (col.type === 'select') {
+    const emptyLabel = autoLabel ?? '—'
     return (
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
-        className="block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white"
+        title={!value && autoLabel ? '비우면 상품명에서 자동 인식됩니다' : undefined}
+        className={`block w-full h-7 px-1.5 text-xs bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${
+          !value && autoLabel ? 'text-emerald-600' : 'text-slate-900'
+        }`}
       >
-        <option value="">—</option>
+        <option value="">{emptyLabel}</option>
         {col.options?.map((o) => (
           <option key={o.value} value={o.value}>{o.label}</option>
         ))}
