@@ -209,8 +209,32 @@ export const CUSTOMS_KEYWORDS: Record<string, string[]> = {
 }
 
 /**
+ * 키워드가 상품명에 포함되는지 판정.
+ * 짧은 영문 키워드 (≤4자, 예: pan/pot/bag/ring) 는 naked substring 으로 매칭하면
+ * "ja**pan**" / "s**pot**" / "s**pring**" 같은 false positive 가 생기므로 단어 경계를 요구한다.
+ * CJK 키워드 (공백 없음) 와 5자 이상 영문은 그대로 substring 매칭.
+ */
+function keywordMatches(hay: string, lw: string): boolean {
+  const isShortAscii = lw.length <= 4 && /^[\x00-\x7f]+$/.test(lw)
+  if (!isShortAscii) return hay.includes(lw)
+  // 단어 경계: 영문자 a-z 가 양옆에 붙어있지 않을 때만 매칭 (숫자·공백·기호·CJK·문자열끝 OK)
+  let idx = hay.indexOf(lw)
+  while (idx !== -1) {
+    const before = hay[idx - 1]
+    const after = hay[idx + lw.length]
+    const beforeOk = before === undefined || before < 'a' || before > 'z'
+    const afterOk = after === undefined || after < 'a' || after > 'z'
+    if (beforeOk && afterOk) return true
+    idx = hay.indexOf(lw, idx + 1)
+  }
+  return false
+}
+
+/**
  * 상품명에서 통관 카테고리 자동 인식.
  * 가장 긴 (= 가장 구체적인) 매칭 키워드를 우선. 매칭 없으면 null.
+ * 'other' 는 의도적으로 키워드 사전에서 제외 (fallback) — 자동 인식은 명시 카테고리만 반환,
+ * 미매칭 시 null 을 반환해 셀러가 수동 선택하게 한다. ('other' 포함 검토 결론: 제외 유지)
  */
 export function matchCustomsCategory(
   text: string | null | undefined,
@@ -221,7 +245,7 @@ export function matchCustomsCategory(
   for (const [category, words] of Object.entries(CUSTOMS_KEYWORDS)) {
     for (const w of words) {
       const lw = w.toLowerCase()
-      if (hay.includes(lw) && (!best || lw.length > best.len)) {
+      if ((!best || lw.length > best.len) && keywordMatches(hay, lw)) {
         best = { category, keyword: w, len: lw.length }
       }
     }
