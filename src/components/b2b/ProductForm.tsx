@@ -296,19 +296,19 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
             {marketLinks.map((m, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 items-start border border-slate-100 rounded-md p-2">
                 <div className="col-span-3">
-                  <select value={m.marketplace} onChange={(e) => patchMarket(i, { marketplace: e.target.value })} className={`${inputCls} text-xs`}>
+                  <select aria-label="마켓" value={m.marketplace} onChange={(e) => patchMarket(i, { marketplace: e.target.value })} className={`${inputCls} text-xs`}>
                     <option value="">마켓</option>
                     {MARKETPLACES.map((mp) => <option key={mp.value} value={mp.value}>{mp.label}</option>)}
                   </select>
                 </div>
                 <div className="col-span-3">
-                  <input type="text" placeholder="마켓 상품번호" value={m.market_product_id} onChange={(e) => patchMarket(i, { market_product_id: e.target.value })} className={`${inputCls} text-xs font-mono`} />
+                  <input type="text" aria-label="마켓 상품번호" placeholder="마켓 상품번호" value={m.market_product_id} onChange={(e) => patchMarket(i, { market_product_id: e.target.value })} className={`${inputCls} text-xs font-mono`} />
                 </div>
                 <div className="col-span-3">
-                  <input type="text" placeholder="옵션 (블랙/270mm)" value={m.market_option} onChange={(e) => patchMarket(i, { market_option: e.target.value })} className={`${inputCls} text-xs`} />
+                  <input type="text" aria-label="옵션" placeholder="옵션 (블랙/270mm)" value={m.market_option} onChange={(e) => patchMarket(i, { market_option: e.target.value })} className={`${inputCls} text-xs`} />
                 </div>
                 <div className="col-span-2">
-                  <input type="number" min={0} step={100} placeholder="판매가 KRW" value={m.sale_price_krw} onChange={(e) => patchMarket(i, { sale_price_krw: e.target.value })} className={`${inputCls} text-xs text-right tabular-nums`} />
+                  <input type="number" aria-label="판매가 KRW" min={0} step={100} placeholder="판매가 KRW" value={m.sale_price_krw} onChange={(e) => patchMarket(i, { sale_price_krw: e.target.value })} className={`${inputCls} text-xs text-right tabular-nums`} />
                 </div>
                 <button type="button" onClick={() => removeMarket(i)} aria-label="제거" className="col-span-1 self-center text-slate-400 hover:text-rose-700 text-xs">×</button>
               </div>
@@ -335,19 +335,19 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
             {supplierLinks.map((s, i) => (
               <div key={i} className="grid grid-cols-12 gap-2 items-start border border-slate-100 rounded-md p-2">
                 <div className="col-span-3">
-                  <select value={s.supplier_site} onChange={(e) => patchSupplier(i, { supplier_site: e.target.value })} className={`${inputCls} text-xs`}>
+                  <select aria-label="매입처" value={s.supplier_site} onChange={(e) => patchSupplier(i, { supplier_site: e.target.value })} className={`${inputCls} text-xs`}>
                     <option value="">매입처</option>
                     {SUPPLIER_SITES.map((ss) => <option key={ss.value} value={ss.value}>{ss.label}</option>)}
                   </select>
                 </div>
                 <div className="col-span-4">
-                  <input type="url" placeholder="상품 URL" value={s.supplier_product_url} onChange={(e) => patchSupplier(i, { supplier_product_url: e.target.value })} className={`${inputCls} text-xs`} />
+                  <input type="url" aria-label="상품 URL" placeholder="상품 URL" value={s.supplier_product_url} onChange={(e) => patchSupplier(i, { supplier_product_url: e.target.value })} className={`${inputCls} text-xs`} />
                 </div>
                 <div className="col-span-2">
-                  <input type="number" min={0} step="0.01" placeholder="단가" value={s.supplier_unit_price} onChange={(e) => patchSupplier(i, { supplier_unit_price: e.target.value })} className={`${inputCls} text-xs text-right tabular-nums`} />
+                  <input type="number" aria-label="단가" min={0} step="0.01" placeholder="단가" value={s.supplier_unit_price} onChange={(e) => patchSupplier(i, { supplier_unit_price: e.target.value })} className={`${inputCls} text-xs text-right tabular-nums`} />
                 </div>
                 <div className="col-span-1">
-                  <select value={s.supplier_currency} onChange={(e) => patchSupplier(i, { supplier_currency: e.target.value })} className={`${inputCls} text-xs`}>
+                  <select aria-label="통화" value={s.supplier_currency} onChange={(e) => patchSupplier(i, { supplier_currency: e.target.value })} className={`${inputCls} text-xs`}>
                     {CURRENCIES.map((c) => <option key={c.code} value={c.code}>{c.code}</option>)}
                   </select>
                 </div>
