@@ -178,6 +178,7 @@ export default function TransitOverrideEditor({
                       inputMode="numeric"
                       value={drafts[k] ?? ''}
                       placeholder={String(d.avg_transit_days)}
+                      aria-label={`${countryLabel} ${methodLabel} 운송일수 보정 (일, 기본 ${d.avg_transit_days}일)`}
                       onChange={(e) => setDrafts((prev) => ({ ...prev, [k]: e.target.value }))}
                       onKeyDown={(e) => {
                         if (e.key === 'Enter') save(d.origin_country, d.method)
@@ -191,6 +192,7 @@ export default function TransitOverrideEditor({
                         type="button"
                         disabled={busy || (drafts[k] ?? '') === ''}
                         onClick={() => save(d.origin_country, d.method)}
+                        aria-label={`${countryLabel} ${methodLabel} 운송일수 보정 저장`}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
                         {busy ? '...' : '저장'}
@@ -200,6 +202,7 @@ export default function TransitOverrideEditor({
                           type="button"
                           disabled={busy}
                           onClick={() => clear(d.origin_country, d.method)}
+                          aria-label={`${countryLabel} ${methodLabel} 보정 초기화 (글로벌 시드값으로 복귀)`}
                           className="inline-flex items-center rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
                           title="글로벌 시드값으로 복귀"
                         >
