@@ -58,6 +58,49 @@ export default async function PaymentCardsPage() {
   const activeCount = rows.filter((r) => r.is_active).length
   const archivedCount = rows.length - activeCount
 
+  // #idea-4 후속: 카드별 이달 매입 합계 (KRW) — 한도 대비 사용률 추적용.
+  // dashboard CardSpendCard 와 동일 로직 (b2b_orders!inner 로 account 격리).
+  const spendByCard: Record<string, { krw: number; lineCount: number }> = {}
+  if (rows.length > 0) {
+    try {
+      const monthStart = new Date()
+      monthStart.setDate(1)
+      monthStart.setHours(0, 0, 0, 0)
+      type LineRow = {
+        payment_card_id: string | null
+        total_price_krw: number | string | null
+        b2b_orders: { account_id: string; order_date: string } | null
+      }
+      const { data: linesRaw } = await admin
+        .from('b2b_order_items')
+        .select('payment_card_id, total_price_krw, b2b_orders!inner(account_id, order_date)')
+        .not('payment_card_id', 'is', null)
+        .gte('b2b_orders.order_date', monthStart.toISOString())
+        .eq('b2b_orders.account_id', account.id)
+      const lines = (linesRaw ?? []) as unknown as LineRow[]
+      for (const ln of lines) {
+        if (!ln.payment_card_id) continue
+        const bucket = spendByCard[ln.payment_card_id] ?? { krw: 0, lineCount: 0 }
+        bucket.lineCount += 1
+        if (ln.total_price_krw != null) {
+          const krw = Number(ln.total_price_krw)
+          if (Number.isFinite(krw)) bucket.krw += krw
+        }
+        spendByCard[ln.payment_card_id] = bucket
+      }
+    } catch {
+      // 합계 실패해도 카드 목록은 정상 노출
+    }
+  }
+
+  // 한도 대비 80% 이상 사용한 active 카드 (경고 배너용)
+  const NEAR_LIMIT_PCT = 0.8
+  const overLimitCards = rows.filter((c) => {
+    if (!c.is_active || c.credit_limit_krw == null || c.credit_limit_krw <= 0) return false
+    const used = spendByCard[c.id]?.krw ?? 0
+    return used / c.credit_limit_krw >= NEAR_LIMIT_PCT
+  })
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
       <header>
@@ -82,7 +125,32 @@ export default async function PaymentCardsPage() {
         </div>
       </div>
 
-      <PaymentCardsManager initialCards={rows} />
+      {overLimitCards.length > 0 && (
+        <div className="rounded-lg bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm px-4 py-3">
+          <p className="text-sm font-semibold text-amber-800">⚠ 한도 임박 카드 {overLimitCards.length}장</p>
+          <ul className="mt-1.5 space-y-1">
+            {overLimitCards.map((c) => {
+              const used = spendByCard[c.id]?.krw ?? 0
+              const pct = Math.round((used / (c.credit_limit_krw as number)) * 100)
+              return (
+                <li key={c.id} className="text-[12px] text-amber-700">
+                  <span className="font-medium">{c.alias}</span>
+                  {c.last4 && <span className="text-amber-600/70"> ···· {c.last4}</span>} —{' '}
+                  이달 {used.toLocaleString()}원 / 한도 {(c.credit_limit_krw as number).toLocaleString()}원{' '}
+                  <span className={`font-semibold ${pct >= 100 ? 'text-rose-600' : 'text-amber-800'}`}>
+                    ({pct}%{pct >= 100 ? ' 초과' : ''})
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
+          <p className="mt-1.5 text-[11px] text-amber-600/80">
+            이달 매입 라인의 원화 합계 기준입니다. 결제일·실제 청구액과 다를 수 있습니다.
+          </p>
+        </div>
+      )}
+
+      <PaymentCardsManager initialCards={rows} spendByCard={spendByCard} />
 
       <p className="text-[11px] text-slate-400">
         ※ 보안: 본 카드 번호 전체와 CVC, 유효기간은 저장하지 않습니다 (PCI-DSS 회피). 별칭·마지막 4자리·결제일만 저장합니다.

@@ -70,7 +70,15 @@ const EMPTY_FORM: FormState = {
   notes: '',
 }
 
-export default function PaymentCardsManager({ initialCards }: { initialCards: CardRow[] }) {
+type CardSpend = { krw: number; lineCount: number }
+
+export default function PaymentCardsManager({
+  initialCards,
+  spendByCard = {},
+}: {
+  initialCards: CardRow[]
+  spendByCard?: Record<string, CardSpend>
+}) {
   const router = useRouter()
   const [rows, setRows] = useState(initialCards)
   const [prevInitial, setPrevInitial] = useState(initialCards)
@@ -325,6 +333,20 @@ export default function PaymentCardsManager({ initialCards }: { initialCards: Ca
           {rows.map((c) => {
             const colorCls = c.color && COLOR_CLS[c.color] ? COLOR_CLS[c.color] : 'bg-slate-400'
             const brandLabel = c.brand ? BRAND_LABEL[c.brand] ?? c.brand : null
+            const spend = spendByCard[c.id]
+            const usedKrw = spend?.krw ?? 0
+            const hasLimit = c.credit_limit_krw != null && c.credit_limit_krw > 0
+            const usagePct = hasLimit
+              ? Math.min(999, Math.round((usedKrw / (c.credit_limit_krw as number)) * 100))
+              : null
+            const barCls =
+              usagePct == null
+                ? ''
+                : usagePct >= 100
+                  ? 'bg-rose-500'
+                  : usagePct >= 80
+                    ? 'bg-amber-500'
+                    : 'bg-emerald-500'
             return (
               <li
                 key={c.id}
@@ -354,6 +376,38 @@ export default function PaymentCardsManager({ initialCards }: { initialCards: Ca
                     )}
                     {c.billing_day != null && <span>결제일 매월 {c.billing_day}일</span>}
                   </div>
+                  {c.is_active && (
+                    <div className="mt-1.5">
+                      <div className="flex items-center justify-between text-[11px]">
+                        <span className="text-slate-500">
+                          이달 매입{' '}
+                          <span className="font-semibold text-slate-700 tabular-nums">
+                            {usedKrw.toLocaleString()}원
+                          </span>
+                          {spend && spend.lineCount > 0 && (
+                            <span className="text-slate-400"> · {spend.lineCount}건</span>
+                          )}
+                        </span>
+                        {usagePct != null && (
+                          <span
+                            className={`font-semibold tabular-nums ${
+                              usagePct >= 100 ? 'text-rose-600' : usagePct >= 80 ? 'text-amber-600' : 'text-slate-500'
+                            }`}
+                          >
+                            {usagePct}%{usagePct >= 100 ? ' 초과' : ''}
+                          </span>
+                        )}
+                      </div>
+                      {usagePct != null && (
+                        <div className="mt-1 h-1.5 w-full rounded-full bg-slate-100 overflow-hidden">
+                          <div
+                            className={`h-full rounded-full ${barCls}`}
+                            style={{ width: `${Math.min(100, usagePct)}%` }}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  )}
                   {c.notes && <p className="mt-1 text-[11px] text-slate-500">{c.notes}</p>}
                 </div>
                 <div className="flex flex-col items-end gap-1 flex-shrink-0">
