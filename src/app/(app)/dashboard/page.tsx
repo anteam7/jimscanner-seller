@@ -771,6 +771,42 @@ export default async function SellerDashboardPage() {
     etaSummary = { overdue: 0, thisWeek: 0, nextThree: [] }
   }
 
+  // #idea-3b 후속: 이달 환불 현황 미니카드 — 신청 건수 / 정산완료 금액 / 처리 대기
+  let refundSummary: {
+    total: number
+    settledKrw: number
+    settledCount: number
+    pendingCount: number
+  } | null = null
+  try {
+    const monthStartRf = new Date(nowMs)
+    monthStartRf.setDate(1)
+    monthStartRf.setHours(0, 0, 0, 0)
+    const { data: refundRows } = await db
+      .from('b2b_refunds')
+      .select('status, refund_amount_krw')
+      .eq('account_id', account.id)
+      .gte('requested_at', monthStartRf.toISOString())
+    const rows = (refundRows ?? []) as Array<{ status: string; refund_amount_krw: number | string | null }>
+    if (rows.length > 0) {
+      let settledKrw = 0
+      let settledCount = 0
+      let pendingCount = 0
+      for (const r of rows) {
+        if (r.status === 'settled') {
+          settledCount += 1
+          const amt = Number(r.refund_amount_krw ?? 0)
+          if (Number.isFinite(amt)) settledKrw += amt
+        } else if (r.status === 'requested' || r.status === 'approved' || r.status === 'processing') {
+          pendingCount += 1
+        }
+      }
+      refundSummary = { total: rows.length, settledKrw, settledCount, pendingCount }
+    }
+  } catch {
+    refundSummary = null
+  }
+
   // #12: 최근 agent 활동 3건 (admin client — b2b_auto_runs RLS bypass)
   let recentAgentRuns: AgentRunRow[] = []
   try {
@@ -978,6 +1014,9 @@ export default async function SellerDashboardPage() {
 
       {/* #idea-4: 카드별 매입 합계 — 등록 카드가 있을 때만 */}
       {cardSpends.length > 0 && <CardSpendCard spends={cardSpends} />}
+
+      {/* #idea-3b 후속: 이달 환불 현황 — 이달 환불 신청이 있을 때만 */}
+      {refundSummary && <RefundMiniCard summary={refundSummary} />}
 
       {/* #12: 최근 agent 활동 — 시스템이 일하고 있다는 transparency */}
       {recentAgentRuns.length > 0 && <RecentAgentActivityCard runs={recentAgentRuns} />}
@@ -1426,6 +1465,54 @@ function CardSpendCard({ spends }: { spends: CardSpend[] }) {
           <span className="text-slate-500">전체 합계 (KRW 입력분)</span>
           <span className="font-bold text-emerald-700 tabular-nums">
             ₩ {totalKrw.toLocaleString('ko-KR')}
+          </span>
+        </div>
+      )}
+    </section>
+  )
+}
+
+function RefundMiniCard({
+  summary,
+}: {
+  summary: { total: number; settledKrw: number; settledCount: number; pendingCount: number }
+}) {
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-rose-500 bg-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">이달 환불 현황</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            {new Date().getMonth() + 1}월 환불 신청 기준 (정산 완료 금액 합산)
+          </p>
+        </div>
+        <Link
+          href="/refunds"
+          prefetch={false}
+          className="text-[11px] font-medium text-indigo-700 hover:text-indigo-900 whitespace-nowrap"
+        >
+          전체 보기 →
+        </Link>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-lg border border-slate-200 bg-slate-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-slate-600 uppercase tracking-wider">신청</p>
+          <p className="mt-0.5 text-xl font-bold text-slate-800 tabular-nums">{summary.total}건</p>
+        </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-amber-700 uppercase tracking-wider">처리 대기</p>
+          <p className="mt-0.5 text-xl font-bold text-amber-700 tabular-nums">{summary.pendingCount}건</p>
+        </div>
+        <div className="rounded-lg border border-emerald-200 bg-emerald-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-emerald-700 uppercase tracking-wider">정산 완료</p>
+          <p className="mt-0.5 text-xl font-bold text-emerald-700 tabular-nums">{summary.settledCount}건</p>
+        </div>
+      </div>
+      {summary.settledKrw > 0 && (
+        <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs">
+          <span className="text-slate-500">정산 완료 환불액 합계</span>
+          <span className="font-bold text-rose-700 tabular-nums">
+            ₩ {summary.settledKrw.toLocaleString('ko-KR')}
           </span>
         </div>
       )}
