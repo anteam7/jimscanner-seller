@@ -60,7 +60,7 @@ export async function GET(request: Request) {
   const items = rows ?? []
   const hasMore = items.length > limit
   const pageItems = hasMore ? items.slice(0, limit) : items
-  const nextCursor = hasMore ? pageItems[pageItems.length - 1].created_at : null
+  const nextCursor = hasMore ? pageItems[pageItems.length - 1]?.created_at ?? null : null
 
   const { count: unreadCount } = await db
     .from('b2b_notifications')
