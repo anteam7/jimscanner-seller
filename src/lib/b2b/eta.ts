@@ -51,6 +51,37 @@ export function buildEtaLookup(rows: TransitDefault[]): EtaLookup {
   return map
 }
 
+export type SellerTransitOverride = {
+  origin_country: string
+  method: string
+  avg_transit_days: number
+}
+
+/**
+ * 셀러별 운송일수 보정을 글로벌 lookup 위에 덮어쓴다.
+ * 같은 (origin_country, method) 키가 있으면 override 가 우선.
+ * min/max 는 override 에 없으므로 글로벌 값을 유지(있으면)하되 avg 만 교체.
+ * 원본 lookup 은 변경하지 않고 새 Map 을 반환한다.
+ */
+export function applyTransitOverrides(
+  lookup: EtaLookup,
+  overrides: SellerTransitOverride[],
+): EtaLookup {
+  const map: EtaLookup = new Map(lookup)
+  for (const o of overrides) {
+    const key = `${normalizeOriginCountry(o.origin_country)}|${o.method || 'air'}`
+    const base = map.get(key)
+    map.set(key, {
+      origin_country: normalizeOriginCountry(o.origin_country),
+      method: o.method || 'air',
+      avg_transit_days: o.avg_transit_days,
+      min_transit_days: base?.min_transit_days ?? null,
+      max_transit_days: base?.max_transit_days ?? null,
+    })
+  }
+  return map
+}
+
 /**
  * 주문의 ETA 계산.
  * - forwarder_submitted_at 있으면 그 시점 + transit 일수

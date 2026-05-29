@@ -1699,6 +1699,44 @@ export type Database = {
           },
         ]
       }
+      b2b_seller_transit_overrides: {
+        Row: {
+          account_id: string
+          avg_transit_days: number
+          created_at: string
+          method: string
+          note: string | null
+          origin_country: string
+          updated_at: string
+        }
+        Insert: {
+          account_id: string
+          avg_transit_days: number
+          created_at?: string
+          method?: string
+          note?: string | null
+          origin_country: string
+          updated_at?: string
+        }
+        Update: {
+          account_id?: string
+          avg_transit_days?: number
+          created_at?: string
+          method?: string
+          note?: string | null
+          origin_country?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "b2b_seller_transit_overrides_account_id_fkey"
+            columns: ["account_id"]
+            isOneToOne: false
+            referencedRelation: "b2b_accounts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       b2b_shipments: {
         Row: {
           account_id: string
@@ -3263,7 +3301,7 @@ export type Database = {
           sold_count: number | null
           source: string
           source_detail_url: string | null
-          source_goods_no: string
+          source_goods_no: string | null
           source_shipping_fee_krw: number | null
           status: string
           stock_sold_out_at: string | null
@@ -3302,7 +3340,7 @@ export type Database = {
           sold_count?: number | null
           source?: string
           source_detail_url?: string | null
-          source_goods_no: string
+          source_goods_no?: string | null
           source_shipping_fee_krw?: number | null
           status?: string
           stock_sold_out_at?: string | null
@@ -3341,7 +3379,7 @@ export type Database = {
           sold_count?: number | null
           source?: string
           source_detail_url?: string | null
-          source_goods_no?: string
+          source_goods_no?: string | null
           source_shipping_fee_krw?: number | null
           status?: string
           stock_sold_out_at?: string | null
@@ -3350,15 +3388,7 @@ export type Database = {
           vendor_id?: string
           view_count?: number | null
         }
-        Relationships: [
-          {
-            foreignKeyName: "jimscanner_coupang_listings_source_goods_no_fk"
-            columns: ["source_goods_no"]
-            isOneToOne: false
-            referencedRelation: "jimscanner_ggsan_products"
-            referencedColumns: ["goods_no"]
-          },
-        ]
+        Relationships: []
       }
       jimscanner_coupang_orders: {
         Row: {

@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
-import { buildEtaLookup, computeOrderEta, formatKstDate, normalizeOriginCountry, type TransitDefault } from '@/lib/b2b/eta'
+import { applyTransitOverrides, buildEtaLookup, computeOrderEta, formatKstDate, normalizeOriginCountry, type SellerTransitOverride, type TransitDefault } from '@/lib/b2b/eta'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,7 +40,7 @@ export async function GET() {
     return new NextResponse('No account', { status: 403 })
   }
 
-  const [{ data: ordersRaw }, { data: defaultsRaw }] = await Promise.all([
+  const [{ data: ordersRaw }, { data: defaultsRaw }, { data: overridesRaw }] = await Promise.all([
     sb
       .from('b2b_orders')
       .select('id, order_number, market_order_number, marketplace, buyer_name, forwarder_country, forwarder_submitted_at, order_date, created_at, status')
@@ -53,9 +53,16 @@ export async function GET() {
       .from('b2b_forwarder_transit_defaults')
       .select('origin_country, method, avg_transit_days, min_transit_days, max_transit_days')
       .eq('is_active', true),
+    sb
+      .from('b2b_seller_transit_overrides')
+      .select('origin_country, method, avg_transit_days')
+      .eq('account_id', account.id),
   ])
 
-  const lookup = buildEtaLookup((defaultsRaw ?? []) as TransitDefault[])
+  const lookup = applyTransitOverrides(
+    buildEtaLookup((defaultsRaw ?? []) as TransitDefault[]),
+    (overridesRaw ?? []) as SellerTransitOverride[],
+  )
   const orders = ordersRaw ?? []
   const now = new Date()
   const dtstamp = icsDateTimeUtc(now)

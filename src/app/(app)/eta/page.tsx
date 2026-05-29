@@ -2,11 +2,13 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import {
+  applyTransitOverrides,
   buildEtaLookup,
   classifyEtaBucket,
   computeOrderEta,
   formatKstDate,
   normalizeOriginCountry,
+  type SellerTransitOverride,
   type TransitDefault,
 } from '@/lib/b2b/eta'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
@@ -85,11 +87,25 @@ export default async function EtaPage() {
     .limit(300)
   const orders = (ordersRaw ?? []) as OrderRow[]
 
-  const { data: defaultsRaw } = await sb
-    .from('b2b_forwarder_transit_defaults')
-    .select('origin_country, method, avg_transit_days, min_transit_days, max_transit_days')
-    .eq('is_active', true)
-  const lookup = buildEtaLookup((defaultsRaw ?? []) as TransitDefault[])
+  const [{ data: defaultsRaw }, { data: overridesRaw }] = await Promise.all([
+    sb
+      .from('b2b_forwarder_transit_defaults')
+      .select('origin_country, method, avg_transit_days, min_transit_days, max_transit_days')
+      .eq('is_active', true),
+    sb
+      .from('b2b_seller_transit_overrides')
+      .select('origin_country, method, avg_transit_days')
+      .eq('account_id', account.id),
+  ])
+  const overrides = (overridesRaw ?? []) as SellerTransitOverride[]
+  const lookup = applyTransitOverrides(
+    buildEtaLookup((defaultsRaw ?? []) as TransitDefault[]),
+    overrides,
+  )
+  // 보정이 실제 적용된 키 (현재 ETA 계산은 air 기준)
+  const overrideKeys = new Set(
+    overrides.map((o) => `${normalizeOriginCountry(o.origin_country)}|${o.method || 'air'}`),
+  )
 
   const now = new Date()
   type Enriched = {
@@ -99,12 +115,14 @@ export default async function EtaPage() {
     basis: 'forwarder_submitted' | 'order_date_estimated'
     bucket: 'overdue' | 'this_week' | 'next_week' | 'later'
     unknownCountry: boolean
+    overridden: boolean
   }
   const enriched: Enriched[] = []
   for (const o of orders) {
-    const { eta, days, basis, unknownCountry } = computeOrderEta(o, lookup)
+    const { eta, days, basis, unknownCountry, country } = computeOrderEta(o, lookup)
     const bucket = classifyEtaBucket(eta, now)
-    enriched.push({ order: o, eta, days, basis, bucket, unknownCountry })
+    const overridden = overrideKeys.has(`${country}|air`)
+    enriched.push({ order: o, eta, days, basis, bucket, unknownCountry, overridden })
   }
 
   // bucket 별 그룹화
@@ -143,6 +161,17 @@ export default async function EtaPage() {
           </p>
         </div>
         <div className="flex gap-2">
+          <Link
+            href="/settings/transit"
+            className="inline-flex items-center gap-1.5 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 shadow-sm hover:border-slate-300 hover:bg-slate-50 transition-colors"
+            title="국가별 운송일수를 본인 기준으로 보정"
+          >
+            <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 0 1 1.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.894.149c-.424.07-.764.383-.929.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 0 1-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.398.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 0 1-.12-1.45l.527-.737c.25-.35.272-.806.108-1.204-.165-.397-.506-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.108-1.204l-.526-.738a1.125 1.125 0 0 1 .12-1.45l.773-.773a1.125 1.125 0 0 1 1.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894Z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z" />
+            </svg>
+            운송일수 보정
+          </Link>
           <a
             href="/api/eta/ics"
             download="jimscanner-eta.ics"
@@ -177,6 +206,7 @@ export default async function EtaPage() {
           <li><strong>배대지 접수일 있는 경우</strong>: 접수일 + 국가별 항공 평균 운송일</li>
           <li><strong>없는 경우</strong>: 주문일 + 3일 (접수 buffer) + 평균 운송일</li>
           <li>국가별 평균은 <Link href="/resources" className="underline hover:text-indigo-700">시드값</Link> 기반 — 실제는 통관·세관·계절에 따라 ±5일 변동.</li>
+          <li><span className="inline-flex items-center rounded bg-indigo-50 px-1 py-0.5 text-[9px] font-medium text-indigo-700 border border-indigo-200 align-middle">보정</span> 배지는 <Link href="/settings/transit" className="underline hover:text-indigo-700">내 운송일수 보정</Link>이 적용된 주문.</li>
         </ul>
       </div>
     </div>
@@ -220,6 +250,7 @@ function Section({
     basis: 'forwarder_submitted' | 'order_date_estimated'
     bucket: 'overdue' | 'this_week' | 'next_week' | 'later'
     unknownCountry: boolean
+    overridden: boolean
   }>
   tone: 'rose' | 'indigo' | 'sky' | 'slate'
   collapsedDefault?: boolean
@@ -299,6 +330,14 @@ function Section({
                           <span className="ml-1 text-amber-600" title="국가 미설정 — 기본값 적용">⚠</span>
                         )}
                         <span className="text-slate-400 ml-1">· {e.days}일</span>
+                        {e.overridden && (
+                          <span
+                            className="ml-1 inline-flex items-center rounded bg-indigo-50 px-1 py-0.5 text-[9px] font-medium text-indigo-700 border border-indigo-200"
+                            title="내 운송일수 보정 적용됨"
+                          >
+                            보정
+                          </span>
+                        )}
                       </span>
                       <span className="text-[10px] text-slate-500">
                         {STATUS_LABEL[e.order.status] ?? e.order.status}

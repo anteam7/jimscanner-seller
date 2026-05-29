@@ -78,6 +78,23 @@ const SETTING_SECTIONS: { heading: string; accent: Accent; cards: SettingCard[] 
     ],
   },
   {
+    heading: '배송·ETA',
+    accent: 'sky',
+    cards: [
+      {
+        title: '운송일수 보정',
+        description: '국가·운송수단별 평균 운송일수를 본인 기준으로 보정. 도착 예정(ETA) 계산 source',
+        href: '/settings/transit',
+        available: true,
+        icon: (
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+          </svg>
+        ),
+      },
+    ],
+  },
+  {
     heading: '팀 관리',
     accent: 'emerald',
     cards: [
