@@ -13,13 +13,39 @@ export type TransitDefault = {
 export type EtaLookup = Map<string, TransitDefault>
 
 /**
+ * 국가 코드/명칭 alias → 시드 canonical 코드.
+ * 시드는 ISO-3166 alpha-2 가 아닌 'UK' (GB), 'US' 등을 씀 — 외부 데이터·수기 입력이
+ * 'GB'·'England'·'USA' 같은 변형으로 들어와도 같은 시드 row 로 매칭되게 정규화.
+ * 미등록 값은 그대로 (대문자) 반환 — OTHER fallback 으로 흘러감.
+ */
+const ORIGIN_COUNTRY_ALIASES: Record<string, string> = {
+  GB: 'UK', GBR: 'UK', ENGLAND: 'UK', BRITAIN: 'UK', SCOTLAND: 'UK', WALES: 'UK',
+  'UNITED KINGDOM': 'UK', 'GREAT BRITAIN': 'UK',
+  USA: 'US', AMERICA: 'US', 'UNITED STATES': 'US', 'UNITED STATES OF AMERICA': 'US',
+  JPN: 'JP', JAPAN: 'JP',
+  CHN: 'CN', CHINA: 'CN',
+  DEU: 'DE', GERMANY: 'DE',
+  HKG: 'HK', 'HONG KONG': 'HK',
+}
+
+/**
+ * forwarder_country 값을 시드 canonical 코드로 정규화.
+ * 'gb' → 'UK', 'England' → 'UK', 'USA' → 'US'. 빈 값은 'OTHER'.
+ */
+export function normalizeOriginCountry(raw: string | null | undefined): string {
+  const v = (raw || '').trim().toUpperCase()
+  if (!v) return 'OTHER'
+  return ORIGIN_COUNTRY_ALIASES[v] ?? v
+}
+
+/**
  * origin_country 와 method 를 key 로 한 lookup map 생성.
- * key: `${UPPER(country)}|${method}` — 'US|air'
+ * key: `${normalize(country)}|${method}` — 'US|air'
  */
 export function buildEtaLookup(rows: TransitDefault[]): EtaLookup {
   const map: EtaLookup = new Map()
   for (const r of rows) {
-    const key = `${(r.origin_country || '').toUpperCase()}|${r.method || 'air'}`
+    const key = `${normalizeOriginCountry(r.origin_country)}|${r.method || 'air'}`
     map.set(key, r)
   }
   return map
@@ -46,7 +72,7 @@ export function computeOrderEta(
   country: string
   unknownCountry: boolean
 } {
-  const country = (order.forwarder_country || 'OTHER').toUpperCase()
+  const country = normalizeOriginCountry(order.forwarder_country)
   const direct = lookup.get(`${country}|${method}`)
   const fallback = lookup.get('OTHER|air')
   const td = direct ?? fallback

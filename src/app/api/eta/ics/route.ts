@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
-import { buildEtaLookup, computeOrderEta, formatKstDate, type TransitDefault } from '@/lib/b2b/eta'
+import { buildEtaLookup, computeOrderEta, formatKstDate, normalizeOriginCountry, type TransitDefault } from '@/lib/b2b/eta'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,7 +74,7 @@ export async function GET() {
     const date = icsDate(eta)
     const orderRef = o.market_order_number ?? o.order_number
     const buyer = o.buyer_name ?? '미지정'
-    const country = o.forwarder_country ?? 'OTHER'
+    const country = normalizeOriginCountry(o.forwarder_country)
     const basisLabel = basis === 'forwarder_submitted' ? '배대지 접수 기준' : '주문일 기준 추정'
     const summary = escapeIcs(`📦 ${orderRef} · ${buyer}`)
     const description = escapeIcs(

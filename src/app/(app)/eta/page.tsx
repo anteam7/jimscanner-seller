@@ -6,6 +6,7 @@ import {
   classifyEtaBucket,
   computeOrderEta,
   formatKstDate,
+  normalizeOriginCountry,
   type TransitDefault,
 } from '@/lib/b2b/eta'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
@@ -258,7 +259,7 @@ function Section({
               const dayMs = 24 * 60 * 60 * 1000
               const remaining = Math.round((e.eta.getTime() - now.getTime()) / dayMs)
               const marketLabel = e.order.marketplace ? MARKETPLACE_LABEL[e.order.marketplace] ?? e.order.marketplace : null
-              const country = e.order.forwarder_country ?? 'OTHER'
+              const country = normalizeOriginCountry(e.order.forwarder_country)
               const countryLabel = COUNTRY_LABEL[country] ?? country
               return (
                 <tr key={e.order.id} className="hover:bg-slate-50/60 transition-colors">
