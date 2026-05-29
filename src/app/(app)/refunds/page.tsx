@@ -79,7 +79,7 @@ function formatDateTime(iso: string): string {
 export default async function RefundsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string }>
+  searchParams: Promise<{ status?: string; before?: string }>
 }) {
   const params = await searchParams
   const sb = await createClient()
@@ -101,6 +101,7 @@ export default async function RefundsPage({
 
   const PAGE_SIZE = 50
   const statusFilter = params.status ?? ''
+  const before = params.before ?? ''
   let query = sb
     .from('b2b_refunds')
     .select(
@@ -114,11 +115,23 @@ export default async function RefundsPage({
   if (statusFilter) {
     query = query.eq('status', statusFilter)
   }
+  if (before) {
+    query = query.lt('requested_at', before)
+  }
 
   const { data: rowsRaw } = (await query) as { data: RefundRow[] | null }
   const rows = rowsRaw ?? []
   const hasMore = rows.length > PAGE_SIZE
   const pageItems = hasMore ? rows.slice(0, PAGE_SIZE) : rows
+  const nextCursor = hasMore ? pageItems[pageItems.length - 1]?.requested_at : null
+  // 다음 페이지 링크는 status 필터를 보존하고 cursor 만 교체
+  const buildHref = (cursor: string | null): string => {
+    const qs = new URLSearchParams()
+    if (statusFilter) qs.set('status', statusFilter)
+    if (cursor) qs.set('before', cursor)
+    const s = qs.toString()
+    return s ? `/refunds?${s}` : '/refunds'
+  }
 
   // 상태별 카운트 (필터링 안 된 전체)
   const { data: countsRaw } = await sb
@@ -261,9 +274,36 @@ export default async function RefundsPage({
               </tbody>
             </table>
           </div>
-          {hasMore && (
-            <div className="px-4 py-3 bg-slate-50 border-t border-slate-200 text-center text-xs text-slate-500">
-              50건 초과. 페이지네이션은 v0.5 — 더 많은 내역은 상태 필터를 활용하세요.
+          {(hasMore || before) && (
+            <div className="flex items-center justify-between gap-3 px-4 py-3 bg-slate-50 border-t border-slate-200">
+              {before ? (
+                <Link
+                  href={buildHref(null)}
+                  prefetch={false}
+                  className="inline-flex items-center gap-1 text-xs font-medium text-slate-600 hover:text-slate-900 transition-colors"
+                >
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />
+                  </svg>
+                  처음으로
+                </Link>
+              ) : (
+                <span className="text-xs text-slate-400">최신 {PAGE_SIZE}건 표시 중</span>
+              )}
+              {hasMore && nextCursor ? (
+                <Link
+                  href={buildHref(nextCursor)}
+                  prefetch={false}
+                  className="inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-indigo-700 hover:border-indigo-300 hover:bg-indigo-50 transition-colors"
+                >
+                  다음 {PAGE_SIZE}건
+                  <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              ) : (
+                <span className="text-xs text-slate-400">마지막 페이지</span>
+              )}
             </div>
           )}
         </div>
