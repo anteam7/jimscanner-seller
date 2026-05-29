@@ -20,9 +20,7 @@ export async function GET(request: Request) {
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -38,7 +36,7 @@ export async function GET(request: Request) {
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? '20'), 1), 100)
   const cursor = url.searchParams.get('cursor')
 
-  let query = db
+  let query = sb
     .from('b2b_notifications')
     .select('id, type, title, body, link, read_at, created_at')
     .eq('account_id', account.id)
@@ -62,7 +60,7 @@ export async function GET(request: Request) {
   const pageItems = hasMore ? items.slice(0, limit) : items
   const nextCursor = hasMore ? pageItems[pageItems.length - 1]?.created_at ?? null : null
 
-  const { count: unreadCount } = await db
+  const { count: unreadCount } = await sb
     .from('b2b_notifications')
     .select('id', { count: 'exact', head: true })
     .eq('account_id', account.id)
