@@ -242,7 +242,7 @@ export default async function EtaPage() {
         <ul className="space-y-1 list-disc list-inside">
           <li><strong>배대지 접수일 있는 경우</strong>: 접수일 + 국가별 항공 평균 운송일</li>
           <li><strong>없는 경우</strong>: 주문일 + 3일 (접수 buffer) + 평균 운송일</li>
-          <li>국가별 평균은 <Link href="/resources" className="underline hover:text-indigo-700">시드값</Link> 기반 — 실제는 통관·세관·계절에 따라 ±5일 변동.</li>
+          <li>국가별 평균은 <Link href="/resources/customs-guide" className="underline hover:text-indigo-700">시드값</Link> 기반 — 실제는 통관·세관·계절에 따라 ±5일 변동.</li>
           <li><span className="inline-flex items-center rounded bg-indigo-50 px-1 py-0.5 text-[9px] font-medium text-indigo-700 border border-indigo-200 align-middle">보정</span> 배지는 <Link href="/settings/transit" className="underline hover:text-indigo-700">내 운송일수 보정</Link>이 적용된 주문.</li>
         </ul>
       </div>
