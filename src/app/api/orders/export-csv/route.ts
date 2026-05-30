@@ -171,6 +171,14 @@ export async function GET(request: Request) {
 
   const lines: string[] = [headers.join(',')]
 
+  // 부가세 신고용 합계 누적 (전체 KRW 합 + 통화별 소계)
+  let totalPurchaseKrw = 0
+  let totalSaleKrw = 0
+  let totalMarginKrw = 0
+  let purchaseKrwKnown = false // KRW 환산 매입가가 한 줄이라도 계산되었는지
+  let marginKnown = false
+  const currencySubtotal = new Map<string, { foreign: number; krw: number; krwKnown: boolean; lines: number }>()
+
   for (const o of orders) {
     const items = (o.b2b_order_items ?? []).slice().sort((a, b) => a.display_order - b.display_order)
     if (items.length === 0) {
@@ -206,6 +214,26 @@ export async function GET(request: Request) {
       const margin = krw != null && saleKrw != null ? saleKrw - krw : null
       // 외화 매입가가 있고 KRW 환산이 된 경우에만 환율 기준 표기 (KRW·환산불가 행은 공란)
       const basisCell = totalForeign != null && krw != null && it.currency && it.currency !== 'KRW' ? rateBasis : ''
+
+      // 합계 누적
+      if (krw != null) {
+        totalPurchaseKrw += krw
+        purchaseKrwKnown = true
+      }
+      if (saleKrw != null) totalSaleKrw += saleKrw
+      if (margin != null) {
+        totalMarginKrw += margin
+        marginKnown = true
+      }
+      const cur = it.currency || 'KRW'
+      const sub = currencySubtotal.get(cur) ?? { foreign: 0, krw: 0, krwKnown: false, lines: 0 }
+      sub.lines += 1
+      if (totalForeign != null) sub.foreign += totalForeign
+      if (krw != null) {
+        sub.krw += krw
+        sub.krwKnown = true
+      }
+      currencySubtotal.set(cur, sub)
       lines.push(
         [
           toIsoDate(o.order_date),
@@ -234,6 +262,45 @@ export async function GET(request: Request) {
     }
   }
 
+  // 부가세 신고용 합계 요약행 (데이터 라인 1개 이상일 때만)
+  const dataRowCount = lines.length - 1
+  if (dataRowCount > 0) {
+    // 21 컬럼 폭의 sparse row 생성 헬퍼 (col index → 값)
+    const COLS = headers.length
+    const row = (cells: Record<number, string>): string => {
+      const arr = new Array(COLS).fill('')
+      for (const [i, v] of Object.entries(cells)) arr[Number(i)] = v
+      return arr.map(csvEscape).join(',')
+    }
+    lines.push('') // 시각적 구분용 빈 줄
+
+    // 통화별 소계 (해외 합계 + KRW 환산)
+    const sortedCurrencies = [...currencySubtotal.keys()].sort()
+    for (const cur of sortedCurrencies) {
+      const s = currencySubtotal.get(cur)!
+      lines.push(
+        row({
+          0: '통화별 소계',
+          11: `${cur} (${s.lines}건)`,
+          14: cur,
+          16: cur !== 'KRW' && s.foreign > 0 ? s.foreign.toString() : '',
+          17: s.krwKnown ? s.krw.toString() : '',
+        }),
+      )
+    }
+
+    // 전체 합계 (KRW)
+    lines.push(
+      row({
+        0: '■ 합계',
+        11: `총 ${dataRowCount}건`,
+        17: purchaseKrwKnown ? totalPurchaseKrw.toString() : '',
+        18: totalSaleKrw > 0 ? totalSaleKrw.toString() : '',
+        19: marginKnown ? totalMarginKrw.toString() : '',
+      }),
+    )
+  }
+
   const csv = lines.join('\r\n') + '\r\n'
   const BOM = '﻿' // 엑셀에서 UTF-8 한글 정상 표시
   const filename = `jimscanner_orders_${from.toISOString().slice(0, 10)}_${to.toISOString().slice(0, 10)}.csv`
@@ -244,7 +311,7 @@ export async function GET(request: Request) {
       'Content-Type': 'text/csv; charset=utf-8',
       'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
       'Cache-Control': 'no-store',
-      'X-Row-Count': String(lines.length - 1),
+      'X-Row-Count': String(dataRowCount),
       'X-Order-Count': String(orders.length),
     },
   })
