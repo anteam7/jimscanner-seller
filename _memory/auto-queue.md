@@ -417,12 +417,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: 주문 생성 시점 환율을 `b2b_orders.exchange_rate_applied` (jsonb, 기존 컬럼) 에 `toSnapshot(getExchangeRates())` 로 고정. `/api/orders` (단일) + `/api/orders/bulk` (요청당 1회 조회 후 전 행 적용). `/api/orders/export-csv` 가 주문별 스냅샷 우선 사용·없으면 라이브 환율 fallback + '환율 기준' 컬럼 (매입시점/현재환율(추정)) 추가. DB 변경 0 (컬럼·직렬화 함수 기존). 빌드 compiled · lint 0 problems.
   - 후속 (소형): `/orders/[id]` 마진율 경고가 아직 라이브 환율 기준 — 스냅샷 있으면 그걸로 계산 + '매입 당시 환율' 표기 (다음 회차), 과거 주문 snapshot backfill 은 선택 (issue#12 body 참조).
 
-- [ ] **#idea-13 배대지 정산 대조 — 예측 vs 실 청구 차이 뷰** _(brainstorm approved 2026-05-30)_
+- [x] **#idea-13 배대지 정산 대조 — 예측 vs 실 청구 차이 뷰** _(brainstorm approved 2026-05-30)_
   - estimated: 1.5-2h
   - prereq: 없음
   - decision_required: false (신규 페이지 → AUTO BUT REPORT)
   - source: github issue#13
   - sketch: 신규 `/settlement` (또는 /analytics 탭) — forwarder_id group, 기간 필터, estimated_cost_krw/actual_cost_krw 합계 + variance + >15% amber flag. actual 미입력 분리 표기. DB 변경 없음.
+  - 완료: 2026-05-30 commit 01a5461
+  - 구현: 신규 `/settlement` 페이지 — `b2b_orders` 를 `forwarder_id` 별 집계 (forwarders(name) 조인). 기간 프리셋 (최근 30/90/180일·전체, searchParams `?period=`). 배대지별 행: 주문 수 / 대조 가능(예측·실청구 둘 다 입력) / 예측 합계 / 실청구 합계 / 차이(=실−예측, +초과·−절감) + 차이% + ±15% 초과 시 '주의' 플래그 / 실청구 미입력 건. 4 KPI 카드 (대조가능 예측·실청구 합계·차이·미입력) + 합계 tfoot + 미입력 경고 배너 + 계산 기준 안내. 취소 주문 제외. DB 변경 0. SellerShell 주문관리 children 에 메뉴 추가. 빌드 compiled · lint 0 problems.
+  - note: 후속 (소형) — 마켓플레이스별 분해 / CSV export / 차이 큰 주문 drill-down 목록 은 운영 데이터 쌓인 뒤 검토.
 
 - [ ] **#idea-14 배대지 보관기간 deadline 알림** _(brainstorm approved 2026-05-30)_
   - estimated: 1-1.5h
