@@ -415,7 +415,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - source: github issue#12
   - 완료: 2026-05-30 commit 34eb623
   - 구현: 주문 생성 시점 환율을 `b2b_orders.exchange_rate_applied` (jsonb, 기존 컬럼) 에 `toSnapshot(getExchangeRates())` 로 고정. `/api/orders` (단일) + `/api/orders/bulk` (요청당 1회 조회 후 전 행 적용). `/api/orders/export-csv` 가 주문별 스냅샷 우선 사용·없으면 라이브 환율 fallback + '환율 기준' 컬럼 (매입시점/현재환율(추정)) 추가. DB 변경 0 (컬럼·직렬화 함수 기존). 빌드 compiled · lint 0 problems.
-  - 후속 (소형): `/orders/[id]` 마진율 경고가 아직 라이브 환율 기준 — 스냅샷 있으면 그걸로 계산 + '매입 당시 환율' 표기 (다음 회차), 과거 주문 snapshot backfill 은 선택 (issue#12 body 참조).
+  - 후속 (소형): ~~`/orders/[id]` 마진율 경고가 아직 라이브 환율 기준 — 스냅샷 있으면 그걸로 계산 + '매입 당시 환율' 표기~~ (2026-05-30 commit b18e8af 완료 — estimated_cost_krw 비어도 라인 해외가를 exchange_rate_applied 스냅샷으로 KRW 환산해 마진 경고 계산, 스냅샷 없는 과거 주문은 현재 환율 추정, '매입 당시 환율'/'현재 환율(추정)' 배지 + 비용 카드 '매입가 환산' 행), 과거 주문 snapshot backfill 은 선택 (issue#12 body 참조).
 
 - [x] **#idea-13 배대지 정산 대조 — 예측 vs 실 청구 차이 뷰** _(brainstorm approved 2026-05-30)_
   - estimated: 1.5-2h
