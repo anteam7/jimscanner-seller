@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 type Notification = {
@@ -125,6 +126,12 @@ export default function NotificationList({
           <p className="mt-1 text-xs text-slate-500">
             주문 상태 변경·결제·환율 알림·시스템 공지가 이곳에 표시됩니다.
           </p>
+          <Link
+            href="/orders/new"
+            className="mt-4 inline-flex h-9 px-4 items-center text-xs font-semibold text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 rounded-md transition-colors"
+          >
+            첫 주문 등록하기 →
+          </Link>
         </div>
       ) : (
         <>

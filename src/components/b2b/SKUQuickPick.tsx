@@ -105,11 +105,21 @@ function Section({
             type="button"
             onClick={() => onPick(p)}
             title={`${p.seller_sku} — ${p.display_name}${p.default_supplier_site ? ` (${p.default_supplier_site})` : ''}`}
-            className={`inline-flex items-center gap-1 max-w-[220px] rounded border px-2 py-1 text-xs text-slate-800 shadow-sm transition-colors ${chipCls}`}
+            className={`inline-flex items-center gap-1 max-w-[280px] rounded border px-2 py-1 text-xs text-slate-800 shadow-sm transition-colors ${chipCls}`}
           >
             <span className="font-mono text-[10px] text-indigo-700 flex-shrink-0">{p.seller_sku}</span>
             <span className="text-slate-300">·</span>
             <span className="truncate">{p.display_name}</span>
+            {p.default_supplier_site && (
+              <span className="flex-shrink-0 rounded bg-sky-50 border border-sky-200 px-1 text-[9px] font-medium text-sky-700">
+                {p.default_supplier_site}
+              </span>
+            )}
+            {p.default_currency && (
+              <span className="flex-shrink-0 rounded bg-slate-100 px-1 text-[9px] font-medium text-slate-500">
+                {p.default_currency}
+              </span>
+            )}
           </button>
         ))}
       </div>
