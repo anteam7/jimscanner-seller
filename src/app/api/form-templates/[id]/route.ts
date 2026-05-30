@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import type { Database } from '../../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -14,9 +15,7 @@ export const dynamic = 'force-dynamic'
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 async function getOwnedTemplate(id: string, userId: string) {
-  const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
+  const adb = createAdminClient()
   const { data: account } = await adb
     .from('b2b_accounts')
     .select('id')
@@ -63,7 +62,7 @@ export async function PATCH(
   const ctx = await getOwnedTemplate(id, user.id)
   if ('error' in ctx) return NextResponse.json({ error: ctx.error }, { status: ctx.status })
 
-  const patch: Record<string, unknown> = {}
+  const patch: Database['public']['Tables']['b2b_form_templates']['Update'] = {}
   if (typeof body.name === 'string' && body.name.trim()) patch.name = body.name.trim()
   if (typeof body.forwarder_id === 'string' || body.forwarder_id === null) {
     patch.forwarder_id = body.forwarder_id || null
