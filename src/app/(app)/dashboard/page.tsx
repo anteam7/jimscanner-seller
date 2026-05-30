@@ -16,6 +16,10 @@ import {
   formatKstDate,
   type TransitDefault,
 } from '@/lib/b2b/eta'
+import {
+  computeStorageStatus,
+  DEFAULT_FREE_STORAGE_DAYS,
+} from '@/lib/b2b/storage-deadline'
 
 export const metadata: Metadata = {
   title: '대시보드',
@@ -771,6 +775,52 @@ export default async function SellerDashboardPage() {
     etaSummary = { overdue: 0, thisWeek: 0, nextThree: [] }
   }
 
+  // #idea-14: 배대지 보관 임박/초과 — 배대지 입고(forwarder_submitted)된 주문만
+  let storageSummary: {
+    over: number
+    warn: number
+    top: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }>
+  } = { over: 0, warn: 0, top: [] }
+  try {
+    const { data: storageRows } = await db
+      .from('b2b_orders')
+      .select('id, order_number, market_order_number, buyer_name, forwarder_submitted_at')
+      .eq('account_id', account.id)
+      .is('deleted_at', null)
+      .eq('status', 'forwarder_submitted')
+      .not('forwarder_submitted_at', 'is', null)
+      .order('forwarder_submitted_at', { ascending: true })
+      .limit(200)
+    const nowDate = new Date(nowMs)
+    let over = 0
+    let warn = 0
+    const flagged: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }> = []
+    for (const o of (storageRows ?? []) as Array<{ id: string; order_number: string; market_order_number: string | null; buyer_name: string | null; forwarder_submitted_at: string | null }>) {
+      const s = computeStorageStatus(o.forwarder_submitted_at, nowDate)
+      if (!s) continue
+      if (s.level === 'over') over++
+      else if (s.level === 'warn') warn++
+      if (s.level === 'over' || s.level === 'warn') {
+        flagged.push({
+          id: o.id,
+          ref: o.market_order_number ?? o.order_number,
+          elapsedDays: s.elapsedDays,
+          remainingDays: s.remainingDays,
+          level: s.level,
+          buyer: o.buyer_name,
+        })
+      }
+    }
+    // 초과 먼저, 그 안에서 경과일 많은 순
+    flagged.sort((a, b) => {
+      if (a.level !== b.level) return a.level === 'over' ? -1 : 1
+      return b.elapsedDays - a.elapsedDays
+    })
+    storageSummary = { over, warn, top: flagged.slice(0, 3) }
+  } catch {
+    storageSummary = { over: 0, warn: 0, top: [] }
+  }
+
   // #idea-3b 후속: 이달 환불 현황 미니카드 — 신청 건수 / 정산완료 금액 / 처리 대기
   let refundSummary: {
     total: number
@@ -1006,6 +1056,15 @@ export default async function SellerDashboardPage() {
           overdue={etaSummary.overdue}
           thisWeek={etaSummary.thisWeek}
           upcoming={etaSummary.nextThree}
+        />
+      )}
+
+      {/* #idea-14: 배대지 보관 임박/초과 — 임박 또는 초과 건이 있을 때만 */}
+      {(storageSummary.over > 0 || storageSummary.warn > 0) && (
+        <StorageDeadlineMiniCard
+          over={storageSummary.over}
+          warn={storageSummary.warn}
+          top={storageSummary.top}
         />
       )}
 
@@ -1395,6 +1454,74 @@ function EtaMiniCard({
                     <span className="text-indigo-700 font-semibold">오늘</span>
                   ) : (
                     <span className="text-slate-500">{u.days}일 후</span>
+                  )}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+  )
+}
+
+function StorageDeadlineMiniCard({
+  over,
+  warn,
+  top,
+}: {
+  over: number
+  warn: number
+  top: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }>
+}) {
+  return (
+    <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-amber-500 bg-white shadow-sm p-5">
+      <div className="flex items-baseline justify-between mb-3 gap-2">
+        <div className="min-w-0">
+          <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">📦 배대지 보관 임박</p>
+          <p className="text-[10px] text-slate-500 mt-0.5">
+            배대지 입고 후 {DEFAULT_FREE_STORAGE_DAYS}일 무료 기준 · 초과 시 보관비 발생
+          </p>
+        </div>
+        <Link
+          href="/eta"
+          prefetch={false}
+          className="text-[11px] font-medium text-indigo-700 hover:text-indigo-900 whitespace-nowrap"
+        >
+          전체 보기 →
+        </Link>
+      </div>
+      <div className="grid grid-cols-2 gap-3 mb-3">
+        <div className="rounded-lg border border-rose-200 bg-rose-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-rose-700 uppercase tracking-wider">보관비 위험</p>
+          <p className="mt-0.5 text-xl font-bold text-rose-700 tabular-nums">{over}건</p>
+        </div>
+        <div className="rounded-lg border border-amber-200 bg-amber-50/60 px-3 py-2">
+          <p className="text-[10px] font-medium text-amber-700 uppercase tracking-wider">임박 (2일 이내)</p>
+          <p className="mt-0.5 text-xl font-bold text-amber-700 tabular-nums">{warn}건</p>
+        </div>
+      </div>
+      {top.length > 0 && (
+        <ul className="divide-y divide-slate-100 border-t border-slate-100 -mb-1">
+          {top.map((u) => (
+            <li key={u.id} className="py-2 flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <Link
+                  href={`/orders/${u.id}`}
+                  prefetch={false}
+                  className="text-sm font-medium text-slate-900 hover:text-indigo-700 transition-colors truncate block"
+                >
+                  {u.ref}
+                </Link>
+                <p className="text-[11px] text-slate-500 truncate">{u.buyer ?? '—'}</p>
+              </div>
+              <div className="shrink-0 text-right">
+                <p className="text-xs font-medium text-slate-700 tabular-nums">{u.elapsedDays}일째 보관</p>
+                <p className="text-[10px] tabular-nums">
+                  {u.remainingDays <= 0 ? (
+                    <span className="text-rose-700 font-semibold">{Math.abs(u.remainingDays)}일 초과</span>
+                  ) : (
+                    <span className="text-amber-700 font-semibold">{u.remainingDays}일 남음</span>
                   )}
                 </p>
               </div>

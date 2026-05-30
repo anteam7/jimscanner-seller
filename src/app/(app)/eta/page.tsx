@@ -11,6 +11,11 @@ import {
   type SellerTransitOverride,
   type TransitDefault,
 } from '@/lib/b2b/eta'
+import {
+  computeStorageStatus,
+  DEFAULT_FREE_STORAGE_DAYS,
+  type StorageStatus,
+} from '@/lib/b2b/storage-deadline'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
 
 export const dynamic = 'force-dynamic'
@@ -146,6 +151,33 @@ export default async function EtaPage() {
     later: groups.later.length,
   }
 
+  // #idea-14: 배대지 보관 기간 — 배대지 입고(forwarder_submitted)된 주문만
+  // forwarder_submitted_at 기준 경과일로 무료 보관 만료 임박/초과 판정.
+  const { data: storageRaw } = await sb
+    .from('b2b_orders')
+    .select(
+      'id, order_number, market_order_number, marketplace, buyer_name, forwarder_country, forwarder_submitted_at, order_date, created_at, status',
+    )
+    .eq('account_id', account.id)
+    .is('deleted_at', null)
+    .eq('status', 'forwarder_submitted')
+    .not('forwarder_submitted_at', 'is', null)
+    .order('forwarder_submitted_at', { ascending: true })
+    .limit(300)
+  type StorageEnriched = { order: OrderRow; storage: StorageStatus }
+  const storageItems: StorageEnriched[] = []
+  for (const o of (storageRaw ?? []) as OrderRow[]) {
+    const storage = computeStorageStatus(o.forwarder_submitted_at, now)
+    if (storage) storageItems.push({ order: o, storage })
+  }
+  // 경과일 많은 순 (위험한 것 위로)
+  storageItems.sort((a, b) => b.storage.elapsedDays - a.storage.elapsedDays)
+  const storageCounts = {
+    over: storageItems.filter((s) => s.storage.level === 'over').length,
+    warn: storageItems.filter((s) => s.storage.level === 'warn').length,
+    total: storageItems.length,
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
       <header className="flex flex-wrap items-start justify-between gap-3">
@@ -200,6 +232,11 @@ export default async function EtaPage() {
       <Section title="📅 다음 주" items={groups.next_week} tone="sky" />
       <Section title="🌐 그 이후" items={groups.later} tone="slate" collapsedDefault />
 
+      {/* #idea-14: 배대지 보관 기간 — 입고된 주문이 있을 때만 */}
+      {storageItems.length > 0 && (
+        <StorageSection items={storageItems} counts={storageCounts} />
+      )}
+
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
         <p className="font-semibold text-slate-700 mb-1">계산 기준</p>
         <ul className="space-y-1 list-disc list-inside">
@@ -218,7 +255,7 @@ function Kpi({
 }: {
   label: string
   value: number
-  tone: 'rose' | 'indigo' | 'sky' | 'slate'
+  tone: 'rose' | 'indigo' | 'sky' | 'slate' | 'amber'
   hint: string
 }) {
   const toneCls: Record<typeof tone, { bar: string; num: string }> = {
@@ -226,6 +263,7 @@ function Kpi({
     indigo: { bar: 'border-l-indigo-500', num: 'text-indigo-700' },
     sky:    { bar: 'border-l-sky-500',    num: 'text-sky-700' },
     slate:  { bar: 'border-l-slate-400',  num: 'text-slate-700' },
+    amber:  { bar: 'border-l-amber-500',  num: 'text-amber-700' },
   } as const
   return (
     <div className={`rounded-lg border border-slate-200 ${toneCls[tone].bar} border-l-[3px] bg-white p-3 shadow-sm`}>
@@ -363,5 +401,110 @@ function Section({
         </table>
       </div>
     </details>
+  )
+}
+
+function StorageSection({
+  items,
+  counts,
+}: {
+  items: Array<{ order: OrderRow; storage: StorageStatus }>
+  counts: { over: number; warn: number; total: number }
+}) {
+  return (
+    <section className="space-y-3">
+      <div className="flex items-baseline justify-between gap-2 flex-wrap">
+        <h2 className="text-sm font-semibold text-slate-700">📦 배대지 보관 기간</h2>
+        <p className="text-[11px] text-slate-500">
+          배대지 입고 후 {DEFAULT_FREE_STORAGE_DAYS}일 무료 보관 기준 · 초과 시 보관비 발생 위험
+        </p>
+      </div>
+      <div className="grid grid-cols-3 gap-3">
+        <Kpi label="초과" value={counts.over} tone="rose" hint={`무료 ${DEFAULT_FREE_STORAGE_DAYS}일 경과`} />
+        <Kpi label="임박" value={counts.warn} tone="amber" hint="2일 이내 만료" />
+        <Kpi label="입고 중" value={counts.total} tone="slate" hint="배대지 보관 중 전체" />
+      </div>
+      <div className="rounded-xl border border-slate-200 border-l-amber-500 border-l-[3px] bg-white shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-slate-50 border-b border-slate-200">
+            <tr className="text-left">
+              <th className="px-3 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">경과</th>
+              <th className="px-3 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">남은 무료일</th>
+              <th className="px-3 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider">주문</th>
+              <th className="px-3 py-2 text-[10px] font-semibold text-slate-600 uppercase tracking-wider whitespace-nowrap">접수일</th>
+              <th className="px-3 py-2"></th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {items.map((e) => {
+              const marketLabel = e.order.marketplace
+                ? MARKETPLACE_LABEL[e.order.marketplace] ?? e.order.marketplace
+                : null
+              const tone =
+                e.storage.level === 'over'
+                  ? { badge: 'bg-rose-50 text-rose-700 border-rose-200', text: 'text-rose-700' }
+                  : e.storage.level === 'warn'
+                    ? { badge: 'bg-amber-50 text-amber-700 border-amber-200', text: 'text-amber-700' }
+                    : { badge: 'bg-slate-50 text-slate-600 border-slate-200', text: 'text-slate-600' }
+              return (
+                <tr key={e.order.id} className="hover:bg-slate-50/60 transition-colors">
+                  <td className="px-3 py-2.5 whitespace-nowrap">
+                    <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[11px] font-semibold tabular-nums ${tone.badge}`}>
+                      {e.storage.level === 'over'
+                        ? '보관비 위험'
+                        : e.storage.level === 'warn'
+                          ? '임박'
+                          : '보관 중'}
+                    </span>
+                    <span className="ml-1.5 text-xs text-slate-500 tabular-nums">{e.storage.elapsedDays}일째</span>
+                  </td>
+                  <td className="px-3 py-2.5 text-xs tabular-nums whitespace-nowrap">
+                    {e.storage.remainingDays <= 0 ? (
+                      <span className="text-rose-700 font-semibold">
+                        {Math.abs(e.storage.remainingDays)}일 초과
+                      </span>
+                    ) : (
+                      <span className={tone.text}>{e.storage.remainingDays}일 남음</span>
+                    )}
+                  </td>
+                  <td className="px-3 py-2.5 text-slate-800">
+                    <Link href={`/orders/${e.order.id}`} prefetch={false} className="hover:text-indigo-700 transition-colors">
+                      <p className="font-medium text-slate-900 text-sm">
+                        {e.order.market_order_number ?? e.order.order_number}
+                      </p>
+                      <p className="text-[11px] text-slate-500 mt-0.5">
+                        {marketLabel && <span className="mr-1.5">{marketLabel}</span>}
+                        {e.order.buyer_name ?? '—'}
+                      </p>
+                    </Link>
+                  </td>
+                  <td className="px-3 py-2.5 text-xs text-slate-600 whitespace-nowrap tabular-nums">
+                    {e.order.forwarder_submitted_at
+                      ? formatKstDate(new Date(e.order.forwarder_submitted_at))
+                      : '—'}
+                  </td>
+                  <td className="px-3 py-2.5 text-right whitespace-nowrap">
+                    <Link
+                      href={`/orders/${e.order.id}`}
+                      prefetch={false}
+                      className="inline-flex items-center gap-1 text-xs font-medium text-indigo-700 hover:text-indigo-900"
+                    >
+                      상세
+                      <svg className="w-3 h-3" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                      </svg>
+                    </Link>
+                  </td>
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+      <p className="text-[11px] text-slate-500">
+        무료 보관일은 배대지마다 다릅니다(보통 7~30일). 위 기준은 가장 보수적인 {DEFAULT_FREE_STORAGE_DAYS}일이며,
+        실제 청구는 배대지 정책을 따릅니다. 한국 출고(운송 중) 전환 시 목록에서 제외됩니다.
+      </p>
+    </section>
   )
 }
