@@ -2,6 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { getNearLimitCards } from '@/lib/b2b/card-limits'
+import { getExchangeRates } from '@/lib/b2b/exchange-rate'
+import { getMarginLossAlerts } from '@/lib/b2b/margin-loss'
 import NewOrderForm, { type ForwarderOption } from './NewOrderForm'
 
 export const metadata: Metadata = {
@@ -29,13 +31,26 @@ export default async function NewOrderPage() {
     data: { user },
   } = await supabase.auth.getUser()
   let nearLimitCards: Awaited<ReturnType<typeof getNearLimitCards>> = []
+  const lossSkus: Record<string, number> = {}
   if (user) {
     const { data: account } = await supabase
       .from('b2b_accounts')
       .select('id')
       .eq('user_id', user.id)
       .single()
-    if (account) nearLimitCards = await getNearLimitCards(account.id)
+    if (account) {
+      nearLimitCards = await getNearLimitCards(account.id)
+      // 마진 손실 SKU — 주문 입력 시 손실 경고 (대시보드 H3 와 동일 계산)
+      try {
+        const ex = await getExchangeRates()
+        const ratesMap: Record<string, { rate: number; unit: number }> = {}
+        for (const [k, v] of Object.entries(ex.rates)) ratesMap[k] = { rate: v.rate, unit: v.unit }
+        const alerts = await getMarginLossAlerts(account.id, ratesMap)
+        for (const a of alerts) lossSkus[a.product_id] = a.loss_per_unit_krw
+      } catch {
+        // 환율/계산 실패해도 폼은 정상
+      }
+    }
   }
 
   return (
@@ -63,7 +78,7 @@ export default async function NewOrderPage() {
           </div>
         </div>
       )}
-      <NewOrderForm forwarders={forwarders} />
+      <NewOrderForm forwarders={forwarders} lossSkus={lossSkus} />
     </>
   )
 }

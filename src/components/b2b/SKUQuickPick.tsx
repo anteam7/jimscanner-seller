@@ -11,13 +11,15 @@ type QuickPickItem = PickedProduct & {
 
 type Props = {
   onPick: (p: PickedProduct) => void
+  /** product_id → 단위당 손실 KRW. 손실 SKU 칩에 경고 배지. */
+  lossSkus?: Record<string, number>
 }
 
 /**
  * 즐겨찾기 + 최근 매입 SKU 칩 행. /orders/new 의 ③ 해외 매입 섹션 상단에 표시.
  * 클릭 1번으로 라인에 product 적용 (default supplier/currency/price/weight 자동).
  */
-export default function SKUQuickPick({ onPick }: Props) {
+export default function SKUQuickPick({ onPick, lossSkus = {} }: Props) {
   const [favorites, setFavorites] = useState<QuickPickItem[]>([])
   const [recents, setRecents] = useState<QuickPickItem[]>([])
   const [loading, setLoading] = useState(true)
@@ -52,6 +54,7 @@ export default function SKUQuickPick({ onPick }: Props) {
           items={favorites}
           onPick={onPick}
           accent="amber"
+          lossSkus={lossSkus}
         />
       )}
       {recents.length > 0 && (
@@ -61,6 +64,7 @@ export default function SKUQuickPick({ onPick }: Props) {
           items={recents}
           onPick={onPick}
           accent="indigo"
+          lossSkus={lossSkus}
         />
       )}
       <p className="text-[10px] text-slate-500 pt-0.5">
@@ -79,12 +83,14 @@ function Section({
   items,
   onPick,
   accent,
+  lossSkus = {},
 }: {
   title: string
   icon: React.ReactNode
   items: QuickPickItem[]
   onPick: (p: PickedProduct) => void
   accent: 'amber' | 'indigo'
+  lossSkus?: Record<string, number>
 }) {
   const chipCls =
     accent === 'amber'
@@ -118,6 +124,14 @@ function Section({
             {p.default_currency && (
               <span className="flex-shrink-0 rounded bg-slate-100 px-1 text-[9px] font-medium text-slate-500">
                 {p.default_currency}
+              </span>
+            )}
+            {lossSkus[p.id] != null && (
+              <span
+                className="flex-shrink-0 rounded bg-rose-50 border border-rose-200 px-1 text-[9px] font-semibold text-rose-700"
+                title={`최근 평균 판매가 기준 단위당 약 ${Math.round(lossSkus[p.id]).toLocaleString('ko-KR')}원 손실 추정`}
+              >
+                ⚠ 손실
               </span>
             )}
           </button>

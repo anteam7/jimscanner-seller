@@ -38,7 +38,14 @@ export type ForwarderOption = {
   slug: string
 }
 
-export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOption[] }) {
+export default function NewOrderForm({
+  forwarders,
+  lossSkus = {},
+}: {
+  forwarders: ForwarderOption[]
+  /** product_id → 단위당 손실 KRW (최근 30일 마진 손실 SKU). 주문 입력 시 경고. */
+  lossSkus?: Record<string, number>
+}) {
   const router = useRouter()
 
   // 식별
@@ -469,7 +476,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
           description="한 마켓 주문에 N개 상품을 매입한 경우 라인을 추가합니다."
           rightChip={`${lines.length} 라인`}
         >
-          <SKUQuickPick onPick={onQuickPick} />
+          <SKUQuickPick onPick={onQuickPick} lossSkus={lossSkus} />
           <CustomsGuidePanel />
           {lines.map((line, i) => (
             <div
@@ -486,6 +493,7 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
                     selectedLabel={line.productSku}
                     onPick={(p) => onPickProduct(i, p)}
                     onClear={() => onClearProduct(i)}
+                    lossSkus={lossSkus}
                   />
                   {lines.length > 1 && (
                     <button
@@ -499,6 +507,13 @@ export default function NewOrderForm({ forwarders }: { forwarders: ForwarderOpti
                   )}
                 </div>
               </div>
+              {line.productId && lossSkus[line.productId] != null && (
+                <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-[11px] text-rose-700">
+                  ⚠ 이 SKU 는 최근 30일 평균 판매가 기준{' '}
+                  <span className="font-semibold">단위당 약 {Math.round(lossSkus[line.productId]).toLocaleString('ko-KR')}원 손실</span>
+                  {' '}추정입니다 (환산 매입가 + 배대지비 추정 대비). 판매가·매입 단가를 확인하세요.
+                </div>
+              )}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="해외 사이트" htmlFor={`supplier_site_${i}`}>
                   <select id={`supplier_site_${i}`} value={line.supplierSite} onChange={(e) => patchLine(i, { supplierSite: e.target.value })} className={inputCls}>

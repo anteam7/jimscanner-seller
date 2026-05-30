@@ -22,9 +22,11 @@ type Props = {
   selectedLabel: string | null
   onPick: (p: PickedProduct) => void
   onClear: () => void
+  /** product_id → 단위당 손실 KRW. 손실 SKU 결과에 경고 배지. */
+  lossSkus?: Record<string, number>
 }
 
-export default function ProductPicker({ selectedId, selectedLabel, onPick, onClear }: Props) {
+export default function ProductPicker({ selectedId, selectedLabel, onPick, onClear, lossSkus = {} }: Props) {
   const [open, setOpen] = useState(false)
   const [q, setQ] = useState('')
   const [results, setResults] = useState<PickedProduct[]>([])
@@ -178,6 +180,14 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
                         {p.default_unit_price != null && p.default_currency && (
                           <span className="ml-2 text-slate-600 tabular-nums">
                             {p.default_unit_price} {p.default_currency}
+                          </span>
+                        )}
+                        {lossSkus[p.id] != null && (
+                          <span
+                            className="ml-2 inline-flex items-center rounded bg-rose-50 border border-rose-200 px-1 py-0 text-[9px] font-semibold text-rose-700"
+                            title={`최근 평균 판매가 기준 단위당 약 ${Math.round(lossSkus[p.id]).toLocaleString('ko-KR')}원 손실 추정`}
+                          >
+                            ⚠ 손실
                           </span>
                         )}
                       </p>
