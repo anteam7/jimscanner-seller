@@ -315,6 +315,33 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
     setGlobalError(null)
   }, [])
 
+  // 행 복제 — 해당 행(여러 컬럼 동일, 상품·갯수만 다른 반복 입력)을 바로 아래에 복사
+  const duplicateRow = useCallback((idx: number) => {
+    setRows((prev) => {
+      const next = prev.slice()
+      next.splice(idx + 1, 0, { ...prev[idx] })
+      return next
+    })
+  }, [])
+
+  // Ctrl+D 채우기 — 현재 셀 값을 "입력된 마지막 행" 까지 같은 컬럼에 복사.
+  // (트레일링 빈 행은 건드리지 않아 검증/제출 오염 방지)
+  const fillDown = useCallback((fromIdx: number, key: string) => {
+    setRows((prev) => {
+      let lastContent = -1
+      for (let i = prev.length - 1; i >= 0; i--) {
+        if (rowHasContent(prev[i])) { lastContent = i; break }
+      }
+      if (fromIdx >= lastContent) return prev
+      const val = prev[fromIdx]?.[key] ?? ''
+      const next = prev.slice()
+      for (let i = fromIdx + 1; i <= lastContent; i++) {
+        next[i] = { ...next[i], [key]: val }
+      }
+      return next
+    })
+  }, [])
+
   const applySkuToRow = useCallback((rowIdx: number, p: SkuLite) => {
     setRows((prev) => {
       const next = prev.slice()
@@ -611,6 +638,9 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
         >
           전체 비우기
         </button>
+        <p className="w-full text-[11px] text-slate-400 mt-1">
+          팁: 셀에서 <kbd className="px-1 py-0.5 rounded border border-slate-200 bg-slate-50 font-mono text-[10px]">Ctrl+D</kbd> = 아래 입력 행에 같은 값 채우기 · 행 오른쪽 <span className="font-medium">⧉</span> = 행 복제
+        </p>
       </div>
 
       {/* paste 영역 */}
@@ -779,6 +809,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                               skuCode={row._sku_code ?? null}
                               rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
+                              onFillDown={() => fillDown(ridx, c.key)}
                               onPick={(p) => applySkuToRow(ridx, p)}
                               onClearSku={() => {
                                 setRows((prev) => {
@@ -797,6 +828,7 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                               value={row[c.key] ?? ''}
                               rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
+                              onFillDown={() => fillDown(ridx, c.key)}
                               autoLabel={autoCustomsLabel(row['product_name'])}
                             />
                           ) : (
@@ -805,12 +837,24 @@ export default function BulkOrderClient({ forwarders }: { forwarders: ForwarderO
                               value={row[c.key] ?? ''}
                               rowNumber={ridx + 1}
                               onChange={(v) => updateCell(ridx, c.key, v)}
+                              onFillDown={() => fillDown(ridx, c.key)}
                             />
                           )}
                         </td>
                       )
                     })}
-                    <td className="px-1 py-1 text-center">
+                    <td className="px-1 py-1 text-center whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={() => duplicateRow(ridx)}
+                        className="w-6 h-6 inline-flex items-center justify-center text-slate-400 hover:text-indigo-600 hover:bg-indigo-50 rounded transition-colors"
+                        aria-label={`${ridx + 1}행 복제`}
+                        title="행 복제 (아래에 같은 값 행 추가)"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 17.25v3.375c0 .621-.504 1.125-1.125 1.125h-9.75a1.125 1.125 0 0 1-1.125-1.125V7.875c0-.621.504-1.125 1.125-1.125H7.5m4.5 0V5.625c0-.621.504-1.125 1.125-1.125h3.75c.621 0 1.125.504 1.125 1.125v9.75c0 .621-.504 1.125-1.125 1.125H13.5m-3.75-1.5h7.5" />
+                        </svg>
+                      </button>
                       <button
                         type="button"
                         onClick={() => removeRow(ridx)}
@@ -876,22 +920,32 @@ function Cell({
   onChange,
   autoLabel,
   rowNumber,
+  onFillDown,
 }: {
   col: ColumnDef
   value: string
   onChange: (v: string) => void
   autoLabel?: string | null
   rowNumber: number
+  onFillDown?: () => void
 }) {
   const ariaLabel = `${col.label} (${rowNumber}행)`
+  // Ctrl/Cmd+D = 이 값을 아래 입력 행에 채우기 (Excel 패리티)
+  function handleKeyDown(e: React.KeyboardEvent<HTMLInputElement | HTMLSelectElement>) {
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+      e.preventDefault()
+      onFillDown?.()
+    }
+  }
   if (col.type === 'select') {
     const emptyLabel = autoLabel ?? '—'
     return (
       <select
         value={value}
         onChange={(e) => onChange(e.target.value)}
+        onKeyDown={handleKeyDown}
         aria-label={ariaLabel}
-        title={!value && autoLabel ? '비우면 상품명에서 자동 인식됩니다' : undefined}
+        title={!value && autoLabel ? '비우면 상품명에서 자동 인식됩니다' : 'Ctrl+D: 아래 행에 채우기'}
         className={`block w-full h-7 px-1.5 text-xs bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${
           !value && autoLabel ? 'text-emerald-600' : 'text-slate-900'
         }`}
@@ -908,6 +962,7 @@ function Cell({
       type={col.type === 'number' ? 'number' : col.type === 'date' ? 'date' : 'text'}
       value={value}
       onChange={(e) => onChange(e.target.value)}
+      onKeyDown={handleKeyDown}
       aria-label={ariaLabel}
       placeholder={col.placeholder}
       step={col.type === 'number' ? 'any' : undefined}
@@ -924,6 +979,7 @@ function SkuPickerCell({
   onChange,
   onPick,
   onClearSku,
+  onFillDown,
 }: {
   value: string
   skuCode: string | null
@@ -931,6 +987,7 @@ function SkuPickerCell({
   onChange: (v: string) => void
   onPick: (p: SkuLite) => void
   onClearSku: () => void
+  onFillDown?: () => void
 }) {
   const [open, setOpen] = useState(false)
   const [query, setQuery] = useState('')
@@ -980,6 +1037,12 @@ function SkuPickerCell({
   }
 
   function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+    // Ctrl/Cmd+D = 아래 행에 채우기 (드롭다운 열림 여부와 무관)
+    if ((e.ctrlKey || e.metaKey) && (e.key === 'd' || e.key === 'D')) {
+      e.preventDefault()
+      onFillDown?.()
+      return
+    }
     if (!open) return
     if (e.key === 'ArrowDown') {
       e.preventDefault()
