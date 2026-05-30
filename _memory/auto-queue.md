@@ -458,6 +458,16 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-30 commit a58f56c
   - fix: 두 컨트롤에 `aria-label` 추가 (순수 additive, 동작·시각 무변경) — textarea `운송장 붙여넣기 (한 줄당: 주문번호, 운송장 번호, 캐리어)`, SKU 검색 input `등록된 SKU 검색 (SKU 코드 또는 상품명)`. 18~22회차 a11y 일관성 보강과 동일 패턴. 빌드 compiled · lint 0 problems.
 
+### Audit 발견 2026-05-31 (daily self-audit · 43회차)
+
+- [ ] **#auto-J bug: NotificationBell.handleClick fire-and-forget fetch 미처리 rejection** _(audit 발견 2026-05-31)_
+  - estimated: 10m
+  - prereq: 없음
+  - decision_required: false
+  - finding: `src/components/b2b/NotificationBell.tsx:103-107` 의 `handleClick` 이 `fetch('/api/notifications/read', …).then(() => refresh())` 를 `.catch()` 없이 fire-and-forget → 네트워크 실패 시 unhandled promise rejection (콘솔 "Uncaught (in promise)"). 같은 파일 sibling `markAllRead` (87-99) 은 try/finally 로 감쌈 → 비대칭.
+  - severity: low
+  - fix 방향: `.catch(() => {})` 추가 (fire-and-forget 동작·네비게이션 무지연 유지, unhandled rejection 만 제거). 16회차에서 `await` 추가는 router.push 지연 회귀라 보류 결정했으나 `.catch()` 는 그와 무관한 순수 additive 하드닝 (27회차 sibling 방어 패턴 정렬과 동일 flavor, zero regression).
+
 ---
 
 ## P2 — 도메인·운영 (사용자 액션 필요 — agent 가 알림만)
