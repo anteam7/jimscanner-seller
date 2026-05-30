@@ -65,7 +65,7 @@ async function fetchDashboardStats(accountId: string): Promise<DashboardStats> {
       .gte('created_at', monthStart),
     admin
       .from('b2b_subscriptions')
-      .select('plan_code, monthly_order_used, monthly_order_limit')
+      .select('monthly_order_used, monthly_order_quota_override, b2b_subscription_plans(plan_code, monthly_order_quota)')
       .eq('account_id', accountId)
       .order('created_at', { ascending: false })
       .limit(1),
@@ -109,11 +109,30 @@ async function fetchDashboardStats(accountId: string): Promise<DashboardStats> {
     statusCounts[r.status] = (statusCounts[r.status] ?? 0) + 1
   }
 
+  // b2b_subscriptions 에는 plan_code·월 한도 컬럼이 없어 plan 조인 결과에서 파생한다.
+  // (월 한도 = 개별 override ?? 플랜 기본 quota, null = 무제한)
+  type SubRow = {
+    monthly_order_used: number | null
+    monthly_order_quota_override: number | null
+    b2b_subscription_plans: { plan_code: string | null; monthly_order_quota: number | null } | null
+  }
+  const subRow = (subRows as SubRow[] | null)?.[0] ?? null
+  const subscription: DashboardStats['subscription'] = subRow
+    ? {
+        plan_code: subRow.b2b_subscription_plans?.plan_code ?? '',
+        monthly_order_used: subRow.monthly_order_used ?? 0,
+        monthly_order_limit:
+          subRow.monthly_order_quota_override ??
+          subRow.b2b_subscription_plans?.monthly_order_quota ??
+          null,
+      }
+    : null
+
   return {
     monthOrderCount: monthOrderCount ?? 0,
     monthSaleKrw,
     skuCount: skuCount ?? 0,
-    subscription: (subRows as DashboardStats['subscription'][] | null)?.[0] ?? null,
+    subscription,
     recentOrders: (recentOrdersRaw as RecentOrder[] | null) ?? [],
     statusCounts,
   }
