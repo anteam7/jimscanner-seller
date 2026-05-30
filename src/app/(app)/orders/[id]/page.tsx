@@ -11,6 +11,7 @@ import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
 import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModal'
 import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
 import { getCustomsGuide } from '@/lib/b2b/customs-guide'
+import { getExchangeRates, type ExchangeRateSnapshot } from '@/lib/b2b/exchange-rate'
 
 export const metadata: Metadata = {
   title: '주문 상세',
@@ -73,6 +74,7 @@ type OrderDetail = {
   // 비용
   estimated_cost_krw: number | string | null
   actual_cost_krw: number | string | null
+  exchange_rate_applied: ExchangeRateSnapshot | null
   // 메모
   request_notes: string | null
   internal_notes: string | null
@@ -165,6 +167,35 @@ function sumSale(items: OrderItem[]): number | null {
   return any ? total : null
 }
 
+// 라인 매입가(해외 통화)를 환율 맵으로 KRW 환산. estimated_cost_krw 가 비어 있을 때
+// 마진율 경고에 쓸 매입 원가를 추정한다. KRW 라인은 그대로, 환율 없는 통화는 제외.
+function convertItemsToKrw(
+  items: OrderItem[],
+  rates: Record<string, { rate: number; unit: number }>,
+): number | null {
+  let total = 0
+  let any = false
+  for (const it of items) {
+    const cur = it.currency
+    if (!cur) continue
+    const totalForeign =
+      it.total_price_foreign != null && it.total_price_foreign !== ''
+        ? Number(it.total_price_foreign)
+        : Number(it.unit_price_foreign ?? 0) * Number(it.quantity ?? 1)
+    if (!Number.isFinite(totalForeign) || totalForeign <= 0) continue
+    if (cur === 'KRW') {
+      total += totalForeign
+      any = true
+      continue
+    }
+    const r = rates[cur]
+    if (!r || !r.rate || !Number.isFinite(r.rate)) continue
+    total += totalForeign * (r.rate / (r.unit || 1))
+    any = true
+  }
+  return any ? Math.round(total) : null
+}
+
 function StatusBadge({ status }: { status: string }) {
   const meta = STATUS_META[status] ?? STATUS_META.pending
   return (
@@ -234,7 +265,7 @@ export default async function OrderDetailPage({
   const { data: order } = (await supabase
     .from('b2b_orders')
     .select(
-      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id, customs_category, payment_card_id, b2b_payment_cards(alias, last4))',
+      'id, order_number, status, order_date, source, marketplace, market_order_number, market_commission_krw, shipping_fee_krw, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, forwarder_id, forwarder_country, forwarder_request_no, estimated_cost_krw, actual_cost_krw, exchange_rate_applied, request_notes, internal_notes, created_at, updated_at, forwarders(name, slug), b2b_order_items(id, display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, total_price_krw, weight_kg, tracking_number, tracking_number_overseas, carrier, image_url, notes, supplier_site, supplier_order_number, supplier_purchased_at, sale_price_krw, market_product_id, market_option, product_id, customs_category, payment_card_id, b2b_payment_cards(alias, last4))',
     )
     .eq('id', id)
     .eq('account_id', account.id)
@@ -363,6 +394,48 @@ export default async function OrderDetailPage({
   const marketLabel = order.marketplace ? (MARKETPLACE_LABEL[order.marketplace] ?? order.marketplace) : null
   const totalSale = sumSale(items)
   const fullAddress = [order.buyer_address, order.buyer_detail_address].filter(Boolean).join(' ')
+
+  // 마진율 경고용 매입 원가(KRW) 산정. 우선순위:
+  //  1) estimated_cost_krw (셀러가 직접 입력) — 가장 신뢰
+  //  2) 주문 생성 시점 환율 스냅샷(exchange_rate_applied)으로 라인 해외가 환산 — '매입 당시 환율'
+  //  3) 스냅샷이 없는 과거 주문은 현재 환율로 추정 — '현재 환율(추정)'
+  const estimatedCost =
+    order.estimated_cost_krw == null ? null : Number(order.estimated_cost_krw)
+  let purchaseKrw: number | null =
+    estimatedCost != null && Number.isFinite(estimatedCost) && estimatedCost > 0
+      ? estimatedCost
+      : null
+  let purchaseBasis: 'estimated' | 'snapshot' | 'live' | null =
+    purchaseKrw != null ? 'estimated' : null
+  let rateAsOf: string | null = null
+
+  if (purchaseBasis == null && items.length > 0) {
+    const snapRates = order.exchange_rate_applied?.rates ?? null
+    if (snapRates) {
+      const krw = convertItemsToKrw(items, snapRates)
+      if (krw != null) {
+        purchaseKrw = krw
+        purchaseBasis = 'snapshot'
+        rateAsOf = order.exchange_rate_applied?.fetchedAt ?? null
+      }
+    }
+    if (purchaseBasis == null) {
+      try {
+        const live = await getExchangeRates()
+        const liveRates = Object.fromEntries(
+          Object.entries(live.rates).map(([k, v]) => [k, { rate: v.rate, unit: v.unit }]),
+        )
+        const krw = convertItemsToKrw(items, liveRates)
+        if (krw != null) {
+          purchaseKrw = krw
+          purchaseBasis = 'live'
+          rateAsOf = live.fetchedAt
+        }
+      } catch {
+        // 환율 조회 실패 시 매입 원가 추정 생략 (마진 경고 미표시)
+      }
+    }
+  }
 
   return (
     <div className="p-8 space-y-6 max-w-5xl">
@@ -755,6 +828,22 @@ export default async function OrderDetailPage({
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">비용</p>
             <dl className="text-sm">
               <InfoRow label="예상 매입 KRW">{formatKRW(order.estimated_cost_krw)}</InfoRow>
+              {purchaseBasis === 'snapshot' || purchaseBasis === 'live' ? (
+                <InfoRow label="매입가 환산">
+                  <span className="font-medium text-slate-900">{formatKRW(purchaseKrw)}</span>
+                  <span
+                    className={`ml-2 inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium ${
+                      purchaseBasis === 'snapshot'
+                        ? 'bg-indigo-50 border border-indigo-200 text-indigo-700'
+                        : 'bg-amber-50 border border-amber-200 text-amber-700'
+                    }`}
+                  >
+                    {purchaseBasis === 'snapshot'
+                      ? `매입 당시 환율${rateAsOf ? ` (${formatDate(rateAsOf)})` : ''}`
+                      : '현재 환율 (추정)'}
+                  </span>
+                </InfoRow>
+              ) : null}
               <InfoRow label="실 결제 KRW">{formatKRW(order.actual_cost_krw)}</InfoRow>
               <InfoRow label="총 판매가">
                 {totalSale != null ? (
@@ -763,21 +852,31 @@ export default async function OrderDetailPage({
               </InfoRow>
             </dl>
             {(() => {
-              // 마진율 경고: estimated_cost_krw + totalSale 둘 다 있을 때만
-              const purchase = order.estimated_cost_krw == null ? null : Number(order.estimated_cost_krw)
-              if (totalSale == null || purchase == null || !Number.isFinite(purchase) || purchase <= 0) {
+              // 마진율 경고: 매입 원가(estimated_cost_krw 또는 환율 환산) + totalSale 둘 다 있을 때만
+              if (
+                totalSale == null ||
+                purchaseKrw == null ||
+                !Number.isFinite(purchaseKrw) ||
+                purchaseKrw <= 0
+              ) {
                 return (
                   <p className="mt-2 text-[10px] text-slate-400">
-                    환율 적용·실제 비용 입력은 v0.5 예정
+                    매입가 또는 판매가가 없어 마진을 계산할 수 없습니다.
                   </p>
                 )
               }
-              const margin = totalSale - purchase
+              const margin = totalSale - purchaseKrw
               const rate = (margin / totalSale) * 100
+              const basisNote =
+                purchaseBasis === 'snapshot'
+                  ? ' · 매입 당시 환율 기준'
+                  : purchaseBasis === 'live'
+                    ? ' · 현재 환율 추정'
+                    : ''
               if (rate >= 5) {
                 return (
                   <p className="mt-2 text-[10px] text-emerald-600">
-                    마진율 {rate.toFixed(1)}% (양호)
+                    마진율 {rate.toFixed(1)}% (양호){basisNote}
                   </p>
                 )
               }
@@ -788,7 +887,7 @@ export default async function OrderDetailPage({
                     {negative ? `마진 음수 (${rate.toFixed(1)}%)` : `마진율 낮음 (${rate.toFixed(1)}%)`}
                   </p>
                   <p className={`text-[10px] mt-0.5 leading-relaxed ${negative ? 'text-rose-800' : 'text-amber-800'}`}>
-                    배대지·관세·플랫폼 수수료 고려 시 실 마진은 더 줄어듭니다.
+                    배대지·관세·플랫폼 수수료 고려 시 실 마진은 더 줄어듭니다.{basisNote}
                   </p>
                 </div>
               )
