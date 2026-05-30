@@ -248,9 +248,20 @@ export default async function SettlementPage({
                   return (
                     <tr key={a.forwarderId ?? '__none__'} className="hover:bg-slate-50/60 transition-colors">
                       <td className="px-4 py-3">
-                        <span className={`font-medium ${a.forwarderId ? 'text-slate-900' : 'text-slate-500 italic'}`}>
-                          {a.name}
-                        </span>
+                        {a.forwarderId ? (
+                          <Link
+                            href={`/orders?forwarder=${a.forwarderId}`}
+                            className="font-medium text-indigo-700 hover:text-indigo-900 hover:underline inline-flex items-center gap-1"
+                            title={`${a.name} 주문 목록 보기`}
+                          >
+                            {a.name}
+                            <svg className="w-3 h-3 opacity-60" fill="none" viewBox="0 0 24 24" strokeWidth={2.2} stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 4.5l7.5 7.5-7.5 7.5" />
+                            </svg>
+                          </Link>
+                        ) : (
+                          <span className="font-medium text-slate-500 italic">{a.name}</span>
+                        )}
                       </td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-600">{a.orders}</td>
                       <td className="px-4 py-3 text-right tabular-nums text-slate-600">{a.reconcilable}</td>

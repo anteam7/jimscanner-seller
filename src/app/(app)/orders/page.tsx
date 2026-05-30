@@ -106,9 +106,9 @@ const PAGE_SIZE = 50
 export default async function OrdersListPage({
   searchParams,
 }: {
-  searchParams: Promise<{ status?: string; q?: string; marketplace?: string; page?: string }>
+  searchParams: Promise<{ status?: string; q?: string; marketplace?: string; forwarder?: string; page?: string }>
 }) {
-  const { status: statusFilter = 'all', q: query = '', marketplace: marketFilter = '', page: pageRaw } = await searchParams
+  const { status: statusFilter = 'all', q: query = '', marketplace: marketFilter = '', forwarder: forwarderFilter = '', page: pageRaw } = await searchParams
   const page = Math.max(1, Number.parseInt(pageRaw ?? '1', 10) || 1)
   const offset = (page - 1) * PAGE_SIZE
 
@@ -144,6 +144,9 @@ export default async function OrdersListPage({
   if (marketFilter && MARKETPLACE_LABEL[marketFilter]) {
     qb = qb.eq('marketplace', marketFilter)
   }
+  if (forwarderFilter) {
+    qb = qb.eq('forwarder_id', forwarderFilter)
+  }
   if (query.trim()) {
     const q = query.trim().replace(/[%,]/g, '')
     qb = qb.or(`order_number.ilike.%${q}%,market_order_number.ilike.%${q}%`)
@@ -170,6 +173,13 @@ export default async function OrdersListPage({
     }
   }
   const orders = baseOrders.map((o) => ({ ...o, receipt_count: receiptCountByOrder.get(o.id) ?? 0 }))
+
+  // 배대지 필터 활성 시 이름 조회 (정산 페이지 드릴다운에서 진입)
+  let forwarderFilterName: string | null = null
+  if (forwarderFilter) {
+    const { data: fw } = await supabase.from('forwarders').select('name').eq('id', forwarderFilter).maybeSingle()
+    forwarderFilterName = fw?.name ?? null
+  }
 
   // 합배송 모달용 templates fetch (공유 + 본인)
   const admin = createAdminClient()
@@ -240,11 +250,13 @@ export default async function OrdersListPage({
     const status = overrides.status !== undefined ? overrides.status : (statusFilter !== 'all' ? statusFilter : null)
     const mp = overrides.marketplace !== undefined ? overrides.marketplace : (marketFilter || null)
     const qv = overrides.q !== undefined ? overrides.q : (query || null)
+    const fw = overrides.forwarder !== undefined ? overrides.forwarder : (forwarderFilter || null)
     // 필터 변경 시 page 리셋, 명시 override 가 있으면 그 값
     const pg = overrides.page !== undefined ? overrides.page : null
     if (status) sp.set('status', status)
     if (mp) sp.set('marketplace', mp)
     if (qv) sp.set('q', qv)
+    if (fw) sp.set('forwarder', fw)
     if (pg) sp.set('page', pg)
     const s = sp.toString()
     return s ? `/orders?${s}` : '/orders'
@@ -320,6 +332,7 @@ export default async function OrdersListPage({
         {/* 마켓 필터 + 검색 */}
         <form method="get" className="flex items-center gap-2 flex-wrap">
           {statusFilter !== 'all' && <input type="hidden" name="status" value={statusFilter} />}
+          {forwarderFilter && <input type="hidden" name="forwarder" value={forwarderFilter} />}
           <label htmlFor="marketplace_filter" className="text-xs text-slate-500">마켓</label>
           <select
             id="marketplace_filter"
@@ -358,9 +371,19 @@ export default async function OrdersListPage({
         </form>
       </div>
 
+      {/* 배대지 필터 활성 표시 (정산 드릴다운) */}
+      {forwarderFilter && (
+        <div className="flex items-center gap-2 text-xs -mt-2">
+          <span className="inline-flex items-center gap-1 rounded-md bg-indigo-50 border border-indigo-200 px-2.5 py-1 text-indigo-700">
+            배대지 필터: <span className="font-semibold">{forwarderFilterName ?? forwarderFilter}</span>
+          </span>
+          <Link href={buildHref({ forwarder: null })} className="text-slate-500 hover:text-slate-700 underline">필터 해제</Link>
+        </div>
+      )}
+
       {/* 목록 또는 빈 상태 */}
       {orders.length === 0 ? (
-        statusFilter === 'all' && !query && !marketFilter ? (
+        statusFilter === 'all' && !query && !marketFilter && !forwarderFilter ? (
           <EmptyState />
         ) : (
           <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-10 text-center">
