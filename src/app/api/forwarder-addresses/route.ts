@@ -43,9 +43,7 @@ export async function GET() {
   } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ addresses: [] })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data } = await db
+  const { data } = await sb
     .from('b2b_forwarder_addresses')
     .select(
       'id, account_id, forwarder_id, label, recipient_name, phone, address1, address2, city, state, zip, country, member_no, is_official, is_default, notes, created_at, forwarders(name, slug)',
@@ -87,9 +85,7 @@ export async function POST(request: Request) {
   if (!state) return NextResponse.json({ error: 'state 가 필요합니다.' }, { status: 400 })
   if (!zip) return NextResponse.json({ error: 'zip 이 필요합니다.' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -101,16 +97,14 @@ export async function POST(request: Request) {
 
   // is_default 가 true 면 본인의 다른 기본 주소를 모두 false 로
   if (isDefault) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (admin as any)
+    await admin
       .from('b2b_forwarder_addresses')
       .update({ is_default: false })
       .eq('account_id', account.id)
       .eq('is_default', true)
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: row, error } = await (admin as any)
+  const { data: row, error } = await admin
     .from('b2b_forwarder_addresses')
     .insert({
       account_id: account.id,
