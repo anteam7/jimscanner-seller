@@ -45,6 +45,7 @@ const NAV_ITEMS = [
       { href: '/orders/tracking-paste', label: '운송장 일괄 입력' },
       { href: '/refunds', label: '환불 관리' },
       { href: '/eta', label: '도착 예정 (ETA)' },
+      { href: '/settlement', label: '배대지 정산 대조' },
     ],
   },
   {
