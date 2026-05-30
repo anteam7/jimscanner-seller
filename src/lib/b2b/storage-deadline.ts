@@ -12,6 +12,16 @@ export const DEFAULT_FREE_STORAGE_DAYS = 7
 /** 무료 기간 만료 N일 이내면 '임박'(amber) 으로 경고. */
 export const STORAGE_WARN_WITHIN_DAYS = 2
 
+/** 셀러가 무료 보관일을 본인 배대지 정책에 맞게 조정 — 쿠키에 저장 (DB 변경 없음). */
+export const FREE_STORAGE_DAYS_COOKIE = 'b2b_free_storage_days'
+
+/** 쿠키/입력값을 안전한 무료 보관일로 파싱 (1~60일, 범위 밖이면 기본값). */
+export function parseFreeStorageDays(raw: string | null | undefined): number {
+  const n = Number(raw)
+  if (Number.isFinite(n) && n >= 1 && n <= 60) return Math.floor(n)
+  return DEFAULT_FREE_STORAGE_DAYS
+}
+
 export type StorageLevel = 'ok' | 'warn' | 'over'
 
 export type StorageStatus = {

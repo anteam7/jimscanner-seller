@@ -16,9 +16,12 @@ import {
   formatKstDate,
   type TransitDefault,
 } from '@/lib/b2b/eta'
+import { cookies } from 'next/headers'
 import {
   computeStorageStatus,
   DEFAULT_FREE_STORAGE_DAYS,
+  FREE_STORAGE_DAYS_COOKIE,
+  parseFreeStorageDays,
 } from '@/lib/b2b/storage-deadline'
 
 export const metadata: Metadata = {
@@ -783,8 +786,9 @@ export default async function SellerDashboardPage() {
   let storageSummary: {
     over: number
     warn: number
+    freeDays: number
     top: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }>
-  } = { over: 0, warn: 0, top: [] }
+  } = { over: 0, warn: 0, freeDays: DEFAULT_FREE_STORAGE_DAYS, top: [] }
   try {
     const { data: storageRows } = await db
       .from('b2b_orders')
@@ -796,11 +800,13 @@ export default async function SellerDashboardPage() {
       .order('forwarder_submitted_at', { ascending: true })
       .limit(200)
     const nowDate = new Date(nowMs)
+    const storageCookie = await cookies()
+    const freeStorageDays = parseFreeStorageDays(storageCookie.get(FREE_STORAGE_DAYS_COOKIE)?.value)
     let over = 0
     let warn = 0
     const flagged: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }> = []
     for (const o of (storageRows ?? []) as Array<{ id: string; order_number: string; market_order_number: string | null; buyer_name: string | null; forwarder_submitted_at: string | null }>) {
-      const s = computeStorageStatus(o.forwarder_submitted_at, nowDate)
+      const s = computeStorageStatus(o.forwarder_submitted_at, nowDate, freeStorageDays)
       if (!s) continue
       if (s.level === 'over') over++
       else if (s.level === 'warn') warn++
@@ -820,9 +826,9 @@ export default async function SellerDashboardPage() {
       if (a.level !== b.level) return a.level === 'over' ? -1 : 1
       return b.elapsedDays - a.elapsedDays
     })
-    storageSummary = { over, warn, top: flagged.slice(0, 3) }
+    storageSummary = { over, warn, freeDays: freeStorageDays, top: flagged.slice(0, 3) }
   } catch {
-    storageSummary = { over: 0, warn: 0, top: [] }
+    storageSummary = { over: 0, warn: 0, freeDays: DEFAULT_FREE_STORAGE_DAYS, top: [] }
   }
 
   // #idea-3b 후속: 이달 환불 현황 미니카드 — 신청 건수 / 정산완료 금액 / 처리 대기
@@ -1086,6 +1092,7 @@ export default async function SellerDashboardPage() {
           over={storageSummary.over}
           warn={storageSummary.warn}
           top={storageSummary.top}
+          freeDays={storageSummary.freeDays}
         />
       )}
 
@@ -1490,10 +1497,12 @@ function StorageDeadlineMiniCard({
   over,
   warn,
   top,
+  freeDays,
 }: {
   over: number
   warn: number
   top: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }>
+  freeDays: number
 }) {
   return (
     <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-amber-500 bg-white shadow-sm p-5">
@@ -1501,7 +1510,7 @@ function StorageDeadlineMiniCard({
         <div className="min-w-0">
           <p className="text-xs font-semibold text-slate-700 uppercase tracking-wider">📦 배대지 보관 임박</p>
           <p className="text-[10px] text-slate-500 mt-0.5">
-            배대지 입고 후 {DEFAULT_FREE_STORAGE_DAYS}일 무료 기준 · 초과 시 보관비 발생
+            배대지 입고 후 {freeDays}일 무료 기준 · 초과 시 보관비 발생
           </p>
         </div>
         <Link

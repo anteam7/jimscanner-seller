@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
+import { cookies } from 'next/headers'
 import { createClient } from '@/lib/auth/server'
 import {
   applyTransitOverrides,
@@ -14,8 +15,11 @@ import {
 import {
   computeStorageStatus,
   DEFAULT_FREE_STORAGE_DAYS,
+  FREE_STORAGE_DAYS_COOKIE,
+  parseFreeStorageDays,
   type StorageStatus,
 } from '@/lib/b2b/storage-deadline'
+import { FreeStorageDaysControl } from './FreeStorageDaysControl'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
 
 export const dynamic = 'force-dynamic'
@@ -164,10 +168,13 @@ export default async function EtaPage() {
     .not('forwarder_submitted_at', 'is', null)
     .order('forwarder_submitted_at', { ascending: true })
     .limit(300)
+  // 셀러가 설정한 무료 보관일 (쿠키, 미설정 시 기본 7일)
+  const cookieStore = await cookies()
+  const freeStorageDays = parseFreeStorageDays(cookieStore.get(FREE_STORAGE_DAYS_COOKIE)?.value)
   type StorageEnriched = { order: OrderRow; storage: StorageStatus }
   const storageItems: StorageEnriched[] = []
   for (const o of (storageRaw ?? []) as OrderRow[]) {
-    const storage = computeStorageStatus(o.forwarder_submitted_at, now)
+    const storage = computeStorageStatus(o.forwarder_submitted_at, now, freeStorageDays)
     if (storage) storageItems.push({ order: o, storage })
   }
   // 경과일 많은 순 (위험한 것 위로)
@@ -234,7 +241,7 @@ export default async function EtaPage() {
 
       {/* #idea-14: 배대지 보관 기간 — 입고된 주문이 있을 때만 */}
       {storageItems.length > 0 && (
-        <StorageSection items={storageItems} counts={storageCounts} />
+        <StorageSection items={storageItems} counts={storageCounts} freeDays={freeStorageDays} />
       )}
 
       <div className="rounded-lg border border-slate-200 bg-slate-50 p-4 text-xs text-slate-600 leading-relaxed">
@@ -407,20 +414,25 @@ function Section({
 function StorageSection({
   items,
   counts,
+  freeDays,
 }: {
   items: Array<{ order: OrderRow; storage: StorageStatus }>
   counts: { over: number; warn: number; total: number }
+  freeDays: number
 }) {
   return (
     <section className="space-y-3">
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
         <h2 className="text-sm font-semibold text-slate-700">📦 배대지 보관 기간</h2>
-        <p className="text-[11px] text-slate-500">
-          배대지 입고 후 {DEFAULT_FREE_STORAGE_DAYS}일 무료 보관 기준 · 초과 시 보관비 발생 위험
-        </p>
+        <div className="flex items-center gap-3 flex-wrap">
+          <p className="text-[11px] text-slate-500">
+            배대지 입고 후 {freeDays}일 무료 보관 기준 · 초과 시 보관비 발생 위험
+          </p>
+          <FreeStorageDaysControl value={freeDays} />
+        </div>
       </div>
       <div className="grid grid-cols-3 gap-3">
-        <Kpi label="초과" value={counts.over} tone="rose" hint={`무료 ${DEFAULT_FREE_STORAGE_DAYS}일 경과`} />
+        <Kpi label="초과" value={counts.over} tone="rose" hint={`무료 ${freeDays}일 경과`} />
         <Kpi label="임박" value={counts.warn} tone="amber" hint="2일 이내 만료" />
         <Kpi label="입고 중" value={counts.total} tone="slate" hint="배대지 보관 중 전체" />
       </div>
@@ -502,8 +514,8 @@ function StorageSection({
         </table>
       </div>
       <p className="text-[11px] text-slate-500">
-        무료 보관일은 배대지마다 다릅니다(보통 7~30일). 위 기준은 가장 보수적인 {DEFAULT_FREE_STORAGE_DAYS}일이며,
-        실제 청구는 배대지 정책을 따릅니다. 한국 출고(운송 중) 전환 시 목록에서 제외됩니다.
+        무료 보관일은 배대지마다 다릅니다(보통 7~30일). 현재 기준은 {freeDays}일{freeDays === DEFAULT_FREE_STORAGE_DAYS ? ' (기본값)' : ' (직접 설정)'}이며,
+        실제 청구는 배대지 정책을 따릅니다. 위 설정으로 본인 배대지에 맞게 조정하세요. 한국 출고(운송 중) 전환 시 목록에서 제외됩니다.
       </p>
     </section>
   )
