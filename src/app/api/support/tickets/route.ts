@@ -39,8 +39,7 @@ export async function POST(request: Request) {
   if (!messageBody) return NextResponse.json({ error: '문의 내용을 입력해 주세요.' }, { status: 400 })
   if (messageBody.length > 5000) return NextResponse.json({ error: '내용은 5000자 이내여야 합니다.' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
+  const db = sb
   const { data: account } = await db
     .from('b2b_accounts')
     .select('id')
@@ -51,8 +50,7 @@ export async function POST(request: Request) {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ticket, error: tErr } = await (admin as any)
+  const { data: ticket, error: tErr } = await admin
     .from('b2b_support_tickets')
     .insert({
       account_id: account.id,
@@ -67,8 +65,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '티켓 생성 실패' }, { status: 500 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: mErr } = await (admin as any)
+  const { error: mErr } = await admin
     .from('b2b_support_messages')
     .insert({
       ticket_id: ticket.id,
@@ -77,8 +74,7 @@ export async function POST(request: Request) {
     })
   if (mErr) {
     // rollback
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (admin as any).from('b2b_support_tickets').delete().eq('id', ticket.id)
+    await admin.from('b2b_support_tickets').delete().eq('id', ticket.id)
     return NextResponse.json({ error: '메시지 저장 실패' }, { status: 500 })
   }
 
