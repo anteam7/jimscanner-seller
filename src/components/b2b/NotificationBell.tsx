@@ -104,7 +104,9 @@ export default function NotificationBell() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ ids: [n.id] }),
-      }).then(() => refresh())
+      })
+        .then(() => refresh())
+        .catch(() => {})
     }
     setOpen(false)
     if (n.link) router.push(n.link)
