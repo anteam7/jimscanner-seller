@@ -47,9 +47,7 @@ export async function GET() {
   } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -57,9 +55,7 @@ export async function GET() {
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data: rows } = await adb
+  const { data: rows } = await admin
     .from('b2b_form_templates')
     .select('id, name, owner_account_id, forwarder_id, source_file_path, data_sheet_name, data_start_row, combine_rule, is_active, created_at, updated_at, forwarders(name, slug)')
     .eq('is_active', true)
@@ -108,9 +104,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'xlsx 또는 xls 파일만 업로드 가능합니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -193,9 +187,7 @@ export async function POST(request: Request) {
 
   // Storage 업로드 (service_role)
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { error: upErr } = await adb.storage
+  const { error: upErr } = await admin.storage
     .from('user-templates')
     .upload(storagePath, xlsxBuffer, {
       contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -213,7 +205,7 @@ export async function POST(request: Request) {
     ? Math.floor(dataStartRowOverride)
     : 2
 
-  const { error: insErr } = await adb.from('b2b_form_templates').insert({
+  const { error: insErr } = await admin.from('b2b_form_templates').insert({
     id: templateId,
     owner_account_id: account.id,
     forwarder_id,
@@ -228,7 +220,7 @@ export async function POST(request: Request) {
   })
   if (insErr) {
     // Storage cleanup best-effort
-    await adb.storage.from('user-templates').remove([storagePath])
+    await admin.storage.from('user-templates').remove([storagePath])
     return NextResponse.json({ error: `템플릿 저장 실패: ${insErr.message}` }, { status: 500 })
   }
 
@@ -243,10 +235,10 @@ export async function POST(request: Request) {
     required: false,
   }))
 
-  const { error: colErr } = await adb.from('b2b_form_template_columns').insert(colRows)
+  const { error: colErr } = await admin.from('b2b_form_template_columns').insert(colRows)
   if (colErr) {
-    await adb.from('b2b_form_templates').delete().eq('id', templateId)
-    await adb.storage.from('user-templates').remove([storagePath])
+    await admin.from('b2b_form_templates').delete().eq('id', templateId)
+    await admin.storage.from('user-templates').remove([storagePath])
     return NextResponse.json({ error: `컬럼 저장 실패: ${colErr.message}` }, { status: 500 })
   }
 
