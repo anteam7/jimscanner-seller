@@ -80,8 +80,7 @@ export async function POST() {
     return NextResponse.json({ error: '이메일 인증이 완료되지 않았습니다.' }, { status: 403 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   const { data: account, error: fetchError } = await admin
     .from('b2b_accounts')
