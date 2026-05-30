@@ -9,11 +9,9 @@ export async function DELETE(_req: Request, { params }: { params: Promise<{ id: 
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
-  const { error } = await db.from('b2b_product_mappings').delete().eq('id', id).eq('account_id', account.id)
+  const { error } = await sb.from('b2b_product_mappings').delete().eq('id', id).eq('account_id', account.id)
   if (error) return NextResponse.json({ error: '삭제 실패', detail: error.message }, { status: 400 })
   return NextResponse.json({ ok: true })
 }
