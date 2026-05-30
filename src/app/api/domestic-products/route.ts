@@ -27,11 +27,9 @@ async function getAccountId() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return { error: NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 }) }
-  return { sb, db, accountId: account.id as string }
+  return { sb, accountId: account.id as string }
 }
 
 export async function GET(request: Request) {
@@ -40,7 +38,7 @@ export async function GET(request: Request) {
   const url = new URL(request.url)
   const q = url.searchParams.get('q')
   const limit = Math.min(Math.max(Number(url.searchParams.get('limit') ?? 100), 1), 200)
-  let qb = auth.db
+  let qb = auth.sb
     .from('b2b_domestic_products')
     .select('id, seller_sku, display_name, marketplace, market_product_id, market_option, sale_price_krw, category, image_url, is_active, updated_at')
     .eq('account_id', auth.accountId)
@@ -77,7 +75,7 @@ export async function POST(request: Request) {
     image_url: str(body.image_url, 500),
     notes: str(body.notes, 1000),
   }
-  const { data, error } = await auth.db.from('b2b_domestic_products').insert(payload).select('id').single()
+  const { data, error } = await auth.sb.from('b2b_domestic_products').insert(payload).select('id').single()
   if (error) {
     const code = (error as { code?: string }).code
     const msg = code === '23505' ? '같은 SKU 가 이미 있습니다.' : '등록 실패'
