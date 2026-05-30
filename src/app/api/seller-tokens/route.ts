@@ -32,9 +32,7 @@ export async function POST(request: Request) {
       ? body.label.trim().slice(0, 80)
       : 'browser-extension'
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -45,8 +43,7 @@ export async function POST(request: Request) {
 
   const { raw, hash, prefix } = generateRawToken()
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: row, error } = await (admin as any)
+  const { data: row, error } = await admin
     .from('b2b_seller_tokens')
     .insert({
       account_id: account.id,
@@ -86,9 +83,7 @@ export async function DELETE(request: Request) {
     return NextResponse.json({ error: 'id 가 필요합니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -98,8 +93,7 @@ export async function DELETE(request: Request) {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (admin as any)
+  const { error } = await admin
     .from('b2b_seller_tokens')
     .update({ revoked_at: new Date().toISOString() })
     .eq('id', id)
