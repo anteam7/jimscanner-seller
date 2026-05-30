@@ -4,6 +4,9 @@
  */
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
+import type { Database } from '../../../../../types/supabase'
+
+type DomesticProductUpdate = Database['public']['Tables']['b2b_domestic_products']['Update']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -25,11 +28,9 @@ async function authAccount() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
+  const { data: account } = await sb.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return { error: NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 }) }
-  return { db, accountId: account.id as string }
+  return { db: sb, accountId: account.id as string }
 }
 
 export async function PATCH(request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -40,8 +41,12 @@ export async function PATCH(request: Request, { params }: { params: Promise<{ id
   try { body = (await request.json()) as Record<string, unknown> } catch {
     return NextResponse.json({ error: 'JSON 본문이 잘못되었습니다.' }, { status: 400 })
   }
-  const patch: Record<string, unknown> = {}
-  if ('display_name' in body) patch.display_name = str(body.display_name, 300)
+  const patch: DomesticProductUpdate = {}
+  if ('display_name' in body) {
+    const displayName = str(body.display_name, 300)
+    if (!displayName) return NextResponse.json({ error: 'display_name 은 비울 수 없습니다.' }, { status: 400 })
+    patch.display_name = displayName
+  }
   if ('seller_sku' in body) patch.seller_sku = str(body.seller_sku, 64)
   if ('marketplace' in body) patch.marketplace = str(body.marketplace, 32)
   if ('market_product_id' in body) patch.market_product_id = str(body.market_product_id, 200)
