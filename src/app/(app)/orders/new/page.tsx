@@ -32,6 +32,8 @@ export default async function NewOrderPage() {
   } = await supabase.auth.getUser()
   let nearLimitCards: Awaited<ReturnType<typeof getNearLimitCards>> = []
   const lossSkus: Record<string, number> = {}
+  let lastForwarderId = ''
+  let lastForwarderCountry = ''
   if (user) {
     const { data: account } = await supabase
       .from('b2b_accounts')
@@ -40,6 +42,20 @@ export default async function NewOrderPage() {
       .single()
     if (account) {
       nearLimitCards = await getNearLimitCards(account.id)
+      // sticky 배대지 — 가장 최근 주문에서 사용한 배대지를 기본값으로
+      const { data: lastOrder } = await supabase
+        .from('b2b_orders')
+        .select('forwarder_id, forwarder_country')
+        .eq('account_id', account.id)
+        .is('deleted_at', null)
+        .not('forwarder_id', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (lastOrder) {
+        lastForwarderId = lastOrder.forwarder_id ?? ''
+        lastForwarderCountry = lastOrder.forwarder_country ?? ''
+      }
       // 마진 손실 SKU — 주문 입력 시 손실 경고 (대시보드 H3 와 동일 계산)
       try {
         const ex = await getExchangeRates()
@@ -78,7 +94,12 @@ export default async function NewOrderPage() {
           </div>
         </div>
       )}
-      <NewOrderForm forwarders={forwarders} lossSkus={lossSkus} />
+      <NewOrderForm
+        forwarders={forwarders}
+        lossSkus={lossSkus}
+        initialForwarderId={lastForwarderId}
+        initialForwarderCountry={lastForwarderCountry}
+      />
     </>
   )
 }

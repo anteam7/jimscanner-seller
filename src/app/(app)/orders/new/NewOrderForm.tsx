@@ -41,10 +41,15 @@ export type ForwarderOption = {
 export default function NewOrderForm({
   forwarders,
   lossSkus = {},
+  initialForwarderId = '',
+  initialForwarderCountry = '',
 }: {
   forwarders: ForwarderOption[]
   /** product_id → 단위당 손실 KRW (최근 30일 마진 손실 SKU). 주문 입력 시 경고. */
   lossSkus?: Record<string, number>
+  /** 마지막 사용 배대지 — 새 주문 시 sticky pre-select */
+  initialForwarderId?: string
+  initialForwarderCountry?: string
 }) {
   const router = useRouter()
 
@@ -114,9 +119,9 @@ export default function NewOrderForm({
     setLines((p) => (p.length <= 1 ? p : p.filter((_, idx) => idx !== i)))
   }
 
-  // 배대지
-  const [forwarderId, setForwarderId] = useState('')
-  const [forwarderCountry, setForwarderCountry] = useState('')
+  // 배대지 (sticky — 마지막 사용 배대지로 초기화, SKU 선택 시 SKU default 가 덮어씀)
+  const [forwarderId, setForwarderId] = useState(initialForwarderId)
+  const [forwarderCountry, setForwarderCountry] = useState(initialForwarderCountry)
 
   // 메모
   const [requestNotes, setRequestNotes] = useState('')
