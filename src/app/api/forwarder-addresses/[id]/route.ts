@@ -5,6 +5,9 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import type { Database } from '../../../../../types/supabase'
+
+type ForwarderAddressUpdate = Database['public']['Tables']['b2b_forwarder_addresses']['Update']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -20,9 +23,7 @@ export async function DELETE(
   } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -30,8 +31,7 @@ export async function DELETE(
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (admin as any)
+  const { error } = await admin
     .from('b2b_forwarder_addresses')
     .delete()
     .eq('id', id)
@@ -65,9 +65,7 @@ export async function PATCH(
 
   const body = (await request.json().catch(() => ({}))) as Record<string, unknown>
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -77,8 +75,7 @@ export async function PATCH(
   const admin = createAdminClient()
 
   // 본인 row 소유권 확인 (is_official=false)
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: owned } = await (admin as any)
+  const { data: owned } = await admin
     .from('b2b_forwarder_addresses')
     .select('id')
     .eq('id', id)
@@ -92,22 +89,19 @@ export async function PATCH(
   // is_default 토글 (단독 호출)
   if (Object.keys(body).length === 1 && 'is_default' in body) {
     if (body.is_default === true) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      await (admin as any)
+      await admin
         .from('b2b_forwarder_addresses')
         .update({ is_default: false })
         .eq('account_id', account.id)
         .eq('is_default', true)
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (admin as any)
+      const { error } = await admin
         .from('b2b_forwarder_addresses')
         .update({ is_default: true })
         .eq('id', id)
         .eq('account_id', account.id)
       if (error) return NextResponse.json({ error: '실패' }, { status: 500 })
     } else if (body.is_default === false) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { error } = await (admin as any)
+      const { error } = await admin
         .from('b2b_forwarder_addresses')
         .update({ is_default: false })
         .eq('id', id)
@@ -118,8 +112,7 @@ export async function PATCH(
   }
 
   // 전체 필드 수정
-  type Patch = Record<string, string | boolean | null>
-  const patch: Patch = {}
+  const patch: ForwarderAddressUpdate = {}
   if (isUuid(body.forwarder_id)) patch.forwarder_id = body.forwarder_id as string
   if ('label' in body) {
     const v = str(body.label, 80)
@@ -169,8 +162,7 @@ export async function PATCH(
   // is_default 도 함께 받았다면 처리
   const wantDefault = body.is_default === true
   if (wantDefault) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    await (admin as any)
+    await admin
       .from('b2b_forwarder_addresses')
       .update({ is_default: false })
       .eq('account_id', account.id)
@@ -180,8 +172,7 @@ export async function PATCH(
     patch.is_default = false
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error } = await (admin as any)
+  const { error } = await admin
     .from('b2b_forwarder_addresses')
     .update(patch)
     .eq('id', id)
