@@ -704,6 +704,28 @@ export default async function OrderDetailPage({
           {/* 액션 (양식 변환) */}
           <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-5 space-y-2">
             <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">액션</p>
+            {/* 양식 변환 사전 readiness — 모달 detectMissing 과 동일 5필드 */}
+            {(() => {
+              const fields = [
+                { v: order.buyer_name, label: '수취인명' },
+                { v: order.buyer_phone, label: '전화' },
+                { v: order.buyer_postal_code, label: '우편번호' },
+                { v: order.buyer_address, label: '주소' },
+                { v: order.buyer_customs_code, label: '통관코드' },
+              ]
+              const missing = fields.filter((f) => !f.v?.trim()).map((f) => f.label)
+              const ready = fields.length - missing.length
+              return missing.length === 0 ? (
+                <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2 text-[11px] text-emerald-700">
+                  ✓ 양식 필드 5/5 완료 — 바로 변환할 수 있습니다.
+                </div>
+              ) : (
+                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-[11px] text-amber-700">
+                  양식 필드 {ready}/5 · 누락: <span className="font-semibold">{missing.join(' · ')}</span>
+                  {' '}— 채우면 깔끔하게 변환됩니다. 빈 값으로도 변환되나 배대지에서 거부될 수 있습니다.
+                </div>
+              )
+            })()}
             <ForwarderExportButton
               orderId={order.id}
               templates={templates}
