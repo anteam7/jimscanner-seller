@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { isValidCustomsCategory, matchCustomsCategory } from '@/lib/b2b/customs-guide'
+import { getExchangeRates, toSnapshot } from '@/lib/b2b/exchange-rate'
+import type { Json } from '../../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -323,6 +325,15 @@ export async function POST(request: Request) {
     }
   }
 
+  // 매입 시점 환율 스냅샷 — 이 요청의 모든 행이 동일 시점에 생성되므로 한 번만 조회.
+  // (단일 주문 라우트와 동일하게 회계·마진 금액을 생성 시점 환율로 고정)
+  let exchangeRateApplied: Json | null = null
+  try {
+    exchangeRateApplied = toSnapshot(await getExchangeRates()) as unknown as Json
+  } catch {
+    exchangeRateApplied = null
+  }
+
   // 행 단위 insert (Supabase 는 트랜잭션 미지원 환경 — 행별 단일 실패 격리)
   // 50건 정도까지는 순차 처리, 그 이상은 batch insert 도 고려할 수 있으나
   // 라인 아이템과의 짝 트랜잭션이 row 단위로 필요해 v0 에선 순차로 안전하게.
@@ -334,6 +345,7 @@ export async function POST(request: Request) {
         account_id: account.id,
         source: 'excel_upload',
         status: 'pending',
+        exchange_rate_applied: exchangeRateApplied,
         ...orderFields,
       })
       .select('id')

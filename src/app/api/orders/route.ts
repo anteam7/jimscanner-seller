@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { isValidCustomsCategory, matchCustomsCategory } from '@/lib/b2b/customs-guide'
+import { getExchangeRates, toSnapshot } from '@/lib/b2b/exchange-rate'
+import type { Json } from '../../../../types/supabase'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -293,6 +295,16 @@ export async function POST(request: Request) {
     }
   }
 
+  // 매입 시점 환율 스냅샷 — 주문 생성 시점 환율을 고정해 회계·마진 금액이
+  // 추후 환율 변동에 흔들리지 않게 한다. getExchangeRates 는 API 장애 시에도
+  // fallback 을 반환하므로 throw 하지 않지만 방어적으로 감싼다.
+  let exchangeRateApplied: Json | null = null
+  try {
+    exchangeRateApplied = toSnapshot(await getExchangeRates()) as unknown as Json
+  } catch {
+    exchangeRateApplied = null
+  }
+
   // 주문 insert (마켓 구매자 PII 는 b2b_orders 에 직접 — b2b_clients 자동 upsert 폐기)
   const { data: order, error: oErr } = await sb
     .from('b2b_orders')
@@ -302,6 +314,7 @@ export async function POST(request: Request) {
       order_date: orderDate,
       source: 'manual',
       status: 'pending',
+      exchange_rate_applied: exchangeRateApplied,
       marketplace,
       market_order_number: marketOrderNumber,
       market_commission_krw: marketCommissionKrw,

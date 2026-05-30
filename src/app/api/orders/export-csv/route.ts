@@ -68,7 +68,7 @@ export async function GET(request: Request) {
   const { data: orderRows, error } = await sb
     .from('b2b_orders')
     .select(
-      'id, order_number, market_order_number, marketplace, order_date, status, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, b2b_order_items(display_order, product_name, supplier_site, quantity, currency, unit_price_foreign, sale_price_krw)',
+      'id, order_number, market_order_number, marketplace, order_date, status, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_customs_code, exchange_rate_applied, b2b_order_items(display_order, product_name, supplier_site, quantity, currency, unit_price_foreign, sale_price_krw)',
     )
     .eq('account_id', account.id)
     .is('deleted_at', null)
@@ -90,6 +90,7 @@ export async function GET(request: Request) {
     unit_price_foreign: number | string | null
     sale_price_krw: number | string | null
   }
+  type RateMap = Record<string, { rate: number; unit: number }>
   type OrderRow = {
     id: string
     order_number: string
@@ -102,21 +103,41 @@ export async function GET(request: Request) {
     buyer_postal_code: string | null
     buyer_address: string | null
     buyer_customs_code: string | null
+    exchange_rate_applied: unknown
     b2b_order_items: ItemRow[] | null
   }
   const orders = (orderRows as OrderRow[] | null) ?? []
 
-  // 환율 (실패 시 KRW 만 환산 가능)
-  let rates: Record<string, { rate: number; unit: number }> = {}
+  // 라이브 환율 (스냅샷 없는 과거 주문의 fallback — 실패 시 KRW 만 환산 가능)
+  let liveRates: RateMap = {}
   try {
     const r = await getExchangeRates()
     for (const [k, v] of Object.entries(r.rates)) {
-      rates[k] = { rate: v.rate, unit: v.unit }
+      liveRates[k] = { rate: v.rate, unit: v.unit }
     }
   } catch {
-    rates = {}
+    liveRates = {}
   }
-  function toKrw(amount: number, currency: string | null): number | null {
+
+  // 주문에 저장된 매입 시점 환율 스냅샷 → rate map. 형식이 깨졌으면 null.
+  function snapshotRates(snap: unknown): RateMap | null {
+    if (!snap || typeof snap !== 'object') return null
+    const ratesObj = (snap as { rates?: unknown }).rates
+    if (!ratesObj || typeof ratesObj !== 'object') return null
+    const out: RateMap = {}
+    for (const [k, v] of Object.entries(ratesObj as Record<string, unknown>)) {
+      if (v && typeof v === 'object') {
+        const rate = Number((v as { rate?: unknown }).rate)
+        const unit = Number((v as { unit?: unknown }).unit)
+        if (Number.isFinite(rate) && rate > 0) {
+          out[k] = { rate, unit: Number.isFinite(unit) && unit > 0 ? unit : 1 }
+        }
+      }
+    }
+    return Object.keys(out).length > 0 ? out : null
+  }
+
+  function toKrw(amount: number, currency: string | null, rates: RateMap): number | null {
     if (currency == null || currency === 'KRW') return amount
     const r = rates[currency]
     if (!r) return null
@@ -145,6 +166,7 @@ export async function GET(request: Request) {
     'KRW 환산 매입가',
     '판매가 KRW',
     '예상 마진 KRW',
+    '환율 기준',
   ]
 
   const lines: string[] = [headers.join(',')]
@@ -165,19 +187,25 @@ export async function GET(request: Request) {
           o.buyer_postal_code ?? '',
           o.buyer_address ?? '',
           o.buyer_customs_code ?? '',
-          '', '', '', '', '', '', '', '', '', '',
+          '', '', '', '', '', '', '', '', '', '', '',
         ].map(csvEscape).join(','),
       )
       continue
     }
+    // 매입 시점 환율 스냅샷 우선, 없으면 라이브 환율로 추정
+    const snap = snapshotRates(o.exchange_rate_applied)
+    const orderRates = snap ?? liveRates
+    const rateBasis = snap ? '매입시점' : '현재환율(추정)'
     for (const it of items) {
       const qty = Number(it.quantity) || 0
       const up = Number(it.unit_price_foreign) || 0
       const totalForeign = qty > 0 && up > 0 ? qty * up : null
-      const krw = totalForeign != null ? toKrw(totalForeign, it.currency) : null
+      const krw = totalForeign != null ? toKrw(totalForeign, it.currency, orderRates) : null
       const sale = Number(it.sale_price_krw)
       const saleKrw = Number.isFinite(sale) && sale > 0 ? sale : null
       const margin = krw != null && saleKrw != null ? saleKrw - krw : null
+      // 외화 매입가가 있고 KRW 환산이 된 경우에만 환율 기준 표기 (KRW·환산불가 행은 공란)
+      const basisCell = totalForeign != null && krw != null && it.currency && it.currency !== 'KRW' ? rateBasis : ''
       lines.push(
         [
           toIsoDate(o.order_date),
@@ -200,6 +228,7 @@ export async function GET(request: Request) {
           krw != null ? krw.toString() : '',
           saleKrw != null ? saleKrw.toString() : '',
           margin != null ? margin.toString() : '',
+          basisCell,
         ].map(csvEscape).join(','),
       )
     }
