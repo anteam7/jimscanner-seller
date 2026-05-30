@@ -394,12 +394,13 @@ export default function SellerShell({
           </button>
           <form action="/orders" method="GET" className="hidden md:flex flex-1 max-w-md mx-4">
             <div className="relative w-full">
-              <svg className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <svg aria-hidden="true" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
               <input
                 name="q"
                 type="search"
+                aria-label="주문 검색 (주문번호·구매자명·전화번호)"
                 placeholder="주문번호·구매자·전화로 검색…"
                 className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-colors"
               />
