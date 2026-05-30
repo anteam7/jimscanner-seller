@@ -10,8 +10,7 @@ export async function POST() {
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = createAdminClient() as any
+  const db = createAdminClient()
   const { data: account } = await db
     .from('b2b_accounts')
     .select('id')
