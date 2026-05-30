@@ -33,9 +33,7 @@ export async function POST(
   if (!text) return NextResponse.json({ error: '내용을 입력해 주세요.' }, { status: 400 })
   if (text.length > 5000) return NextResponse.json({ error: '5000자 이내여야 합니다.' }, { status: 400 })
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -46,8 +44,7 @@ export async function POST(
 
   const admin = createAdminClient()
   // 티켓 소유권 확인
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ticket } = await (admin as any)
+  const { data: ticket } = await admin
     .from('b2b_support_tickets')
     .select('id, account_id, status')
     .eq('id', ticketId)
@@ -61,16 +58,14 @@ export async function POST(
   }
 
   const now = new Date().toISOString()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { error: mErr } = await (admin as any)
+  const { error: mErr } = await admin
     .from('b2b_support_messages')
     .insert({ ticket_id: ticketId, sender: 'seller', body: text.slice(0, 5000) })
   if (mErr) {
     return NextResponse.json({ error: '메시지 저장 실패' }, { status: 500 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (admin as any)
+  await admin
     .from('b2b_support_tickets')
     .update({ status: 'open', last_message_at: now })
     .eq('id', ticketId)
