@@ -2,10 +2,9 @@
 
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
-import { FREE_STORAGE_DAYS_COOKIE } from '@/lib/b2b/storage-deadline'
 
 /**
- * 무료 보관일 셀러 설정 — 쿠키에 저장하고 서버 재요청으로 즉시 반영 (DB 변경 없음).
+ * 무료 보관일 셀러 설정 — 계정 단위(b2b_accounts.free_storage_days) 저장, 기기 간 동기화.
  * 배대지마다 무료 보관 정책(7~30일)이 달라 본인 기준으로 조정.
  */
 export function FreeStorageDaysControl({ value }: { value: number }) {
@@ -13,15 +12,23 @@ export function FreeStorageDaysControl({ value }: { value: number }) {
   const [days, setDays] = useState(value)
   const [saving, setSaving] = useState(false)
 
-  function apply(n: number) {
+  async function apply(n: number) {
     const safe = Math.max(1, Math.min(60, Math.floor(n) || 7))
     setDays(safe)
+    if (safe === value) return
     setSaving(true)
-    // 1년 만료 쿠키
-    document.cookie = `${FREE_STORAGE_DAYS_COOKIE}=${safe}; path=/; max-age=${60 * 60 * 24 * 365}; samesite=lax`
-    router.refresh()
-    // refresh 후 서버 컴포넌트가 갱신되면 saving 해제 (낙관적으로 짧게)
-    setTimeout(() => setSaving(false), 600)
+    try {
+      await fetch('/api/settings/preferences', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ free_storage_days: safe }),
+      })
+      router.refresh()
+    } catch {
+      /* 실패해도 입력값은 유지 */
+    } finally {
+      setSaving(false)
+    }
   }
 
   return (
@@ -33,7 +40,7 @@ export function FreeStorageDaysControl({ value }: { value: number }) {
         max={60}
         value={days}
         onChange={(e) => setDays(Number(e.target.value))}
-        onBlur={() => { if (days !== value) apply(days) }}
+        onBlur={() => apply(days)}
         aria-label="무료 보관일 (일, 1~60)"
         className="w-14 px-1.5 py-0.5 text-xs text-right tabular-nums rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
       />

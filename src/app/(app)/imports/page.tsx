@@ -9,7 +9,7 @@ import {
 import { ImportMatchAction } from './ImportMatchAction'
 import { ManualReceiptCreate } from './ManualReceiptCreate'
 import { BulkMatchBar, type BulkCandidate } from './BulkMatchBar'
-import { AutoMatchThreshold } from './AutoMatchThreshold'
+import { AutoMatchThreshold, DEFAULT_AUTOMATCH_THRESHOLD } from './AutoMatchThreshold'
 
 export const dynamic = 'force-dynamic'
 
@@ -105,10 +105,16 @@ export default async function ImportsPage({
 
   const { data: account } = await sb
     .from('b2b_accounts')
-    .select('id')
+    .select('id, automatch_threshold')
     .eq('user_id', user.id)
     .single()
   if (!account) return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
+
+  // 자동 매칭 임계값 — 계정 설정값 (null·범위 밖이면 기본 90)
+  const autoThreshold = (() => {
+    const n = Number(account.automatch_threshold)
+    return Number.isFinite(n) && n >= 70 && n <= 95 ? n : DEFAULT_AUTOMATCH_THRESHOLD
+  })()
 
   let qb = sb
     .from('b2b_supplier_purchases')
@@ -234,8 +240,8 @@ export default async function ImportsPage({
       {/* 추천 일괄 매칭 (미매칭 + 추천 점수 보유분) */}
       <BulkMatchBar high={bulkHigh} mid={bulkMid} />
 
-      {/* 자동 매칭 안전 임계값 (셀러 설정) */}
-      <AutoMatchThreshold />
+      {/* 자동 매칭 안전 임계값 (셀러 설정 · 계정 단위) */}
+      <AutoMatchThreshold value={autoThreshold} />
 
       {/* Filter chips */}
       <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -375,6 +381,7 @@ export default async function ImportsPage({
                           receiptId={r.id}
                           recommendation={rec}
                           matchedOrderLabel={matchedLabel}
+                          autoThreshold={autoThreshold}
                         />
                       </td>
                     </tr>

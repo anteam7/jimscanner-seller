@@ -2,11 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
-import {
-  AUTOMATCH_THRESHOLD_KEY,
-  AUTOMATCH_THRESHOLD_EVENT,
-  DEFAULT_AUTOMATCH_THRESHOLD,
-} from './AutoMatchThreshold'
+import { DEFAULT_AUTOMATCH_THRESHOLD } from './AutoMatchThreshold'
 
 type SearchResult = {
   id: string
@@ -26,6 +22,8 @@ type Props = {
     reasons: string[]
   } | null
   matchedOrderLabel?: string | null
+  /** 계정 자동 매칭 임계값 — 이 점수 이상은 확인 창 생략. */
+  autoThreshold?: number
 }
 
 const MARKETPLACE_LABEL: Record<string, string> = {
@@ -54,26 +52,16 @@ function labelFor(o: SearchResult): string {
   return mk ? `${mk} ${num}` : num
 }
 
-export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel }: Props) {
+export function ImportMatchAction({
+  receiptId,
+  recommendation,
+  matchedOrderLabel,
+  autoThreshold = DEFAULT_AUTOMATCH_THRESHOLD,
+}: Props) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
-  // 자동 매칭 안전 임계값 (셀러 설정, localStorage + 같은 페이지 이벤트 전파)
-  const [autoThreshold, setAutoThreshold] = useState(DEFAULT_AUTOMATCH_THRESHOLD)
-  useEffect(() => {
-    const read = () => {
-      const v = Number(localStorage.getItem(AUTOMATCH_THRESHOLD_KEY))
-      if (Number.isFinite(v) && v >= 70 && v <= 95) setAutoThreshold(v)
-    }
-    read()
-    const onEvt = (e: Event) => {
-      const n = Number((e as CustomEvent).detail)
-      if (Number.isFinite(n) && n >= 70 && n <= 95) setAutoThreshold(n)
-    }
-    window.addEventListener(AUTOMATCH_THRESHOLD_EVENT, onEvt)
-    return () => window.removeEventListener(AUTOMATCH_THRESHOLD_EVENT, onEvt)
-  }, [])
 
   async function link(orderId: string | null, opts?: { confirmText?: string; skipConfirm?: boolean }) {
     if (!opts?.skipConfirm && opts?.confirmText) {

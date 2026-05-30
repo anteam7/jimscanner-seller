@@ -181,6 +181,8 @@ export type Database = {
       b2b_accounts: {
         Row: {
           address: string | null
+          automatch_threshold: number | null
+          free_storage_days: number | null
           business_category_main: string | null
           business_category_sub: string | null
           business_name: string | null
@@ -213,6 +215,8 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          automatch_threshold?: number | null
+          free_storage_days?: number | null
           business_category_main?: string | null
           business_category_sub?: string | null
           business_name?: string | null
@@ -245,6 +249,8 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          automatch_threshold?: number | null
+          free_storage_days?: number | null
           business_category_main?: string | null
           business_category_sub?: string | null
           business_name?: string | null

@@ -16,11 +16,9 @@ import {
   formatKstDate,
   type TransitDefault,
 } from '@/lib/b2b/eta'
-import { cookies } from 'next/headers'
 import {
   computeStorageStatus,
   DEFAULT_FREE_STORAGE_DAYS,
-  FREE_STORAGE_DAYS_COOKIE,
   parseFreeStorageDays,
 } from '@/lib/b2b/storage-deadline'
 
@@ -32,6 +30,7 @@ export const metadata: Metadata = {
 type FullAccount = SellerAccount & {
   ceo_name: string | null
   business_no: string | null
+  free_storage_days: number | null
 }
 
 const NEXT_ACTION: Record<number, { label: string; hint: string; href?: string }> = {
@@ -537,7 +536,7 @@ export default async function SellerDashboardPage() {
   const { data: account } = (await (supabase as any)
     .from('b2b_accounts')
     .select(
-      'id, email, business_name, ceo_name, business_no, verification_level, verification_status, suspended_at'
+      'id, email, business_name, ceo_name, business_no, verification_level, verification_status, suspended_at, free_storage_days'
     )
     .eq('user_id', user.id)
     .single()) as { data: FullAccount | null }
@@ -800,8 +799,7 @@ export default async function SellerDashboardPage() {
       .order('forwarder_submitted_at', { ascending: true })
       .limit(200)
     const nowDate = new Date(nowMs)
-    const storageCookie = await cookies()
-    const freeStorageDays = parseFreeStorageDays(storageCookie.get(FREE_STORAGE_DAYS_COOKIE)?.value)
+    const freeStorageDays = parseFreeStorageDays(account.free_storage_days)
     let over = 0
     let warn = 0
     const flagged: Array<{ id: string; ref: string; elapsedDays: number; remainingDays: number; level: 'warn' | 'over'; buyer: string | null }> = []

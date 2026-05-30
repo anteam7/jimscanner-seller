@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
-import { cookies } from 'next/headers'
 import { createClient } from '@/lib/auth/server'
 import {
   applyTransitOverrides,
@@ -15,7 +14,6 @@ import {
 import {
   computeStorageStatus,
   DEFAULT_FREE_STORAGE_DAYS,
-  FREE_STORAGE_DAYS_COOKIE,
   parseFreeStorageDays,
   type StorageStatus,
 } from '@/lib/b2b/storage-deadline'
@@ -74,12 +72,14 @@ export default async function EtaPage() {
   }
   const { data: account } = await sb
     .from('b2b_accounts')
-    .select('id')
+    .select('id, free_storage_days')
     .eq('user_id', user.id)
     .single()
   if (!account) {
     return <div className="p-8"><p className="text-sm text-slate-600">사업자 계정이 없습니다.</p></div>
   }
+  // 무료 보관일 — 계정 설정값 (null 이면 기본 7)
+  const freeStorageDays = parseFreeStorageDays(account.free_storage_days)
 
   // ETA 계산 대상: 도착 안 한 주문만 (delivered/completed/cancelled 제외)
   const ACTIVE_STATUS = ['draft', 'pending', 'paid', 'purchasing', 'shipping', 'refund_requested']
@@ -168,9 +168,6 @@ export default async function EtaPage() {
     .not('forwarder_submitted_at', 'is', null)
     .order('forwarder_submitted_at', { ascending: true })
     .limit(300)
-  // 셀러가 설정한 무료 보관일 (쿠키, 미설정 시 기본 7일)
-  const cookieStore = await cookies()
-  const freeStorageDays = parseFreeStorageDays(cookieStore.get(FREE_STORAGE_DAYS_COOKIE)?.value)
   type StorageEnriched = { order: OrderRow; storage: StorageStatus }
   const storageItems: StorageEnriched[] = []
   for (const o of (storageRaw ?? []) as OrderRow[]) {
