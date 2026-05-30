@@ -62,9 +62,7 @@ export async function PATCH(
   }
 
   // 권한 확인
-  const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
+  const adb = createAdminClient()
   const { data: account } = await adb
     .from('b2b_accounts')
     .select('id')
@@ -116,15 +114,17 @@ export async function PATCH(
     .eq('template_id', id)
 
   const existingByIdx = new Map<number, string>()
-  for (const e of (existing ?? []) as Array<{ id: string; column_index: number }>) {
+  for (const e of existing ?? []) {
     existingByIdx.set(e.column_index, e.id)
   }
 
   // 순차 update (Postgres unique 충돌 회피)
   for (const c of cols) {
     const eid = existingByIdx.get(c.column_index)
+    // 추론 리터럴 타입이 Update·Insert 양쪽에 모두 대입 가능 (column_label 은 위 검증 루프에서
+    // 비어 있지 않은 string 으로 정규화됨 — ?? '' 는 required string 보장용 타입 가드).
     const patch = {
-      column_label: c.column_label,
+      column_label: c.column_label ?? '',
       source_kind: c.source_kind,
       source_path: c.source_path ?? null,
       composite_template: c.composite_template ?? null,
