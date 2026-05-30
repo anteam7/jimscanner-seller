@@ -8,6 +8,7 @@ import {
 } from '@/lib/b2b/import-matcher'
 import { ImportMatchAction } from './ImportMatchAction'
 import { ManualReceiptCreate } from './ManualReceiptCreate'
+import { BulkMatchBar, type BulkCandidate } from './BulkMatchBar'
 
 export const dynamic = 'force-dynamic'
 
@@ -193,6 +194,20 @@ export default async function ImportsPage({
     }
   }
 
+  // 추천 후보를 1회 계산 — 일괄 매칭 바 + 테이블에서 재사용 (중복 계산 방지)
+  const recById = new Map<string, ReturnType<typeof topCandidate>>()
+  const bulkHigh: BulkCandidate[] = []
+  const bulkMid: BulkCandidate[] = []
+  for (const r of rows) {
+    const rec = topCandidate(r)
+    recById.set(r.id, rec)
+    if (rec) {
+      const cand: BulkCandidate = { receiptId: r.id, orderId: rec.orderId, label: rec.label, score: rec.score }
+      if (rec.score >= 90) bulkHigh.push(cand)
+      else if (rec.score >= 70) bulkMid.push(cand)
+    }
+  }
+
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-6">
       <header className="flex items-start justify-between gap-4 flex-wrap">
@@ -214,6 +229,9 @@ export default async function ImportsPage({
       </header>
 
       <ManualReceiptCreate />
+
+      {/* 추천 일괄 매칭 (미매칭 + 추천 점수 보유분) */}
+      <BulkMatchBar high={bulkHigh} mid={bulkMid} />
 
       {/* Filter chips */}
       <div className="flex items-center gap-2 flex-wrap text-xs">
@@ -310,7 +328,7 @@ export default async function ImportsPage({
                 {rows.map((r) => {
                   const first = r.items?.[0]
                   const moreCount = (r.items?.length ?? 0) - 1
-                  const rec = topCandidate(r)
+                  const rec = recById.get(r.id) ?? null
                   const matchedLabel = r.matched_order_id
                     ? orderLabelById.get(r.matched_order_id) ?? '연결된 주문'
                     : null
