@@ -165,6 +165,43 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
   const totalKrw = toKrw(num(row.total_foreign))
   const supplierUrl = buildSupplierUrl(row.source, row.supplier_order_number) ?? row.source_url
 
+  // #18 매칭 검증 — 매칭된 주문의 매입 라인을 함께 불러와 side-by-side 비교
+  type MatchedItem = { product_name: string; quantity: number | null; unit_price_foreign: number | string | null; currency: string | null }
+  type MatchedOrder = { order_number: string | null; market_order_number: string | null; marketplace: string | null; items: MatchedItem[] }
+  let matchedOrder: MatchedOrder | null = null
+  if (row.matched_order_id) {
+    const { data: mo } = await admin
+      .from('b2b_orders')
+      .select('order_number, market_order_number, marketplace, b2b_order_items(product_name, quantity, unit_price_foreign, currency)')
+      .eq('id', row.matched_order_id)
+      .eq('account_id', account.id)
+      .maybeSingle()
+    if (mo) {
+      const moTyped = mo as unknown as MatchedOrder & { b2b_order_items: MatchedItem[] | null }
+      matchedOrder = {
+        order_number: moTyped.order_number,
+        market_order_number: moTyped.market_order_number,
+        marketplace: moTyped.marketplace,
+        items: moTyped.b2b_order_items ?? [],
+      }
+    }
+  }
+  // 영수증 합계 vs 주문 라인 매입 합계 (같은 통화일 때만 비교)
+  const orderForeignTotal = matchedOrder
+    ? matchedOrder.items.reduce((s, it) => {
+        const q = Number(it.quantity) || 0
+        const up = Number(it.unit_price_foreign) || 0
+        return q > 0 && up > 0 ? s + q * up : s
+      }, 0)
+    : 0
+  const receiptForeignTotal = num(row.total_foreign) ?? 0
+  const sameCurrency = matchedOrder?.items.some((it) => it.currency && it.currency === row.currency) ?? false
+  const amountVariancePct =
+    sameCurrency && receiptForeignTotal > 0 && orderForeignTotal > 0
+      ? Math.round(((orderForeignTotal - receiptForeignTotal) / receiptForeignTotal) * 1000) / 10
+      : null
+  const amountMismatch = amountVariancePct != null && Math.abs(amountVariancePct) > 5
+
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
       <header className="flex items-center justify-between">
@@ -305,6 +342,59 @@ export default async function ImportDetailPage({ params }: { params: Promise<{ i
           </ul>
         )}
       </section>
+
+      {/* #18 매칭 검증 — 영수증 vs 주문 라인 side-by-side */}
+      {matchedOrder && (
+        <section className="rounded-lg bg-white shadow-sm border border-slate-200 overflow-hidden">
+          <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between gap-2 flex-wrap">
+            <h2 className="text-sm font-bold text-slate-900">🔎 매칭 검증</h2>
+            <span className="text-[11px] text-slate-500">
+              연결 주문: <span className="font-medium text-slate-700">{matchedOrder.market_order_number || matchedOrder.order_number || '주문'}</span>
+            </span>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
+            <div className="p-4">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">영수증 상품 {items.length}건</p>
+              <ul className="space-y-1.5">
+                {items.length === 0 ? (
+                  <li className="text-[11px] text-slate-400">상품 정보 없음</li>
+                ) : (
+                  items.map((it, i) => (
+                    <li key={i} className="text-xs text-slate-700 flex justify-between gap-2">
+                      <span className="truncate">{it.name ?? '상품'}</span>
+                      <span className="tabular-nums text-slate-500 shrink-0">×{it.qty ?? 1} · {formatForeign(it.unit_price, row.currency)}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+            <div className="p-4">
+              <p className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-2">주문 매입 라인 {matchedOrder.items.length}건</p>
+              <ul className="space-y-1.5">
+                {matchedOrder.items.length === 0 ? (
+                  <li className="text-[11px] text-slate-400">매입 라인 없음</li>
+                ) : (
+                  matchedOrder.items.map((it, i) => (
+                    <li key={i} className="text-xs text-slate-700 flex justify-between gap-2">
+                      <span className="truncate">{it.product_name}</span>
+                      <span className="tabular-nums text-slate-500 shrink-0">×{it.quantity ?? 1} · {formatForeign(it.unit_price_foreign, it.currency)}</span>
+                    </li>
+                  ))
+                )}
+              </ul>
+            </div>
+          </div>
+          <div className={`px-5 py-2.5 text-[11px] border-t ${amountMismatch ? 'bg-amber-50 border-amber-200 text-amber-800' : 'bg-slate-50 border-slate-100 text-slate-600'}`}>
+            {amountVariancePct == null ? (
+              '통화가 달라 금액 비교는 생략 — 상품·수량을 직접 대조하세요.'
+            ) : amountMismatch ? (
+              <>⚠ 금액 차이 {amountVariancePct > 0 ? '+' : ''}{amountVariancePct}% — 영수증 {formatForeign(receiptForeignTotal, row.currency)} vs 주문 라인 합계 {formatForeign(orderForeignTotal, row.currency)}. 잘못된 영수증이 매칭됐는지 확인하세요.</>
+            ) : (
+              <>✓ 금액 일치 ({amountVariancePct > 0 ? '+' : ''}{amountVariancePct}%) — 영수증 {formatForeign(receiptForeignTotal, row.currency)} vs 주문 {formatForeign(orderForeignTotal, row.currency)}</>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 메타 */}
       <details className="rounded-lg bg-white shadow-sm border border-slate-200 px-5 py-3">
