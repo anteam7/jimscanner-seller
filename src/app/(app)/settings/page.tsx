@@ -293,73 +293,94 @@ export default function SettingsPage() {
         </p>
       </div>
 
+      {/* 사용 가능 — 섹션별 (준비 중 카드는 하단 단일 섹션으로 분리) */}
       {SETTING_SECTIONS.map((section) => {
         const c = ACCENT_MAP[section.accent]
+        const cards = section.cards.filter((card) => card.available)
+        if (cards.length === 0) return null
         return (
           <section key={section.heading}>
             <h2 className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3">
               {section.heading}
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              {section.cards.map((card) =>
-                card.available ? (
-                  <Link
-                    key={card.href}
-                    href={card.href}
-                    className={`group flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] ${c.borderL} bg-white shadow-sm hover:shadow-md ${c.hoverBorder} transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
-                  >
-                    <div className={`w-10 h-10 rounded-lg ${c.iconBg} flex items-center justify-center flex-shrink-0 ${c.iconC} ${c.hoverIconBg} transition-colors`}>
-                      {card.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm font-semibold text-slate-900 ${c.hoverTitle} transition-colors`}>{card.title}</p>
-                      <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{card.description}</p>
-                    </div>
-                    <svg
-                      className={`w-4 h-4 text-slate-400 ${c.hoverArrow} flex-shrink-0 mt-1 transition-colors`}
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      strokeWidth={2}
-                      stroke="currentColor"
-                      aria-hidden="true"
-                    >
-                      <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
-                    </svg>
-                  </Link>
-                ) : (
-                  <div
-                    key={card.href}
-                    className="group/disabled relative flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] border-l-slate-300 bg-white shadow-sm cursor-not-allowed opacity-50"
-                    aria-disabled="true"
-                    title={card.disabledReason || card.badge || undefined}
-                  >
-                    <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
-                      {card.icon}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-slate-500">{card.title}</p>
-                      <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{card.description}</p>
-                    </div>
-                    {card.badge && (
-                      <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
-                        {card.badge}
-                      </span>
-                    )}
-                    {card.disabledReason && (
-                      <span
-                        role="tooltip"
-                        className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover/disabled:opacity-100 transition-opacity whitespace-nowrap rounded-md bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1.5 shadow-md z-10"
-                      >
-                        {card.disabledReason}
-                      </span>
-                    )}
+              {cards.map((card) => (
+                <Link
+                  key={card.href}
+                  href={card.href}
+                  className={`group flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] ${c.borderL} bg-white shadow-sm hover:shadow-md ${c.hoverBorder} transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500`}
+                >
+                  <div className={`w-10 h-10 rounded-lg ${c.iconBg} flex items-center justify-center flex-shrink-0 ${c.iconC} ${c.hoverIconBg} transition-colors`}>
+                    {card.icon}
                   </div>
-                )
-              )}
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-sm font-semibold text-slate-900 ${c.hoverTitle} transition-colors`}>{card.title}</p>
+                    <p className="text-xs text-slate-500 mt-0.5 leading-relaxed">{card.description}</p>
+                  </div>
+                  {card.badge && (
+                    <span className="flex-shrink-0 text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded px-1.5 py-0.5 border border-emerald-200 mt-1">
+                      {card.badge}
+                    </span>
+                  )}
+                  <svg
+                    className={`w-4 h-4 text-slate-400 ${c.hoverArrow} flex-shrink-0 mt-1 transition-colors`}
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    strokeWidth={2}
+                    stroke="currentColor"
+                    aria-hidden="true"
+                  >
+                    <path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" />
+                  </svg>
+                </Link>
+              ))}
             </div>
           </section>
         )
       })}
+
+      {/* 준비 중 — 인증/추후 제공 카드를 한 곳에 모아 가용 기능 발견성 향상 */}
+      {(() => {
+        const comingSoon = SETTING_SECTIONS.flatMap((s) => s.cards.filter((card) => !card.available))
+        if (comingSoon.length === 0) return null
+        return (
+          <section>
+            <h2 className="text-xs font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              준비 중 <span className="text-slate-300">({comingSoon.length})</span>
+            </h2>
+            <p className="text-xs text-slate-400 mb-3">아래 기능은 L4 인증 후 또는 추후 제공 예정입니다.</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {comingSoon.map((card) => (
+                <div
+                  key={card.href}
+                  className="group/disabled relative flex items-start gap-3 p-5 rounded-xl border border-slate-200 border-l-[3px] border-l-slate-300 bg-white shadow-sm cursor-not-allowed opacity-50"
+                  aria-disabled="true"
+                  title={card.disabledReason || card.badge || undefined}
+                >
+                  <div className="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-center flex-shrink-0 text-slate-400">
+                    {card.icon}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold text-slate-500">{card.title}</p>
+                    <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">{card.description}</p>
+                  </div>
+                  <span className="flex-shrink-0 text-[10px] text-slate-500 bg-slate-100 rounded px-1.5 py-0.5 border border-slate-200 mt-1">
+                    {card.badge ?? '준비 중'}
+                  </span>
+                  {card.disabledReason && (
+                    <span
+                      role="tooltip"
+                      className="pointer-events-none absolute -top-2 left-1/2 -translate-x-1/2 -translate-y-full opacity-0 group-hover/disabled:opacity-100 transition-opacity whitespace-nowrap rounded-md bg-slate-900 text-white text-[11px] font-medium px-2.5 py-1.5 shadow-md z-10"
+                    >
+                      {card.disabledReason}
+                    </span>
+                  )}
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      })()}
     </div>
   )
 }
