@@ -32,6 +32,33 @@ export async function GET() {
   const total = notices?.length ?? 0
   const sent = notices?.filter((n) => n.delivery_status === 'sent').length ?? 0
 
+  // #22 실패 드릴다운 — 발송 실패/미완료 내역 (sent 아닌 상태) 최근 20건
+  const { data: failedRaw } = await sb
+    .from('b2b_withdrawal_notices')
+    .select('id, delivery_status, sent_at, order_id, channel, recipient_contact, b2b_orders(order_number, market_order_number)')
+    .eq('account_id', account.id)
+    .neq('delivery_status', 'sent')
+    .order('sent_at', { ascending: false })
+    .limit(20)
+  type FailRow = {
+    id: string
+    delivery_status: string
+    sent_at: string
+    order_id: string
+    channel: string
+    recipient_contact: string | null
+    b2b_orders: { order_number: string | null; market_order_number: string | null } | null
+  }
+  const failures = ((failedRaw ?? []) as unknown as FailRow[]).map((f) => ({
+    id: f.id,
+    order_id: f.order_id,
+    order_ref: f.b2b_orders?.market_order_number || f.b2b_orders?.order_number || f.order_id,
+    delivery_status: f.delivery_status,
+    channel: f.channel,
+    recipient_contact: f.recipient_contact,
+    sent_at: f.sent_at,
+  }))
+
   return NextResponse.json({
     withdrawal_notice_enabled: account.withdrawal_notice_enabled ?? true,
     withdrawal_notice_custom_text: account.withdrawal_notice_custom_text ?? '',
@@ -40,6 +67,7 @@ export async function GET() {
       sent_30d: sent,
       success_rate: total > 0 ? Math.round((sent / total) * 100) : null,
     },
+    failures,
   })
 }
 

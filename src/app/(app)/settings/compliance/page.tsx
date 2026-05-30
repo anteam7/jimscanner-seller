@@ -1,16 +1,28 @@
 'use client'
 
 import { useCallback, useEffect, useState } from 'react'
+import Link from 'next/link'
 
 export const dynamic = 'force-dynamic'
 
 const DEFAULT_NOTICE =
   '구매하신 상품을 수령한 날로부터 7일 이내 청약 철회가 가능합니다 (전자상거래법 제17조).'
 
+type ComplianceFailure = {
+  id: string
+  order_id: string
+  order_ref: string
+  delivery_status: string
+  channel: string
+  recipient_contact: string | null
+  sent_at: string
+}
+
 type ComplianceData = {
   withdrawal_notice_enabled: boolean
   withdrawal_notice_custom_text: string
   stats: { total_30d: number; sent_30d: number; success_rate: number | null }
+  failures?: ComplianceFailure[]
 }
 
 export default function CompliancePage() {
@@ -192,6 +204,44 @@ export default function CompliancePage() {
               아직 청약철회 고지가 발송된 내역이 없습니다. 주문 상태를 <strong className="text-slate-500">완료</strong>로
               전환하면 의뢰자에게 자동 발송됩니다.
             </p>
+          )}
+
+          {/* #22 실패 드릴다운 — 발송 실패/미완료 내역 */}
+          {data.failures && data.failures.length > 0 && (
+            <details className="rounded-lg border border-amber-200 bg-amber-50/50 overflow-hidden" open>
+              <summary className="px-4 py-2.5 text-xs font-semibold text-amber-800 cursor-pointer">
+                ⚠ 발송 실패·미완료 {data.failures.length}건 — 펼쳐서 확인
+              </summary>
+              <div className="border-t border-amber-200 overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="bg-white/60 text-[10px] uppercase tracking-wider text-slate-500">
+                    <tr className="text-left">
+                      <th className="px-3 py-2">주문</th>
+                      <th className="px-3 py-2">상태</th>
+                      <th className="px-3 py-2">채널</th>
+                      <th className="px-3 py-2">수신처</th>
+                      <th className="px-3 py-2 whitespace-nowrap">시도일</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-amber-100">
+                    {data.failures.map((f) => (
+                      <tr key={f.id}>
+                        <td className="px-3 py-2">
+                          <Link href={`/orders/${f.order_id}`} className="font-mono text-indigo-700 hover:underline">{f.order_ref}</Link>
+                        </td>
+                        <td className="px-3 py-2"><span className="text-rose-700 font-medium">{f.delivery_status}</span></td>
+                        <td className="px-3 py-2 text-slate-600">{f.channel}</td>
+                        <td className="px-3 py-2 text-slate-600">{f.recipient_contact ?? '—'}</td>
+                        <td className="px-3 py-2 text-slate-500 tabular-nums whitespace-nowrap">{f.sent_at?.slice(0, 10)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              <p className="px-4 py-2 text-[11px] text-slate-500 border-t border-amber-100">
+                재발송은 주문 상세에서 상태를 다시 전환하거나, 이메일 발송 채널(RESEND) 설정 후 자동 재시도됩니다.
+              </p>
+            </details>
           )}
         </section>
       )}
