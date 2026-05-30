@@ -33,8 +33,7 @@ async function getAccount() {
   const sb = await createClient()
   const { data: { user } } = await sb.auth.getUser()
   if (!user) return { error: NextResponse.json({ error: '로그인이 필요합니다.' }, { status: 401 }) }
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
+  const db = sb
   const { data: account } = await db.from('b2b_accounts').select('id').eq('user_id', user.id).single()
   if (!account) return { error: NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 }) }
   return { db, accountId: account.id as string }
