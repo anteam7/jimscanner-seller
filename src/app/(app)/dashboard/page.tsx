@@ -97,16 +97,20 @@ function StatusBanner({ account }: { account: FullAccount }) {
             <span className="font-semibold text-amber-900">{next?.label}</span>
             {next?.hint ? ` — ${next.hint}` : ''}
           </p>
-          {next?.href && (
+          {next?.href ? (
             <Link
               href={next.href}
-              className="inline-flex items-center gap-1 mt-2.5 text-xs font-semibold text-amber-800 hover:text-amber-900 transition-colors"
+              className="inline-flex items-center gap-1.5 mt-3 px-3 py-1.5 rounded-md text-xs font-semibold text-white bg-amber-600 hover:bg-amber-500 active:bg-amber-700 shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2"
             >
               지금 완료하기
               <svg className="w-3 h-3" fill="none" viewBox="0 0 12 12" strokeWidth={2.5} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m3 2.5 4 3.5-4 3.5" />
               </svg>
             </Link>
+          ) : (
+            <p className="inline-flex items-center gap-1.5 mt-2.5 text-[11px] text-amber-700">
+              📧 받은 편지함에서 인증 메일의 링크를 클릭해 주세요 (스팸함도 확인).
+            </p>
           )}
         </div>
       </div>
@@ -936,8 +940,25 @@ export default async function SellerDashboardPage() {
       {/* H3 — 마진 손실 알림 */}
       {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
 
-      {/* 오늘 행동 큐 — 즉시 행동 필요 항목 */}
-      {totalActions > 0 && (
+      {/* 오늘 행동 큐 — 3건 미만이면 슬림 인라인 배너로 노이즈 감축 */}
+      {totalActions > 0 && totalActions < 3 && (
+        <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+          <span className="font-semibold text-amber-900">⚡ 행동 필요</span>
+          {actionQueue.unmatchedReceipts > 0 && (
+            <Link href="/imports" className="text-amber-800 hover:text-amber-900 underline">매칭 대기 영수증 {actionQueue.unmatchedReceipts}건</Link>
+          )}
+          {actionQueue.refundRequests > 0 && (
+            <Link href="/orders?status=refund_requested" className="text-rose-700 hover:text-rose-800 underline">환불 신청 {actionQueue.refundRequests}건</Link>
+          )}
+          {actionQueue.oldPending > 0 && (
+            <Link href="/orders?status=pending" className="text-amber-800 hover:text-amber-900 underline">매입 미진행(1일+) {actionQueue.oldPending}건</Link>
+          )}
+          {actionQueue.oldUnmatched > 0 && (
+            <Link href="/imports" className="text-rose-700 hover:text-rose-800 underline">⏰ 무매칭 7일+ {actionQueue.oldUnmatched}건</Link>
+          )}
+        </div>
+      )}
+      {totalActions >= 3 && (
         <section className="rounded-xl bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm p-5">
           <h2 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-1.5">
             <span>⚡</span> 오늘 행동 큐 ({totalActions}건)
