@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button'
 import { createClient } from '@/lib/auth/client'
 import { SignupProgress } from '@/components/b2b/SignupProgress'
 import { SignupHeader } from '@/components/b2b/SignupHeader'
+import { EmailVerifyNotice } from './EmailVerifyNotice'
 
 interface Term {
   id: string
@@ -163,6 +164,8 @@ export default function SignupStep2Page() {
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold tracking-tight mb-1">약관 동의</h1>
           <p className="text-slate-400 text-sm mb-6">서비스 이용을 위해 약관에 동의해 주세요.</p>
+
+          <EmailVerifyNotice />
 
           {loading ? (
             <div className="space-y-3">
