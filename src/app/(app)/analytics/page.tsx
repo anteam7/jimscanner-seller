@@ -410,10 +410,20 @@ export default async function AnalyticsPage() {
                   const mine = mySupplierStats.find((x) => x.supplierSite === m.supplier_site)
                   const diff = mine ? mine.avgSaleKrw - m.avg_sale_krw : null
                   const diffPct = mine && m.avg_sale_krw > 0 ? Math.round((diff! / m.avg_sale_krw) * 1000) / 10 : null
+                  // 저가 경쟁: 내 평균이 시장 중간값 대비 10%+ 낮으면 주의 하이라이트
+                  const underpriced = !!mine && m.median_sale_krw > 0 && mine.avgSaleKrw < m.median_sale_krw * 0.9
                   return (
-                    <tr key={m.supplier_site} className="hover:bg-slate-50/70">
+                    <tr key={m.supplier_site} className={underpriced ? 'bg-amber-50/70 hover:bg-amber-50' : 'hover:bg-slate-50/70'}>
                       <td className="px-3 py-2 font-medium text-slate-900">
                         {SUPPLIER_LABEL.get(m.supplier_site) ?? m.supplier_site}
+                        {underpriced && (
+                          <span
+                            className="ml-1.5 inline-flex items-center gap-0.5 rounded bg-amber-100 px-1 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200 align-middle"
+                            title="내 평균 판매가가 시장 중간값보다 10% 이상 낮습니다 — 저가 경쟁 / 가격 재검토"
+                          >
+                            📉 저가
+                          </span>
+                        )}
                       </td>
                       <td className="px-3 py-2 text-right tabular-nums text-slate-700">
                         {mine ? mine.lineCount : <span className="text-slate-400">—</span>}
@@ -447,7 +457,7 @@ export default async function AnalyticsPage() {
         )}
         <div className="px-5 py-2.5 text-[10px] text-slate-500 bg-slate-50 border-t border-slate-100 leading-relaxed">
           💡 시장 평균보다 높으면 프리미엄 포지셔닝 — 마진 좋음. 낮으면 가격 경쟁이 치열한 카테고리 — 회전율로 승부.
-          본인 데이터 없는 매입처는 신규 진입 기회로 검토.
+          본인 데이터 없는 매입처는 신규 진입 기회로 검토. <span className="text-amber-700 font-medium">📉 저가</span> 배지는 내 평균이 시장 중간값보다 10%+ 낮은 매입처.
         </div>
       </section>
     </div>
