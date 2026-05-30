@@ -38,11 +38,21 @@ export type ForwarderOption = {
   slug: string
 }
 
+export type RecentBuyer = {
+  buyer_name: string | null
+  buyer_phone: string | null
+  buyer_postal_code: string | null
+  buyer_address: string | null
+  buyer_detail_address: string | null
+  buyer_customs_code: string | null
+}
+
 export default function NewOrderForm({
   forwarders,
   lossSkus = {},
   initialForwarderId = '',
   initialForwarderCountry = '',
+  recentBuyers = [],
 }: {
   forwarders: ForwarderOption[]
   /** product_id → 단위당 손실 KRW (최근 30일 마진 손실 SKU). 주문 입력 시 경고. */
@@ -50,6 +60,8 @@ export default function NewOrderForm({
   /** 마지막 사용 배대지 — 새 주문 시 sticky pre-select */
   initialForwarderId?: string
   initialForwarderCountry?: string
+  /** 최근 구매자 — 클릭 1번으로 수신자 정보 자동 채움 */
+  recentBuyers?: RecentBuyer[]
 }) {
   const router = useRouter()
 
@@ -125,6 +137,16 @@ export default function NewOrderForm({
 
   // 메모
   const [requestNotes, setRequestNotes] = useState('')
+
+  // 최근 구매자 칩 클릭 → 수신자 정보 일괄 채움
+  function applyBuyer(b: RecentBuyer) {
+    setBuyerName(b.buyer_name ?? '')
+    setBuyerPhone(b.buyer_phone ?? '')
+    setBuyerPostalCode(b.buyer_postal_code ?? '')
+    setBuyerAddress(b.buyer_address ?? '')
+    setBuyerDetailAddress(b.buyer_detail_address ?? '')
+    setBuyerCustomsCode(b.buyer_customs_code ?? '')
+  }
 
   // UI 상태
   const [submitting, setSubmitting] = useState(false)
@@ -425,6 +447,27 @@ export default function NewOrderForm({
           title="② 마켓 구매자 (배송 수신자)"
           description="33 배대지 양식 수신자 칸에 자동으로 채워집니다. ★ 표시는 양식 변환에 필요한 항목."
         >
+          {recentBuyers.length > 0 && (
+            <div className="mb-3 rounded-md border border-emerald-100 bg-emerald-50/40 p-2.5">
+              <p className="text-[11px] font-semibold text-emerald-700 mb-1.5">최근 구매자 — 클릭하면 수신자 정보 자동 채움</p>
+              <div className="flex flex-wrap gap-1.5">
+                {recentBuyers.map((b, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => applyBuyer(b)}
+                    title={`${b.buyer_name ?? ''}${b.buyer_phone ? ` · ${b.buyer_phone}` : ''}${b.buyer_address ? ` · ${b.buyer_address}` : ''}`}
+                    className="inline-flex items-center gap-1.5 max-w-[220px] rounded border border-emerald-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 px-2 py-1 text-xs text-slate-800 shadow-sm transition-colors"
+                  >
+                    <span className="font-medium truncate">{b.buyer_name || '이름없음'}</span>
+                    {b.buyer_phone && (
+                      <span className="font-mono text-[10px] text-slate-400 flex-shrink-0">···{b.buyer_phone.replace(/\D/g, '').slice(-4)}</span>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Field label="이름" htmlFor="buyer_name" required>
               <input id="buyer_name" type="text" maxLength={120} value={buyerName} onChange={(e) => setBuyerName(e.target.value)} placeholder="예: 홍길동" className={inputCls} />

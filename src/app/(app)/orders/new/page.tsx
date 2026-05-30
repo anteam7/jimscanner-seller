@@ -4,7 +4,7 @@ import { createClient } from '@/lib/auth/server'
 import { getNearLimitCards } from '@/lib/b2b/card-limits'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
 import { getMarginLossAlerts } from '@/lib/b2b/margin-loss'
-import NewOrderForm, { type ForwarderOption } from './NewOrderForm'
+import NewOrderForm, { type ForwarderOption, type RecentBuyer } from './NewOrderForm'
 
 export const metadata: Metadata = {
   title: '새 주문 입력',
@@ -34,6 +34,7 @@ export default async function NewOrderPage() {
   const lossSkus: Record<string, number> = {}
   let lastForwarderId = ''
   let lastForwarderCountry = ''
+  const recentBuyers: RecentBuyer[] = []
   if (user) {
     const { data: account } = await supabase
       .from('b2b_accounts')
@@ -55,6 +56,31 @@ export default async function NewOrderPage() {
       if (lastOrder) {
         lastForwarderId = lastOrder.forwarder_id ?? ''
         lastForwarderCountry = lastOrder.forwarder_country ?? ''
+      }
+
+      // 최근 구매자 — 최근 주문에서 이름+전화 기준 중복 제거 후 5명
+      const { data: buyerRows } = await supabase
+        .from('b2b_orders')
+        .select('buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, created_at')
+        .eq('account_id', account.id)
+        .is('deleted_at', null)
+        .not('buyer_name', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(40)
+      const seen = new Set<string>()
+      for (const b of (buyerRows ?? []) as RecentBuyer[]) {
+        const key = `${(b.buyer_name ?? '').trim()}|${(b.buyer_phone ?? '').replace(/\D/g, '')}`
+        if (key === '|' || seen.has(key)) continue
+        seen.add(key)
+        recentBuyers.push({
+          buyer_name: b.buyer_name,
+          buyer_phone: b.buyer_phone,
+          buyer_postal_code: b.buyer_postal_code,
+          buyer_address: b.buyer_address,
+          buyer_detail_address: b.buyer_detail_address,
+          buyer_customs_code: b.buyer_customs_code,
+        })
+        if (recentBuyers.length >= 5) break
       }
       // 마진 손실 SKU — 주문 입력 시 손실 경고 (대시보드 H3 와 동일 계산)
       try {
@@ -99,6 +125,7 @@ export default async function NewOrderPage() {
         lossSkus={lossSkus}
         initialForwarderId={lastForwarderId}
         initialForwarderCountry={lastForwarderCountry}
+        recentBuyers={recentBuyers}
       />
     </>
   )
