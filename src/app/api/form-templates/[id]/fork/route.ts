@@ -37,9 +37,7 @@ export async function POST(
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
-  const { data: account } = await adb
+  const { data: account } = await admin
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -47,7 +45,7 @@ export async function POST(
   if (!account) return NextResponse.json({ error: '사업자 계정이 없습니다.' }, { status: 404 })
 
   // 원본 템플릿 조회
-  const { data: src } = await adb
+  const { data: src } = await admin
     .from('b2b_form_templates')
     .select('id, owner_account_id, forwarder_id, name, source_file_path, data_sheet_name, data_start_row, header_row_count, combine_rule')
     .eq('id', id)
@@ -59,7 +57,7 @@ export async function POST(
   }
 
   // 원본 컬럼 조회
-  const { data: srcCols } = await adb
+  const { data: srcCols } = await admin
     .from('b2b_form_template_columns')
     .select('column_index, column_letter, column_label, source_kind, source_path, composite_template, constant_value, user_input_label, user_input_options, transform, required, notes')
     .eq('template_id', id)
@@ -71,7 +69,7 @@ export async function POST(
   // Storage 파일 복제
   const [bucket, ...rest] = src.source_file_path.split('/')
   const srcObjectPath = rest.join('/')
-  const { data: fileBlob, error: dlErr } = await adb.storage.from(bucket).download(srcObjectPath)
+  const { data: fileBlob, error: dlErr } = await admin.storage.from(bucket).download(srcObjectPath)
   if (dlErr || !fileBlob) {
     return NextResponse.json(
       { error: `원본 파일을 불러오지 못했습니다. ${dlErr?.message ?? ''}` },
@@ -83,7 +81,7 @@ export async function POST(
   const newTplId = crypto.randomUUID()
   const newStoragePath = `${account.id}/${newTplId}/template.xlsx`
   const newFullPath = `user-templates/${newStoragePath}`
-  const { error: upErr } = await adb.storage
+  const { error: upErr } = await admin.storage
     .from('user-templates')
     .upload(newStoragePath, buf, {
       contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
@@ -95,7 +93,7 @@ export async function POST(
 
   // 새 템플릿 INSERT
   const newName = body.name?.trim() || `${src.name} (복사본)`
-  const { error: insErr } = await adb.from('b2b_form_templates').insert({
+  const { error: insErr } = await admin.from('b2b_form_templates').insert({
     id: newTplId,
     owner_account_id: account.id,
     forwarder_id: src.forwarder_id,
@@ -109,7 +107,7 @@ export async function POST(
     is_active: true,
   })
   if (insErr) {
-    await adb.storage.from('user-templates').remove([newStoragePath])
+    await admin.storage.from('user-templates').remove([newStoragePath])
     return NextResponse.json({ error: `템플릿 저장 실패: ${insErr.message}` }, { status: 500 })
   }
 
@@ -143,10 +141,10 @@ export async function POST(
     required: c.required,
     notes: c.notes,
   }))
-  const { error: colErr } = await adb.from('b2b_form_template_columns').insert(newCols)
+  const { error: colErr } = await admin.from('b2b_form_template_columns').insert(newCols)
   if (colErr) {
-    await adb.from('b2b_form_templates').delete().eq('id', newTplId)
-    await adb.storage.from('user-templates').remove([newStoragePath])
+    await admin.from('b2b_form_templates').delete().eq('id', newTplId)
+    await admin.storage.from('user-templates').remove([newStoragePath])
     return NextResponse.json({ error: `컬럼 복제 실패: ${colErr.message}` }, { status: 500 })
   }
 
