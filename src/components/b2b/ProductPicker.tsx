@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useEffect, useRef, useState } from 'react'
+import { SUPPLIER_SITES, CURRENCIES } from '@/lib/b2b/order-options'
 
 export type PickedProduct = {
   id: string
@@ -33,6 +34,68 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
   const [loading, setLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
   const wrapRef = useRef<HTMLDivElement>(null)
+
+  // 인라인 빠른 등록
+  const [quickOpen, setQuickOpen] = useState(false)
+  const [qSku, setQSku] = useState('')
+  const [qName, setQName] = useState('')
+  const [qSupplier, setQSupplier] = useState('')
+  const [qCurrency, setQCurrency] = useState('')
+  const [qPrice, setQPrice] = useState('')
+  const [creating, setCreating] = useState(false)
+  const [createError, setCreateError] = useState<string | null>(null)
+
+  async function submitQuickCreate() {
+    const sku = qSku.trim()
+    const name = qName.trim()
+    if (!sku || !name) {
+      setCreateError('SKU 코드와 상품명을 입력해 주세요.')
+      return
+    }
+    setCreating(true)
+    setCreateError(null)
+    const priceNum = qPrice.trim() ? Number(qPrice) : null
+    try {
+      const res = await fetch('/api/products', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          seller_sku: sku,
+          display_name: name,
+          default_supplier_site: qSupplier || null,
+          default_currency: qCurrency || null,
+          default_unit_price: priceNum != null && Number.isFinite(priceNum) && priceNum > 0 ? priceNum : null,
+        }),
+      })
+      const json = (await res.json().catch(() => ({}))) as { id?: string; error?: string }
+      if (!res.ok || !json.id) {
+        setCreateError(json.error ?? '등록 실패')
+        return
+      }
+      // 생성된 SKU 를 즉시 선택
+      onPick({
+        id: json.id,
+        seller_sku: sku,
+        display_name: name,
+        english_name: null,
+        default_supplier_site: qSupplier || null,
+        default_currency: qCurrency || null,
+        default_unit_price: priceNum != null && Number.isFinite(priceNum) && priceNum > 0 ? priceNum : null,
+        default_forwarder_id: null,
+        default_forwarder_country: null,
+        default_weight_kg: null,
+        is_favorite: false,
+      })
+      // 초기화 + 닫기
+      setQSku(''); setQName(''); setQSupplier(''); setQCurrency(''); setQPrice('')
+      setQuickOpen(false)
+      setOpen(false)
+    } catch (e) {
+      setCreateError(e instanceof Error ? e.message : '네트워크 오류')
+    } finally {
+      setCreating(false)
+    }
+  }
 
   const fetchResults = useCallback(async (query: string) => {
     setLoading(true)
@@ -195,6 +258,89 @@ export default function ProductPicker({ selectedId, selectedLabel, onPick, onCle
                   </li>
                 ))}
               </ul>
+            )}
+          </div>
+
+          {/* 인라인 빠른 등록 — 검색 결과 없을 때 컨텍스트 스위치 없이 SKU 생성 */}
+          <div className="border-t border-slate-100 p-2">
+            {!quickOpen ? (
+              <button
+                type="button"
+                onClick={() => { setQuickOpen(true); setQSku(q.trim()) }}
+                className="w-full text-left px-1.5 py-1 text-xs font-semibold text-indigo-700 hover:text-indigo-800"
+              >
+                + 빠른 등록 (이 화면에서 새 SKU)
+              </button>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="grid grid-cols-2 gap-1.5">
+                  <input
+                    value={qSku}
+                    onChange={(e) => setQSku(e.target.value)}
+                    placeholder="SKU 코드*"
+                    aria-label="SKU 코드"
+                    className="px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <input
+                    value={qName}
+                    onChange={(e) => setQName(e.target.value)}
+                    placeholder="상품명*"
+                    aria-label="상품명"
+                    className="px-2 py-1 text-xs border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  />
+                  <select
+                    value={qSupplier}
+                    onChange={(e) => setQSupplier(e.target.value)}
+                    aria-label="기본 매입처"
+                    className="px-2 py-1 text-xs border border-slate-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                  >
+                    <option value="">매입처(선택)</option>
+                    {SUPPLIER_SITES.map((s) => (
+                      <option key={s.value} value={s.value}>{s.label}</option>
+                    ))}
+                  </select>
+                  <div className="flex gap-1.5">
+                    <select
+                      value={qCurrency}
+                      onChange={(e) => setQCurrency(e.target.value)}
+                      aria-label="기본 통화"
+                      className="w-16 px-1.5 py-1 text-xs border border-slate-200 rounded bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    >
+                      <option value="">통화</option>
+                      {CURRENCIES.map((c) => (
+                        <option key={c.code} value={c.code}>{c.code}</option>
+                      ))}
+                    </select>
+                    <input
+                      value={qPrice}
+                      onChange={(e) => setQPrice(e.target.value)}
+                      type="number"
+                      step="any"
+                      placeholder="단가"
+                      aria-label="기본 단가"
+                      className="flex-1 min-w-0 px-2 py-1 text-xs text-right tabular-nums border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                    />
+                  </div>
+                </div>
+                {createError && <p className="text-[11px] text-rose-600">{createError}</p>}
+                <div className="flex items-center justify-end gap-1.5">
+                  <button
+                    type="button"
+                    onClick={() => { setQuickOpen(false); setCreateError(null) }}
+                    className="px-2 py-1 text-xs text-slate-500 hover:text-slate-700"
+                  >
+                    취소
+                  </button>
+                  <button
+                    type="button"
+                    onClick={submitQuickCreate}
+                    disabled={creating || !qSku.trim() || !qName.trim()}
+                    className="px-2.5 py-1 text-xs font-semibold rounded text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    {creating ? '등록 중…' : '등록 후 선택'}
+                  </button>
+                </div>
+              </div>
             )}
           </div>
         </div>
