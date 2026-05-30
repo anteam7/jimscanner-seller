@@ -9,6 +9,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { authenticateSellerToken } from '@/lib/b2b/seller-tokens'
+import type { Database } from '../../../../../types/supabase'
+
+type ForwarderAddressInsert = Database['public']['Tables']['b2b_forwarder_addresses']['Insert']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -50,12 +53,10 @@ export async function POST(request: Request) {
   const sourceId = isUuid(body.source_address_id) ? body.source_address_id : null
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
-  let payload: Record<string, unknown>
+  let payload: ForwarderAddressInsert
   if (sourceId) {
-    const { data: src } = await adb
+    const { data: src } = await admin
       .from('b2b_forwarder_addresses')
       .select('forwarder_id, label, phone, address1, address2, city, state, zip, country, notes')
       .eq('id', sourceId)
@@ -112,7 +113,7 @@ export async function POST(request: Request) {
     }
   }
 
-  const { data, error } = await adb
+  const { data, error } = await admin
     .from('b2b_forwarder_addresses')
     .insert(payload)
     .select('id')
