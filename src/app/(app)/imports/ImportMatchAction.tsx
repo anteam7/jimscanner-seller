@@ -2,6 +2,11 @@
 
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
+import {
+  AUTOMATCH_THRESHOLD_KEY,
+  AUTOMATCH_THRESHOLD_EVENT,
+  DEFAULT_AUTOMATCH_THRESHOLD,
+} from './AutoMatchThreshold'
 
 type SearchResult = {
   id: string
@@ -54,6 +59,21 @@ export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [modalOpen, setModalOpen] = useState(false)
+  // 자동 매칭 안전 임계값 (셀러 설정, localStorage + 같은 페이지 이벤트 전파)
+  const [autoThreshold, setAutoThreshold] = useState(DEFAULT_AUTOMATCH_THRESHOLD)
+  useEffect(() => {
+    const read = () => {
+      const v = Number(localStorage.getItem(AUTOMATCH_THRESHOLD_KEY))
+      if (Number.isFinite(v) && v >= 70 && v <= 95) setAutoThreshold(v)
+    }
+    read()
+    const onEvt = (e: Event) => {
+      const n = Number((e as CustomEvent).detail)
+      if (Number.isFinite(n) && n >= 70 && n <= 95) setAutoThreshold(n)
+    }
+    window.addEventListener(AUTOMATCH_THRESHOLD_EVENT, onEvt)
+    return () => window.removeEventListener(AUTOMATCH_THRESHOLD_EVENT, onEvt)
+  }, [])
 
   async function link(orderId: string | null, opts?: { confirmText?: string; skipConfirm?: boolean }) {
     if (!opts?.skipConfirm && opts?.confirmText) {
@@ -83,7 +103,7 @@ export function ImportMatchAction({ receiptId, recommendation, matchedOrderLabel
 
   // 추천 점수에 따라 confirm 문구 결정
   function confirmTextFor(rec: NonNullable<Props['recommendation']>): string | undefined {
-    if (rec.score >= 90) return undefined // 높은 점수는 무난, confirm 안 함
+    if (rec.score >= autoThreshold) return undefined // 셀러 설정 임계값 이상은 confirm 생략
     const warn = rec.score < 70 ? '⚠️ 주의: 매칭 점수가 낮습니다.\n\n' : ''
     return `${warn}이 영수증을 [${rec.label}] 주문에 매칭하시겠습니까?\n\n점수: ${rec.score}\n근거: ${rec.reasons.join(' · ')}\n\n매칭 후 [해제] 로 되돌릴 수 있습니다.`
   }

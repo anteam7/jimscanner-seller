@@ -9,6 +9,7 @@ import {
 import { ImportMatchAction } from './ImportMatchAction'
 import { ManualReceiptCreate } from './ManualReceiptCreate'
 import { BulkMatchBar, type BulkCandidate } from './BulkMatchBar'
+import { AutoMatchThreshold } from './AutoMatchThreshold'
 
 export const dynamic = 'force-dynamic'
 
@@ -232,6 +233,9 @@ export default async function ImportsPage({
 
       {/* 추천 일괄 매칭 (미매칭 + 추천 점수 보유분) */}
       <BulkMatchBar high={bulkHigh} mid={bulkMid} />
+
+      {/* 자동 매칭 안전 임계값 (셀러 설정) */}
+      <AutoMatchThreshold />
 
       {/* Filter chips */}
       <div className="flex items-center gap-2 flex-wrap text-xs">
