@@ -427,12 +427,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: 신규 `/settlement` 페이지 — `b2b_orders` 를 `forwarder_id` 별 집계 (forwarders(name) 조인). 기간 프리셋 (최근 30/90/180일·전체, searchParams `?period=`). 배대지별 행: 주문 수 / 대조 가능(예측·실청구 둘 다 입력) / 예측 합계 / 실청구 합계 / 차이(=실−예측, +초과·−절감) + 차이% + ±15% 초과 시 '주의' 플래그 / 실청구 미입력 건. 4 KPI 카드 (대조가능 예측·실청구 합계·차이·미입력) + 합계 tfoot + 미입력 경고 배너 + 계산 기준 안내. 취소 주문 제외. DB 변경 0. SellerShell 주문관리 children 에 메뉴 추가. 빌드 compiled · lint 0 problems.
   - note: 후속 (소형) — 마켓플레이스별 분해 / CSV export / 차이 큰 주문 drill-down 목록 은 운영 데이터 쌓인 뒤 검토.
 
-- [ ] **#idea-14 배대지 보관기간 deadline 알림** _(brainstorm approved 2026-05-30)_
+- [x] **#idea-14 배대지 보관기간 deadline 알림** _(brainstorm approved 2026-05-30)_
   - estimated: 1-1.5h
   - prereq: 없음
   - decision_required: false
   - source: github issue#14
   - sketch: arrived_korea 진입 시각(status_history) 기준 경과일 계산, 기본 무료 보관 7일 초과 시 amber/rose 배지. 대시보드 행동 큐 + /eta(또는 신규 섹션) 목록. DB 변경 없음 (eta.ts 패턴 재사용).
+  - 완료: 2026-05-30 commit 6192485
+  - 구현: `src/lib/b2b/storage-deadline.ts` (`computeStorageStatus` — forwarder_submitted_at 기준 경과일·남은 무료일·level ok/warn/over, 기본 무료 7일·임박 2일 이내). `/eta` 에 '📦 배대지 보관 기간' 섹션 (status=forwarder_submitted 주문 별도 쿼리, 초과/임박/입고중 KPI + 경과·남은일·배지 테이블). `/dashboard` `StorageDeadlineMiniCard` (보관비위험/임박 카드 + top3, 임박·초과 있을 때만). DB 변경 0.
+  - note: issue 의 sketch 는 `arrived_korea`+status_history 를 신호로 가정했으나, (1) status_history 는 status route 가 실제로 기록하지 않아 항상 빈 배열, (2) 보관비는 해외 배대지에 입고된 `forwarder_submitted` 상태(=배대지 보관 중)에서 누적되고 `arrived_korea`(한국 통관)는 이미 출고 후라 부적합. 따라서 실 컬럼 `forwarder_submitted_at` + `forwarder_submitted` status 를 신호로 사용 (더 정확·신뢰 가능). 후속(선택): 배대지별 무료 보관일 override (현 기본 7일 상수), status route 의 status_history 기록 활성화.
 
 - [ ] **#idea-15 부가세 자료 분기/연간 프리셋 + CSV 합계 요약행** _(brainstorm approved 2026-05-30)_
   - estimated: 40-60m
