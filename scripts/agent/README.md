@@ -52,7 +52,7 @@ prompt 만 `daily-self-audit-prompt.md` / `daily-brainstorm-prompt.md` / `weekly
 |---|---|---|
 | `cron-prompt.md` | 매 fire 시 Claude Code 가 받는 instruction | hourly |
 | `daily-self-audit-prompt.md` | QA + security + lint/build 자체 점검 | daily KST 03:00 |
-| `daily-brainstorm-prompt.md` | 아이디어 brainstorm → issue 등록 | daily KST 05:00 |
+| `daily-brainstorm-prompt.md` | 기능+디자인 아이디어 brainstorm → issue 등록 (매 회차 디자인 1+ 필수) | daily KST 05:00 |
 | `weekly-qa-prompt.md` | 4 페르소나 QA + critical/high 즉시 fix | weekly Mon KST 03:00 |
 | `weekly-security-review-prompt.md` | 신규 API/마이그레이션/RLS 깊은 점검 | weekly Wed KST 03:00 |
 | `decision-needed.mjs` | STOP&ASK 트리거 → GitHub issue 자동 생성 | on-demand |
