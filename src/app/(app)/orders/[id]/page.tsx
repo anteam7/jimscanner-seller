@@ -12,6 +12,7 @@ import type { ForwarderTemplateLite } from '@/components/b2b/ForwarderExportModa
 import { MARKETPLACES, SUPPLIER_SITES } from '@/lib/b2b/order-options'
 import { getCustomsGuide } from '@/lib/b2b/customs-guide'
 import { getExchangeRates, type ExchangeRateSnapshot } from '@/lib/b2b/exchange-rate'
+import { formatKRW, formatForeign, formatDate, formatDateTime, formatWeight } from '@/lib/b2b/format'
 
 export const metadata: Metadata = {
   title: '주문 상세',
@@ -122,42 +123,6 @@ const SOURCE_LABEL: Record<string, string> = {
   webhook: 'Webhook',
   api: 'API',
   migration: '마이그레이션',
-}
-
-function formatKRW(value: number | string | null): string {
-  if (value == null || value === '') return '—'
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return '—'
-  return new Intl.NumberFormat('ko-KR').format(n) + '원'
-}
-
-function formatForeign(value: number | string | null, currency: string | null): string {
-  if (value == null || value === '' || !currency) return '—'
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n)) return '—'
-  return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(n)} ${currency}`
-}
-
-function formatDate(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
-}
-
-function formatDateTime(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
-
-function formatWeight(value: number | string | null): string {
-  if (value == null || value === '') return '—'
-  const n = typeof value === 'number' ? value : Number(value)
-  if (!Number.isFinite(n) || n <= 0) return '—'
-  return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 3 }).format(n)} kg`
 }
 
 function sumSale(items: OrderItem[]): number | null {

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { MARKETPLACES } from '@/lib/b2b/order-options'
+import { formatKRW, formatDateTime } from '@/lib/b2b/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,22 +59,6 @@ type RefundRow = {
     buyer_name: string | null
     marketplace: string | null
   } | null
-}
-
-function formatKRW(v: number | string | null): string {
-  if (v == null || v === '') return '—'
-  const n = typeof v === 'number' ? v : Number(v)
-  if (!Number.isFinite(n)) return '—'
-  return new Intl.NumberFormat('ko-KR').format(n) + '원'
-}
-
-function formatDateTime(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return d.toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export default async function RefundsPage({

@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import BulkExportModal, { type SelectedOrderInfo } from './BulkExportModal'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
+import { formatKRW, formatDate } from '@/lib/b2b/format'
 
 const LAST_CLICK_KEY = 'b2bOrdersLastClickedId'
 const LAST_SCROLL_KEY = 'b2bOrdersScrollY'
@@ -84,19 +85,6 @@ type Props = {
   templates: ForwarderTemplateLite[]
   marketplaceLabel: Record<string, string>
   statusMeta: Record<string, { label: string; cls: string }>
-}
-
-function formatKRW(v: number | string | null): string {
-  if (v == null || v === '') return '—'
-  const n = typeof v === 'number' ? v : Number(v)
-  if (!Number.isFinite(n)) return '—'
-  return new Intl.NumberFormat('ko-KR').format(n) + '원'
-}
-
-function formatDate(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleDateString('ko-KR', { year: 'numeric', month: '2-digit', day: '2-digit' })
 }
 
 function sumSale(items: { sale_price_krw: number | string | null }[]): number | null {
