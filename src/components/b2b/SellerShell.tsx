@@ -7,6 +7,7 @@ import Image from 'next/image'
 import { createClient } from '@/lib/auth/client'
 import AnnouncementBanner from '@/components/b2b/AnnouncementBanner'
 import NotificationBell from '@/components/b2b/NotificationBell'
+import CommandPalette from '@/components/b2b/CommandPalette'
 
 export type SellerAccount = {
   id: string
@@ -195,10 +196,23 @@ export default function SellerShell({
   const pathname = usePathname()
   const router = useRouter()
   const [mobileOpen, setMobileOpen] = useState(false)
+  const [paletteOpen, setPaletteOpen] = useState(false)
 
   // 경로 바뀌면 모바일 사이드바 닫기 — 라우터(외부 시스템) 변경에 대한 UI 동기화
   // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { setMobileOpen(false) }, [pathname])
+
+  // ⌘K / Ctrl+K 로 빠른 검색 팔레트 토글 (전역 단축키)
+  useEffect(() => {
+    function onKey(e: KeyboardEvent) {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        setPaletteOpen((o) => !o)
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
+  }, [])
 
   // ESC 키로 닫기 + 열렸을 때 body scroll lock
   useEffect(() => {
@@ -392,21 +406,33 @@ export default function SellerShell({
               <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
             </svg>
           </button>
-          <form action="/orders" method="GET" className="hidden md:flex flex-1 max-w-md mx-4">
-            <div className="relative w-full">
-              <svg aria-hidden="true" className="w-4 h-4 absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+          {/* 빠른 검색 트리거 — 클릭 또는 ⌘K 로 CommandPalette 열기 */}
+          <button
+            type="button"
+            onClick={() => setPaletteOpen(true)}
+            aria-label="빠른 검색 (단축키 Ctrl+K)"
+            className="hidden md:flex flex-1 max-w-md mx-4 items-center gap-2.5 px-3 py-1.5 text-sm border border-slate-200 rounded-md bg-slate-50 text-slate-400 hover:bg-white hover:border-slate-300 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+          >
+            <svg aria-hidden="true" className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
+            </svg>
+            <span className="flex-1 text-left">주문·상품·메뉴 검색…</span>
+            <kbd className="inline-flex items-center text-[10px] font-medium text-slate-400 bg-white border border-slate-200 rounded px-1.5 py-0.5">
+              ⌘K
+            </kbd>
+          </button>
+          <div className="flex items-center gap-2">
+            {/* 모바일 검색 아이콘 */}
+            <button
+              type="button"
+              onClick={() => setPaletteOpen(true)}
+              aria-label="빠른 검색"
+              className="md:hidden inline-flex items-center justify-center w-9 h-9 rounded-md text-slate-600 hover:bg-slate-100 hover:text-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-500"
+            >
+              <svg aria-hidden="true" className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z" />
               </svg>
-              <input
-                name="q"
-                type="search"
-                aria-label="주문 검색 (주문번호·구매자명·전화번호)"
-                placeholder="주문번호·구매자·전화로 검색…"
-                className="w-full pl-8 pr-3 py-1.5 text-sm border border-slate-200 rounded-md bg-slate-50 text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 focus:bg-white transition-colors"
-              />
-            </div>
-          </form>
-          <div className="flex items-center gap-2">
+            </button>
             <VerificationBadge level={account.verification_level} />
             <NotificationBell />
             <div
@@ -426,6 +452,13 @@ export default function SellerShell({
           {children}
         </div>
       </div>
+
+      {/* 전역 빠른 검색 팔레트 — key 로 열릴 때마다 입력/결과 초기화 */}
+      <CommandPalette
+        key={paletteOpen ? 'palette-open' : 'palette-closed'}
+        open={paletteOpen}
+        onClose={() => setPaletteOpen(false)}
+      />
     </div>
   )
 }
