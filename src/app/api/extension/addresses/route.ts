@@ -34,8 +34,7 @@ export async function GET(request: Request) {
   const country = url.searchParams.get('country')?.toUpperCase().slice(0, 2) || null
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let q = (admin as any)
+  let q = admin
     .from('b2b_forwarder_addresses')
     .select(
       'id, account_id, forwarder_id, label, recipient_name, phone, address1, address2, city, state, zip, country, member_no, is_official, is_default, notes, forwarders(name, slug)',
@@ -57,8 +56,7 @@ export async function GET(request: Request) {
   }
 
   // 셀러 본인 정보 — 공용 주소에 phone NULL 일 때 fallback 용
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: seller } = await (admin as any)
+  const { data: seller } = await admin
     .from('b2b_accounts')
     .select('phone, business_name')
     .eq('id', auth.account_id)
