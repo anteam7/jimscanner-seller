@@ -49,12 +49,10 @@ export async function GET(request: Request) {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 1) 매칭된 영수증이 있는 order_id 들을 먼저 찾음
   type MatchedRow = { matched_order_id: string | null }
-  const { data: matchedRows, error: matchedErr } = await adb
+  const { data: matchedRows, error: matchedErr } = await admin
     .from('b2b_supplier_purchases')
     .select('matched_order_id')
     .eq('account_id', auth.account_id)
@@ -74,7 +72,7 @@ export async function GET(request: Request) {
   }
 
   // 2) 매칭된 order_id 들 중 active status 인 주문만 가져옴
-  const { data: ordersData, error } = await adb
+  const { data: ordersData, error } = await admin
     .from('b2b_orders')
     .select(
       `id, order_number, market_order_number, marketplace, status, request_notes,
@@ -140,7 +138,7 @@ export async function GET(request: Request) {
   }
   let receiptsByOrderId = new Map<string, ReceiptRow[]>()
   if (orderIds.length > 0) {
-    const { data: receiptsData } = await adb
+    const { data: receiptsData } = await admin
       .from('b2b_supplier_purchases')
       .select('id, source, supplier_order_number, purchased_at, currency, total_foreign, items, matched_order_id')
       .eq('account_id', auth.account_id)
