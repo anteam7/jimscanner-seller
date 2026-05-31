@@ -527,6 +527,7 @@ P1 (brainstorm 승인분) 이 비고 inbox 도 조용할 때, `chore(queue): P1 
 - [ ] **#idle-3 a11y 일관성 스윕** _(rolling)_ — 신규/누락 컴포넌트 한 회차 1군. placeholder-only input 의 `aria-label`, 아이콘 버튼 라벨, focus ring, 대비(WCAG AA), 키보드 내비. (⌘K 팔레트·상태 타임라인·주문 복제 폼·BulkMatchBar 등 최근 추가분 우선)
 - [ ] **#idle-4 모바일 레이아웃 점검** _(rolling)_ — 핵심 플로우(주문 확인·매칭·알림·대시보드) 한 회차 1 페이지. 좁은 뷰포트 overflow·터치 타겟(≥40px)·가독성. gstack `/browse` 로 360px 스크린샷 근거 권장.
 - [ ] **#idle-5 중복 유틸 통합** _(rolling)_ — `formatKRW`·`formatForeign`·`formatDate`·`formatWeight` 등 여러 파일에 복붙된 헬퍼를 `src/lib/b2b/format.ts` 로 통합하고 import 교체. 한 회차 몇 파일씩, 동작 동일 보장.
+  - 65회차 (2026-06-01) commit 8074a5e: `src/lib/b2b/format.ts` 신설 (formatKRW/Foreign/Date/DateTime/Weight 5종, ko-KR, byte-identical 구현 통합). 1차 migrate 4파일 — orders/[id], refunds/page, refunds/[id], OrderListClient. settlement 의 formatKRW 는 `₩` prefix·Math.round 의 다른 구현이라 미통합. 잔여 중복: analytics/billing/clients/imports/imports[id]/recommendations/notifications/products/templates/support 등 formatKRW·formatDate·formatDateTime·formatForeign (단 일부는 시그니처·locale 미세 차이 — 다음 회차 검증 후 통합).
 - [ ] **#idle-6 잔여 `as any` 제거 마무리** _(거의 소진)_ — 남은 route/컴포넌트의 느슨한 캐스트를 typed client 로. types/supabase.ts 에 타입 있는 것만. (이전에 대시보드 silent 버그를 숨긴 류라 예방 가치 있음)
 - [ ] **#idle-7 dead code·unused export 정리** _(rolling)_ — 미사용 export/변수/주석 처리된 코드 한 회차 1 모듈. lint 가 못 잡는 것 위주.
 - [ ] **#idle-8 DB 성능 모니터 점검(2026-08-28 재검토 대상)** _(점검만)_ — `#auto-G`·`#auto-H` 의 미인덱스 FK·unused index 후보가 행 수 증가로 활용 시작됐는지 advisor 로 확인만. 실제 인덱스 추가는 재검토 기한까지 보류 (변경 없이 점검 1줄 기록).
