@@ -43,3 +43,14 @@ export function formatWeight(value: number | string | null): string {
   if (!Number.isFinite(n) || n <= 0) return '—'
   return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 3 }).format(n)} kg`
 }
+
+/** ISO 문자열 → "YY.MM.DD HH:MM" (로컬 시간, 2자리 연도). 알림·문의 목록 등 컴팩트 표기용. */
+export function formatDateTimeShort(value: string): string {
+  const d = new Date(value)
+  const yy = String(d.getFullYear()).slice(2)
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  const hh = String(d.getHours()).padStart(2, "0")
+  const mi = String(d.getMinutes()).padStart(2, "0")
+  return `${yy}.${mm}.${dd} ${hh}:${mi}`
+}
