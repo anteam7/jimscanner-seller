@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import { logOrderStatusChange } from '@/lib/b2b/audit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -105,6 +106,16 @@ export async function PATCH(
   if (updateErr) {
     return NextResponse.json({ error: '상태 변경 중 오류가 발생했습니다.' }, { status: 500 })
   }
+
+  // 상태 변경 이력 기록 (타임라인용) — 셀러가 직접 변경한 경우
+  await logOrderStatusChange(admin, {
+    accountId: account.id,
+    orderId,
+    from: order.status,
+    to: newStatus,
+    userId: user.id,
+    via: 'manual',
+  })
 
   // 청약철회 고지 발송 (B2C/구매대행 시절 로직)은 v0 비활성.
   // 마켓 셀러 도메인에선 마켓이 정산·환불 흐름을 관리하므로 셀러 측 직접 발송 불필요.

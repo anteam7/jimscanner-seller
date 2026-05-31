@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import { logOrderStatusChange } from '@/lib/b2b/audit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -217,6 +218,15 @@ export async function POST(request: Request) {
       .from('b2b_orders')
       .update({ status: 'refund_requested', updated_at: nowIso })
       .eq('id', orderId)
+    await logOrderStatusChange(admin, {
+      accountId: account.id,
+      orderId,
+      from: order.status,
+      to: 'refund_requested',
+      userId: user.id,
+      via: 'refund',
+      note: '환불 요청 등록으로 자동 전환',
+    })
   }
 
   return NextResponse.json({ ok: true, id: inserted.id, status: inserted.status })

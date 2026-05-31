@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import { logOrderStatusChange } from '@/lib/b2b/audit'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -134,6 +135,15 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
       .update({ status: 'paid', updated_at: new Date().toISOString() })
       .eq('id', orderId)
       .eq('account_id', auth.accountId)
+    await logOrderStatusChange(admin, {
+      accountId: auth.accountId,
+      orderId,
+      from: ord.status,
+      to: 'paid',
+      userId: auth.user.id,
+      via: 'match',
+      note: '영수증 매칭으로 자동 전환',
+    })
   }
 
   // Audit log

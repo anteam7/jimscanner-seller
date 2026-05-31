@@ -98,6 +98,14 @@ const STATUS_META: Record<string, { label: string; cls: string }> = {
   refunded:            { label: '환불', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
 }
 
+// 상태 변경 출처(via) 배지 — 타임라인에서 "누가/어디서 바꿨나" 구분
+const VIA_META: Record<string, { label: string; cls: string }> = {
+  manual: { label: '직접 변경', cls: 'bg-indigo-50 text-indigo-700 border-indigo-200' },
+  refund: { label: '환불 처리', cls: 'bg-rose-50 text-rose-700 border-rose-200' },
+  match:  { label: '영수증 매칭', cls: 'bg-sky-50 text-sky-700 border-sky-200' },
+  auto:   { label: '자동', cls: 'bg-slate-100 text-slate-600 border-slate-200' },
+}
+
 const MARKETPLACE_LABEL: Record<string, string> = Object.fromEntries(
   MARKETPLACES.map((m) => [m.value, m.label]),
 )
@@ -296,6 +304,24 @@ export default async function OrderDetailPage({
     .eq('account_id', account.id)
     .order('matched_at', { ascending: false })) as { data: MatchedReceiptRow[] | null }
   const matchedReceipts = matchedReceiptsRaw ?? []
+
+  // 상태 변경 이력 (#idea-18) — b2b_audit_log 의 order_status_changed 기록.
+  // RLS owner-select 로 본인 계정 row 만 조회. 오래된 주문은 기록이 없어 빈 배열.
+  type StatusHistoryRow = {
+    id: string
+    metadata: { from?: string | null; to?: string; via?: string; note?: string } | null
+    created_at: string
+  }
+  const { data: statusHistoryRaw } = (await supabase
+    .from('b2b_audit_log')
+    .select('id, metadata, created_at')
+    .eq('target_type', 'b2b_order')
+    .eq('target_id', id)
+    .eq('account_id', account.id)
+    .eq('action', 'order_status_changed')
+    .order('created_at', { ascending: false })
+    .limit(100)) as { data: StatusHistoryRow[] | null }
+  const statusHistory = statusHistoryRaw ?? []
 
   // 가격 변동 감지: 첫 매칭된 영수증의 items 합 vs 라인 합계 비교
   type ReceiptItem = { unit_price?: number | null; qty?: number | null }
@@ -695,6 +721,55 @@ export default async function OrderDetailPage({
               )}
             </section>
           )}
+
+          {/* 상태 변경 이력 타임라인 (#idea-18) — 마켓 클레임 대응용 */}
+          <section className="rounded-xl border border-slate-200 border-l-[3px] border-l-violet-500 bg-white shadow-sm p-6">
+            <h2 className="text-sm font-semibold text-slate-900">상태 변경 이력</h2>
+            <p className="text-xs text-slate-500 mt-0.5 mb-4">
+              언제 · 무엇이 · 어디서 바뀌었는지. 마켓 클레임 대응 근거로 활용하세요.
+            </p>
+            {statusHistory.length === 0 ? (
+              <p className="text-xs text-slate-400">
+                아직 기록된 상태 변경이 없습니다. 이후 상태를 바꾸면 여기에 시간순으로 쌓입니다.
+              </p>
+            ) : (
+              <ol className="relative ml-1 border-l border-slate-200">
+                {statusHistory.map((h) => {
+                  const meta = h.metadata ?? {}
+                  const fromLabel = meta.from ? (STATUS_META[meta.from]?.label ?? meta.from) : null
+                  const toLabel = meta.to ? (STATUS_META[meta.to]?.label ?? meta.to) : '—'
+                  const via = VIA_META[meta.via ?? 'manual'] ?? VIA_META.manual
+                  return (
+                    <li key={h.id} className="relative ml-5 pb-4 last:pb-0">
+                      <span className="absolute -left-[26px] top-1 h-2.5 w-2.5 rounded-full bg-violet-500 ring-2 ring-white" />
+                      <div className="flex items-center gap-1.5 flex-wrap">
+                        {fromLabel && (
+                          <>
+                            <span className="text-xs text-slate-500">{fromLabel}</span>
+                            <svg className="w-3 h-3 text-slate-400 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={2.5} stroke="currentColor" aria-hidden="true">
+                              <path strokeLinecap="round" strokeLinejoin="round" d="M13.5 4.5 21 12m0 0-7.5 7.5M21 12H3" />
+                            </svg>
+                          </>
+                        )}
+                        <span className="text-sm font-medium text-slate-900">{toLabel}</span>
+                        <span className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] font-medium ${via.cls}`}>
+                          {via.label}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 mt-0.5 tabular-nums">{formatDateTime(h.created_at)}</p>
+                      {meta.note && <p className="text-[11px] text-slate-500 mt-0.5">{meta.note}</p>}
+                    </li>
+                  )
+                })}
+                {/* 타임라인 기준점 — 주문 등록 */}
+                <li className="relative ml-5">
+                  <span className="absolute -left-[26px] top-1 h-2.5 w-2.5 rounded-full bg-slate-300 ring-2 ring-white" />
+                  <p className="text-xs text-slate-600">주문 등록</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5 tabular-nums">{formatDateTime(order.created_at)}</p>
+                </li>
+              </ol>
+            )}
+          </section>
         </div>
 
         {/* 우측 사이드바 */}

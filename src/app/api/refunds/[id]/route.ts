@@ -8,6 +8,7 @@
 import { NextResponse } from 'next/server'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
+import { logOrderStatusChange } from '@/lib/b2b/audit'
 import type { Database } from '../../../../../types/supabase'
 
 type RefundUpdate = Database['public']['Tables']['b2b_refunds']['Update']
@@ -155,10 +156,24 @@ export async function PATCH(
   if (statusChanged && nextStatus) {
     if (nextStatus === 'settled') {
       // 환불 정산 완료 → 주문 'refunded'
+      const { data: orderRow } = await admin
+        .from('b2b_orders')
+        .select('status')
+        .eq('id', refund.order_id)
+        .single()
       await admin
         .from('b2b_orders')
         .update({ status: 'refunded', updated_at: nowIso })
         .eq('id', refund.order_id)
+      await logOrderStatusChange(admin, {
+        accountId: account.id,
+        orderId: refund.order_id,
+        from: orderRow?.status ?? null,
+        to: 'refunded',
+        userId: user.id,
+        via: 'refund',
+        note: '환불 정산 완료로 자동 전환',
+      })
     } else if (nextStatus === 'denied' || nextStatus === 'cancelled') {
       // 환불 거절·취소 → 주문이 환불 요청 상태였으면 'completed' 로 복귀
       const { data: orderRow } = await admin
@@ -171,6 +186,15 @@ export async function PATCH(
           .from('b2b_orders')
           .update({ status: 'completed', updated_at: nowIso })
           .eq('id', refund.order_id)
+        await logOrderStatusChange(admin, {
+          accountId: account.id,
+          orderId: refund.order_id,
+          from: 'refund_requested',
+          to: 'completed',
+          userId: user.id,
+          via: 'refund',
+          note: '환불 거절·취소로 주문 복귀',
+        })
       }
     }
   }
