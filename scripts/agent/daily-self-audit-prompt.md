@@ -50,11 +50,16 @@
 ## 4. b2b_auto_runs 기록
 
 ```sql
+-- 주의: agent_type·mode 는 DB check constraint 가 강제하는 enum 만 허용.
+--   agent_type ∈ {discovery, builder, review}
+--   mode       ∈ {discovery, implementation, skip, error, review}
+-- daily self-audit 는 점검 작업이므로 agent_type='review', mode='review' 사용.
+-- (task_picked 에 'daily-self-audit YYYY-MM-DD' 를 적어 self-audit 임을 식별)
 INSERT INTO b2b_auto_runs (
   mode, agent_type, task_picked, task_status, change_summary
 ) VALUES (
-  'daily-self-audit', 'jimscanner-seller-agent',
-  'self-audit YYYY-MM-DD',
+  'review', 'review',
+  'daily-self-audit YYYY-MM-DD',
   'completed',
   'qa: <발견 수>, security: <발견 수>, lint/build: pass|fail. 큐 추가: <N>건, issue 생성: <M>건.'
 );
