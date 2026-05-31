@@ -499,12 +499,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-31 commit 6e65014 (54회차)
   - 구현: `src/lib/b2b/audit.ts` 의 `logOrderStatusChange()` best-effort 헬퍼 (action='order_status_changed', target_type='b2b_order', metadata={from,to,via,note}, PII 미포함, insert 실패해도 throw X). 상태 변경 4개 지점 wiring — 직접 변경(`orders/[id]/status` via='manual', user_id 기록), 영수증 매칭→paid(`imports/.../matches` via='match'), 환불 요청→refund_requested(`refunds` POST via='refund'), 환불 정산→refunded·거절→completed 복귀(`refunds/[id]` PATCH via='refund'). `/orders/[id]` 좌측에 violet border-l 타임라인 카드: from→to(STATUS_META 라벨) + via 배지(직접/매칭/환불/자동) + 시각 + "주문 등록" 기준점. RLS owner-select 로 본인 row 만 조회. 오래된 주문은 기록 없어 안내문. build·lint(0) 통과.
 
-- [ ] **#idea-19 전역 빠른 검색·점프 (⌘K command palette)** _(brainstorm approved 2026-05-31)_
+- [x] **#idea-19 전역 빠른 검색·점프 (⌘K command palette)** _(brainstorm approved 2026-05-31)_
   - estimated: 1.5h
   - prereq: 없음
   - decision_required: false (user approve 수신 — 기본값: ⌘K/Ctrl+K + 상단바 버튼, cmdk 패키지 미추가 자체 구현)
   - source: github issue#19
-  - sketch: SellerShell 전역 CommandPalette(client) mount. 검색은 /api/orders?q= (구매자·전화·주문번호) + /api/products (SKU) 재활용. 결과 주문/상품/정적 메뉴 3 섹션, Link 라우팅(SPA). DB 변경 없음.
+  - 완료: 2026-05-31 commit bbf540c (55회차)
+  - 구현: `src/components/b2b/CommandPalette.tsx` (client) + SellerShell mount. ⌘K/Ctrl+K 전역 단축키 + 상단바 트리거 버튼(데스크탑 "검색… ⌘K" / 모바일 아이콘)으로 오픈, ESC·백드롭 닫기. 3 섹션: 메뉴(정적 21개 한·영 키워드 필터), 주문(`/api/orders?q=&limit=8`), 상품(`/api/products?q=`). 220ms 디바운스 + AbortController, trimmed 2자 이상일 때만 서버 검색(미만은 메뉴만). 방향키↑↓ 순환 탐색 + Enter SPA `router.push` + 마우스 hover 선택 + scrollIntoView. set-state-in-effect 회피: 부모가 `key` 로 열릴 때마다 remount(상태 초기화) + autoFocus, selected 는 effect 보정 대신 사용 시점 clamp(activeIndex). 기존 상단바 GET form 검색 제거(팔레트로 대체). DB 변경 0. build·lint(0) 통과.
+  - 후속 (소형): 단골 구매자(/clients) 검색 결과 섹션 추가, 최근 방문/최근 검색 캐시, 결과 키보드 home/end 점프 — 운영 데이터 쌓인 뒤 검토.
 
 ---
 
@@ -531,7 +533,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **39개 완료, pending 1** (#idea-18 2026-05-31 54회차 commit 6e65014 완료. **pending = #idea-19 (⌘K command palette)** — 52회차 brainstorm approved 4건 중 #idea-16/17/18 처리, #idea-19 다음 회차 대기).
+- P1 자율 가능: **40개 완료, pending 0** (#idea-19 ⌘K command palette 2026-05-31 55회차 commit bbf540c 완료. 52회차 brainstorm approved 4건(#idea-16/17/18/19) 전건 소진. **P1 큐 비었음 — 다음 brainstorm 승인 대기**).
 - Phase 0 잔여: **2개** (#PH0-5 detail page, #PH0-6 KPI 카드) — 둘 다 main repo 핸드오프이며 **base 페이지 핸드오프 (jimpass-agent-platform#3, PH0-4) 가 아직 open** 이라 blocked. main#3 close 되면 그 때 handoff issue 생성.
 - P0 결정 대기: **0개 (issue#7 답신 수신·종결 처리 중)** — 30회차에 사용자 최종 답신(item 2 적용요청, 나머지 no). item 2 는 GoTrue 대시보드 설정이라 agent MCP 적용 불가 → issue 에 단계 안내 댓글 + 사용자 토글 대기.
 - P2 사용자 액션 대기: **4개**
