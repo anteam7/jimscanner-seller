@@ -532,8 +532,7 @@ export default async function SellerDashboardPage() {
 
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: account } = (await (supabase as any)
+  const { data: account } = (await supabase
     .from('b2b_accounts')
     .select(
       'id, email, business_name, ceo_name, business_no, verification_level, verification_status, suspended_at, free_storage_days'
@@ -580,8 +579,7 @@ export default async function SellerDashboardPage() {
   const isNewSeller = (monthOrderCount ?? 0) === 0 && (skuCount ?? 0) === 0
 
   // "오늘 행동 큐" — 셀러가 즉시 행동해야 하는 항목들
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any
+  const db = supabase
   // server component: per-request side effects are intended (not React render purity)
   // eslint-disable-next-line react-hooks/purity
   const nowMs = Date.now()
@@ -869,9 +867,7 @@ export default async function SellerDashboardPage() {
   let recentAgentRuns: AgentRunRow[] = []
   try {
     const admin = createAdminClient()
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adminAny = admin as any
-    const { data: agentRunsData } = await adminAny
+    const { data: agentRunsData } = await admin
       .from('b2b_auto_runs')
       .select('created_at, mode, agent_type, task_picked, task_status, change_summary')
       .order('created_at', { ascending: false })
