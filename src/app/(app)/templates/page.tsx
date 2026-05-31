@@ -50,9 +50,7 @@ export default async function TemplatesPage() {
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name')
     .eq('user_id', user.id)
@@ -60,11 +58,9 @@ export default async function TemplatesPage() {
   if (!account) return null
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // 양식 목록 (공유 + 본인)
-  const { data: rows } = await adb
+  const { data: rows } = await admin
     .from('b2b_form_templates')
     .select('id, name, owner_account_id, forwarder_id, data_sheet_name, data_start_row, source_file_size, is_active, created_at, forwarders(name, slug)')
     .eq('is_active', true)
@@ -77,7 +73,7 @@ export default async function TemplatesPage() {
   const mine = templates.filter((t) => t.owner_account_id === account.id)
 
   // 배대지 목록 (업로드 시 dropdown)
-  const { data: fwdRows } = await adb
+  const { data: fwdRows } = await admin
     .from('forwarders')
     .select('id, name')
     .eq('is_active', true)
