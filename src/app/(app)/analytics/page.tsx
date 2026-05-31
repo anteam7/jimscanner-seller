@@ -45,9 +45,7 @@ export default async function AnalyticsPage() {
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -60,7 +58,7 @@ export default async function AnalyticsPage() {
   sixMonthsAgo.setDate(1)
   sixMonthsAgo.setHours(0, 0, 0, 0)
 
-  const { data: orderRows } = await db
+  const { data: orderRows } = await sb
     .from('b2b_orders')
     .select('id, created_at, b2b_order_items(product_id, product_name, quantity, currency, unit_price_foreign, sale_price_krw, supplier_site)')
     .eq('account_id', account.id)
@@ -211,7 +209,7 @@ export default async function AnalyticsPage() {
   }
   let marketStats: MarketStat[] = []
   try {
-    const { data: mw } = await db.rpc('b2b_marketwide_supplier_stats', { p_min_lines: 20 })
+    const { data: mw } = await sb.rpc('b2b_marketwide_supplier_stats', { p_min_lines: 20 })
     marketStats = ((mw as MarketStat[] | null) ?? []).map((r) => ({
       supplier_site: r.supplier_site,
       line_count: Number(r.line_count),
