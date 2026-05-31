@@ -490,12 +490,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-31 commit ca09a7f (53회차)
   - 구현: `import-matcher.ts` 에 `compareAmounts(receipt, order)` 추가 — 같은 source 라인만 합산, deltaPct(부호有: 음수=주문이 더 큼=분할발송 의심) + currencyMismatch + orderCurrency 반환. matching/page.tsx 가 매칭된 주문(우선) 또는 top1 추천 주문 대상으로 cmp 계산해 client 에 `amount` 전달. OrderMatchingClient `AmountWarning` 컴포넌트: 통화 불일치 시 rose "통화 다름" 배지(비교 불가), ±10%(AMOUNT_DELTA_THRESHOLD) 초과 시 amber 금액차이 배지(차이%+영수증/주문/차액 + 방향 hint title). 매칭된 영수증에도 적용(자신있게 매칭한 오매칭 T1 사후 인지). DB·외부의존 0. build·lint(0 problems) 통과.
 
-- [ ] **#idea-18 주문 상태 변경 이력 타임라인** _(brainstorm approved 2026-05-31)_
+- [x] **#idea-18 주문 상태 변경 이력 타임라인** _(brainstorm approved 2026-05-31)_
   - estimated: 1h
   - prereq: 없음
   - decision_required: false (audit_log write 추가 → AUTO-RUN BUT REPORT)
   - source: github issue#18
   - sketch: status route update 성공 직후 admin client 로 b2b_audit_log insert (entity='b2b_order', action='status_change', meta={from,to}, PII 미포함). /orders/[id] 서버 컴포넌트에서 audit row 조회 → 타임라인 카드 (v2.1 border-l accent). DB 신규 컬럼 없음 (기존 b2b_audit_log).
+  - 완료: 2026-05-31 commit 6e65014 (54회차)
+  - 구현: `src/lib/b2b/audit.ts` 의 `logOrderStatusChange()` best-effort 헬퍼 (action='order_status_changed', target_type='b2b_order', metadata={from,to,via,note}, PII 미포함, insert 실패해도 throw X). 상태 변경 4개 지점 wiring — 직접 변경(`orders/[id]/status` via='manual', user_id 기록), 영수증 매칭→paid(`imports/.../matches` via='match'), 환불 요청→refund_requested(`refunds` POST via='refund'), 환불 정산→refunded·거절→completed 복귀(`refunds/[id]` PATCH via='refund'). `/orders/[id]` 좌측에 violet border-l 타임라인 카드: from→to(STATUS_META 라벨) + via 배지(직접/매칭/환불/자동) + 시각 + "주문 등록" 기준점. RLS owner-select 로 본인 row 만 조회. 오래된 주문은 기록 없어 안내문. build·lint(0) 통과.
 
 - [ ] **#idea-19 전역 빠른 검색·점프 (⌘K command palette)** _(brainstorm approved 2026-05-31)_
   - estimated: 1.5h
@@ -529,7 +531,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **38개 완료, pending 2** (#idea-17 2026-05-31 53회차 commit ca09a7f 완료. **pending = #idea-18 (주문 상태 이력 타임라인)·#idea-19 (⌘K command palette)** — 52회차 brainstorm approved 4건 중 #idea-16/17 처리, 나머지 2건 다음 회차 대기).
+- P1 자율 가능: **39개 완료, pending 1** (#idea-18 2026-05-31 54회차 commit 6e65014 완료. **pending = #idea-19 (⌘K command palette)** — 52회차 brainstorm approved 4건 중 #idea-16/17/18 처리, #idea-19 다음 회차 대기).
 - Phase 0 잔여: **2개** (#PH0-5 detail page, #PH0-6 KPI 카드) — 둘 다 main repo 핸드오프이며 **base 페이지 핸드오프 (jimpass-agent-platform#3, PH0-4) 가 아직 open** 이라 blocked. main#3 close 되면 그 때 handoff issue 생성.
 - P0 결정 대기: **0개 (issue#7 답신 수신·종결 처리 중)** — 30회차에 사용자 최종 답신(item 2 적용요청, 나머지 no). item 2 는 GoTrue 대시보드 설정이라 agent MCP 적용 불가 → issue 에 단계 안내 댓글 + 사용자 토글 대기.
 - P2 사용자 액션 대기: **4개**
