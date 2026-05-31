@@ -53,7 +53,17 @@ type Item = {
   currency: string | null
   matched_order_label: string | null
   suggestion: { orderId: string; label: string; score: number } | null
+  amount: {
+    receiptTotal: number
+    orderTotal: number
+    deltaPct: number
+    currencyMismatch: boolean
+    orderCurrency: string | null
+  } | null
 }
+
+/** 금액 차이 경고 임계값 (±10% 초과 시 ⚠️). 추후 셀러 설정으로 조정 가능. */
+const AMOUNT_DELTA_THRESHOLD = 0.1
 
 export function OrderMatchingClient({ items }: { items: Item[] }) {
   const router = useRouter()
@@ -208,6 +218,7 @@ function ReceiptRow({ item }: { item: Item }) {
           ) : (
             <p className="text-[11px] text-amber-700">추천 없음 — [🔍 검색] 으로 매칭</p>
           )}
+          <AmountWarning item={item} />
           {error && <p className="text-[10px] text-rose-600 mt-1">{error}</p>}
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
@@ -240,6 +251,36 @@ function ReceiptRow({ item }: { item: Item }) {
       </div>
       {modalOpen && <SearchModal onClose={() => setModalOpen(false)} onPick={(orderId) => link(orderId)} busy={busy} error={error} />}
     </li>
+  )
+}
+
+function AmountWarning({ item }: { item: Item }) {
+  const a = item.amount
+  if (!a) return null
+
+  // 통화 불일치: 환산 없이 경고만
+  if (a.currencyMismatch) {
+    return (
+      <p className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded">
+        ⚠️ 통화 다름 · 영수증 {item.currency ?? '—'} / 주문 {a.orderCurrency ?? '—'} (금액 비교 불가)
+      </p>
+    )
+  }
+
+  // 임계값 이내면 경고 숨김
+  if (Math.abs(a.deltaPct) <= AMOUNT_DELTA_THRESHOLD) return null
+
+  const pctLabel = `${a.deltaPct > 0 ? '+' : ''}${(a.deltaPct * 100).toFixed(0)}%`
+  const diff = a.receiptTotal - a.orderTotal
+  // deltaPct < 0 → 주문 합계가 영수증보다 큼 (분할발송 의심), > 0 → 영수증이 더 큼
+  const hint = a.deltaPct < 0 ? '주문 합계가 더 큼 — 분할발송/일부 영수증 누락 의심' : '영수증이 더 큼 — 추가 매입/가격변동 확인'
+  return (
+    <p
+      className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-semibold text-amber-800 bg-amber-50 border border-amber-300 rounded"
+      title={hint}
+    >
+      ⚠️ 금액 차이 {pctLabel} · 영수증 {fmtForeign(a.receiptTotal, item.currency)} / 주문 {fmtForeign(a.orderTotal, a.orderCurrency)} (차액 {fmtForeign(Math.abs(diff), item.currency)})
+    </p>
   )
 }
 

@@ -122,6 +122,47 @@ export function scoreCandidate(
   return { order, score, reasons }
 }
 
+/**
+ * 영수증 결제액(total_foreign) vs 주문 라인 합계(unit_price_foreign × qty) 비교.
+ * 매칭/추천된 order 가 실제 영수증과 금액이 얼마나 벌어져 있는지 노출용 (분할발송·가격변동·부분취소 조기 감지).
+ * - 같은 source 의 라인만 합산 (supplier_site === receipt.source)
+ * - 통화 불일치 시 금액 비교 무의미 → currencyMismatch = true (환산 없이 경고만)
+ * 비교 대상 라인이 없으면 null.
+ */
+export type AmountComparison = {
+  receiptTotal: number
+  orderTotal: number
+  /** (영수증 - 주문) / 영수증. 음수 = 주문 합계가 더 큼(분할발송 의심), 양수 = 영수증이 더 큼. 영수증액 0 이면 0. */
+  deltaPct: number
+  currencyMismatch: boolean
+  orderCurrency: string | null
+}
+
+export function compareAmounts(
+  receipt: ReceiptForMatching,
+  order: OrderForMatching,
+): AmountComparison | null {
+  const matchingItems = order.items.filter((it) => it.supplier_site === receipt.source)
+  if (matchingItems.length === 0) return null
+
+  const receiptTotal = toNum(receipt.total_foreign)
+  const orderTotal = matchingItems.reduce(
+    (acc, it) => acc + toNum(it.unit_price_foreign) * (toNum(it.qty) || 1),
+    0,
+  )
+
+  const itemCurrencies = new Set(
+    matchingItems.map((it) => (it.currency ?? '').toUpperCase()).filter(Boolean),
+  )
+  const rc = (receipt.currency ?? '').toUpperCase()
+  const currencyMismatch = !!rc && itemCurrencies.size > 0 && !itemCurrencies.has(rc)
+  const orderCurrency = matchingItems.find((it) => it.currency)?.currency ?? null
+
+  const deltaPct = receiptTotal > 0 ? (receiptTotal - orderTotal) / receiptTotal : 0
+
+  return { receiptTotal, orderTotal, deltaPct, currencyMismatch, orderCurrency }
+}
+
 export function findCandidates(
   receipt: ReceiptForMatching,
   orders: OrderForMatching[],

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/auth/server'
 import { OrderMatchingClient } from './OrderMatchingClient'
 import {
   findCandidates,
+  compareAmounts,
   type OrderForMatching,
   type ReceiptForMatching,
 } from '@/lib/b2b/import-matcher'
@@ -106,27 +107,38 @@ export default async function OrderMatchingPage() {
   const orderById = new Map<string, OrderRow>()
   for (const o of orders) orderById.set(o.id, o)
 
+  const candidateById = new Map<string, OrderForMatching>()
+  for (const c of orderCandidates) candidateById.set(c.id, c)
+
   const items = receipts.map((r) => {
     const matched = r.matched_order_id ? orderById.get(r.matched_order_id) : null
+    const receipt: ReceiptForMatching = {
+      id: r.id,
+      source: r.source,
+      purchased_at: r.purchased_at,
+      currency: r.currency,
+      total_foreign: r.total_foreign,
+    }
     let suggestion: { orderId: string; label: string; score: number } | null = null
+    // 금액 비교 대상: 매칭된 주문이 있으면 그 주문, 없으면 top1 추천 주문
+    let amountTargetId: string | null = matched ? matched.id : null
     if (!matched) {
-      const receipt: ReceiptForMatching = {
-        id: r.id,
-        source: r.source,
-        purchased_at: r.purchased_at,
-        currency: r.currency,
-        total_foreign: r.total_foreign,
-      }
       const cands = findCandidates(receipt, orderCandidates, 1)
       if (cands[0]) {
         const target = orderById.get(cands[0].order.id)
-        if (target) suggestion = { orderId: target.id, label: orderLabel(target), score: cands[0].score }
+        if (target) {
+          suggestion = { orderId: target.id, label: orderLabel(target), score: cands[0].score }
+          amountTargetId = target.id
+        }
       }
     }
+    const targetCandidate = amountTargetId ? candidateById.get(amountTargetId) : null
+    const cmp = targetCandidate ? compareAmounts(receipt, targetCandidate) : null
     return {
       receipt: r,
       matched_order_label: matched ? orderLabel(matched) : null,
       suggestion,
+      amount: cmp,
     }
   })
 
@@ -169,6 +181,7 @@ export default async function OrderMatchingPage() {
           currency: it.receipt.currency,
           matched_order_label: it.matched_order_label,
           suggestion: it.suggestion,
+          amount: it.amount,
         }))}
       />
 
