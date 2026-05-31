@@ -46,9 +46,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -58,8 +56,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: ticket } = await (admin as any)
+  const { data: ticket } = await admin
     .from('b2b_support_tickets')
     .select('id, subject, category, status, created_at, last_message_at')
     .eq('id', id)
@@ -67,8 +64,7 @@ export default async function TicketDetailPage({ params }: { params: Promise<{ i
     .single()
   if (!ticket) notFound()
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: messages } = await (admin as any)
+  const { data: messages } = await admin
     .from('b2b_support_messages')
     .select('id, sender, body, created_at')
     .eq('ticket_id', id)

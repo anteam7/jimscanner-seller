@@ -43,9 +43,7 @@ export default async function SupportPage() {
     return <div className="p-8 text-sm text-slate-600">로그인이 필요합니다.</div>
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -54,21 +52,14 @@ export default async function SupportPage() {
     return <div className="p-8 text-sm text-slate-600">사업자 계정이 없습니다.</div>
   }
 
-  const { data: rows } = await db
+  const { data: rows } = await sb
     .from('b2b_support_tickets')
     .select('id, subject, category, status, last_message_at, created_at')
     .eq('account_id', account.id)
     .order('last_message_at', { ascending: false })
     .limit(50)
 
-  const tickets = (rows ?? []) as {
-    id: string
-    subject: string
-    category: string
-    status: string
-    last_message_at: string
-    created_at: string
-  }[]
+  const tickets = rows ?? []
 
   return (
     <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
