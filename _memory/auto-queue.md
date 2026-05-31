@@ -512,12 +512,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 5건 모두 사용자 `approve` 댓글 수신 (2026-05-31, brainstorm cron 생성분) → P1 추가. issue open 유지 (작업 완료 시 close).
 
-- [ ] **#idea-20 구매 전 마진 시뮬레이터 — "이거 사도 남나" 30초 계산** _(brainstorm approved 2026-06-01)_
+- [x] **#idea-20 구매 전 마진 시뮬레이터 — "이거 사도 남나" 30초 계산** _(brainstorm approved 2026-06-01)_
   - estimated: 1.5-2h
   - prereq: 없음
   - decision_required: false (신규 페이지 → AUTO-RUN BUT REPORT)
   - source: github issue#20
   - sketch: 신규 `/simulator` 페이지 (client). 입력 판매가(KRW)·매입가(외화+통화)·수량·예상 배대지비(KRW)·마켓 수수료율(마켓 프리셋)·관부가세 토글 → 순마진(KRW)/마진율(%)/손익분기 매입가/역마진 경고. 실시간 환율(`getExchangeRates` 재사용). 마켓 수수료 프리셋(쿠팡/스마트스토어/11번가 등). 결과→`/orders/new` prefill 링크(선택). SellerShell 메뉴 추가. DB 변경 0.
+  - 완료: 2026-06-01 commit 4334c47 (74회차)
+  - 구현: 서버 `/simulator/page.tsx` (getExchangeRates→toSnapshot) + client `MarginSimulator.tsx`. 입력: 통화(환율 지원 USD/JPY/CNY/EUR)·매입 단가(외화)·수량·판매 단가(KRW)·마켓 수수료 프리셋(쿠팡10.8/스마트스토어5.85/11번가·지마켓·옥션12/롯데온11/자사몰3/직접입력)·배대지 배송비(기본 6000, margin-loss SHIPPING_EST_KRW 동일)·기타비용(관세·수수료). 출력: 순마진/마진율(역마진 rose<0·주의 amber<10%·양호 emerald)·매입환산단가·매입합계·판매합계·마켓수수료·총비용·손익분기 판매단가(수수료 반영 fixedCost/(1-f)/q). KRW 환산 `(foreign*rate)/unit` (margin-loss·NewOrderForm 동일). 환율 fallback 배지 + 수수료 추정 안내문 + aria-label. SellerShell 메뉴 '마진 시뮬레이터' 추가. CTA 는 prefill 미구현이라 `/orders/new` 단순 이동. DB·외부의존 0. build·lint(0 problems) 통과.
+  - 후속 (소형): `/orders/new` 에 sim 값 prefill(query param) 연계, 대시보드 빠른작업 카드 진입점, 관·부가세 자동 계산(현재 수동 기타비용).
 
 - [ ] **#idea-21 주간 운영 요약 다이제스트 — 월요일에 지난주를 한 카드로** _(brainstorm approved 2026-06-01)_
   - estimated: 1-1.5h
