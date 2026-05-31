@@ -64,9 +64,7 @@ export default async function ClientsPage() {
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id, business_name')
     .eq('user_id', user.id)
@@ -80,8 +78,7 @@ export default async function ClientsPage() {
   }
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const { data: rows } = await (admin as any)
+  const { data: rows } = await admin
     .from('b2b_orders')
     .select(
       'id, order_date, status, marketplace, buyer_name, buyer_phone, buyer_address, b2b_order_items(sale_price_krw)',
