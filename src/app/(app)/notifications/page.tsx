@@ -33,9 +33,7 @@ export default async function NotificationsPage() {
     )
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
@@ -49,7 +47,7 @@ export default async function NotificationsPage() {
   }
 
   const PAGE_SIZE = 50
-  const { data: rows } = await db
+  const { data: rows } = await sb
     .from('b2b_notifications')
     .select('id, type, title, body, link, read_at, created_at')
     .eq('account_id', account.id)
@@ -61,7 +59,7 @@ export default async function NotificationsPage() {
   const items = hasMore ? fetched.slice(0, PAGE_SIZE) : fetched
   const initialCursor = hasMore ? items[items.length - 1].created_at : null
 
-  const { count: unreadCount } = await db
+  const { count: unreadCount } = await sb
     .from('b2b_notifications')
     .select('id', { count: 'exact', head: true })
     .eq('account_id', account.id)
