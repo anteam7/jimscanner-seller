@@ -481,12 +481,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: sessionStorage 대신 `/orders/new?duplicate=<orderId>` query param 채택 (기존 `/refunds/new?order_id=` 패턴과 일관, 서버 컴포넌트 fetch라 클라 fetch 불필요). `/orders/[id]` 액션 섹션에 '이 주문 복제(재주문)' indigo 버튼. new/page.tsx 가 소유 주문(account_id 명시 가드 + deleted_at null)을 fetch → `DuplicateSource` 구성 → NewOrderForm `duplicateFrom` prop. prefill: 구매자 PII·배대지(주문 단위)·상품 라인(productId/SKU label/supplierSite/상품명/URL/옵션/수량/통화/단가/중량/판매가/이미지/라인 배대지/통관분류). 비움: 마켓 주문번호·매입 주문번호·운송장(과거 매입 고유값)·주문번호·주문일(새 발급). SKU label 은 b2b_order_items.product_id FK 미등록이라 b2b_products 별도 in() 조회. 복제 모드 시 헤더 타이틀 '주문 복제(재주문)' + indigo 안내 배너. DB 변경 0. 빌드 compiled · lint 0 problems.
   - note: OrderListClient 행 액션 추가는 행이 Link 래핑이라 중첩 인터랙션 a11y 위험 → 후속(선택)으로 보류. 상세 페이지 버튼으로 1-click 재주문 핵심 가치는 전달됨.
 
-- [ ] **#idea-17 매칭 시 영수증↔주문 금액 불일치 경고** _(brainstorm approved 2026-05-31)_
+- [x] **#idea-17 매칭 시 영수증↔주문 금액 불일치 경고** _(brainstorm approved 2026-05-31)_
   - estimated: 40m
   - prereq: 없음
   - decision_required: false
   - source: github issue#17
   - sketch: /orders/matching 추천 계산 시 후보 주문 라인 합계 대비 영수증 total_foreign 비율 → suggestion.amountDelta. ReceiptRow 에 ±10% 초과 ⚠️ 배지 + 실제 차액. 통화 불일치는 "통화 다름" 라벨(환산 없이 경고만). DB 변경 없음.
+  - 완료: 2026-05-31 commit ca09a7f (53회차)
+  - 구현: `import-matcher.ts` 에 `compareAmounts(receipt, order)` 추가 — 같은 source 라인만 합산, deltaPct(부호有: 음수=주문이 더 큼=분할발송 의심) + currencyMismatch + orderCurrency 반환. matching/page.tsx 가 매칭된 주문(우선) 또는 top1 추천 주문 대상으로 cmp 계산해 client 에 `amount` 전달. OrderMatchingClient `AmountWarning` 컴포넌트: 통화 불일치 시 rose "통화 다름" 배지(비교 불가), ±10%(AMOUNT_DELTA_THRESHOLD) 초과 시 amber 금액차이 배지(차이%+영수증/주문/차액 + 방향 hint title). 매칭된 영수증에도 적용(자신있게 매칭한 오매칭 T1 사후 인지). DB·외부의존 0. build·lint(0 problems) 통과.
 
 - [ ] **#idea-18 주문 상태 변경 이력 타임라인** _(brainstorm approved 2026-05-31)_
   - estimated: 1h
@@ -527,7 +529,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ## 큐 통계
 
-- P1 자율 가능: **37개 완료, pending 3** (#idea-16 2026-05-31 52회차 commit 60aa714 완료. **pending = #idea-17 (매칭 금액 불일치 경고)·#idea-18 (주문 상태 이력 타임라인)·#idea-19 (⌘K command palette)** — 52회차 brainstorm approved 4건 중 #idea-16 처리, 나머지 3건 다음 회차 대기).
+- P1 자율 가능: **38개 완료, pending 2** (#idea-17 2026-05-31 53회차 commit ca09a7f 완료. **pending = #idea-18 (주문 상태 이력 타임라인)·#idea-19 (⌘K command palette)** — 52회차 brainstorm approved 4건 중 #idea-16/17 처리, 나머지 2건 다음 회차 대기).
 - Phase 0 잔여: **2개** (#PH0-5 detail page, #PH0-6 KPI 카드) — 둘 다 main repo 핸드오프이며 **base 페이지 핸드오프 (jimpass-agent-platform#3, PH0-4) 가 아직 open** 이라 blocked. main#3 close 되면 그 때 handoff issue 생성.
 - P0 결정 대기: **0개 (issue#7 답신 수신·종결 처리 중)** — 30회차에 사용자 최종 답신(item 2 적용요청, 나머지 no). item 2 는 GoTrue 대시보드 설정이라 agent MCP 적용 불가 → issue 에 단계 안내 댓글 + 사용자 토글 대기.
 - P2 사용자 액션 대기: **4개**
