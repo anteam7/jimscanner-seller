@@ -20,6 +20,9 @@
 import { NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import { authenticateSellerToken } from '@/lib/b2b/seller-tokens'
+import type { Database, Json } from '../../../../../types/supabase'
+
+type FormSnapshotInsert = Database['public']['Tables']['b2b_forwarder_form_snapshots']['Insert']
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -75,13 +78,11 @@ export async function POST(request: Request) {
   const fields = fieldsRaw.slice(0, MAX_FIELDS)
 
   const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
 
   // slug → forwarder_id 매핑 (있으면)
   let forwarderId: string | null = null
   if (forwarderSlug) {
-    const { data: fwd } = await adb
+    const { data: fwd } = await admin
       .from('forwarders')
       .select('id')
       .eq('slug', forwarderSlug)
@@ -89,18 +90,20 @@ export async function POST(request: Request) {
     if (fwd) forwarderId = fwd.id
   }
 
-  const { data: row, error } = await adb
+  const payload: FormSnapshotInsert = {
+    account_id: auth.account_id,
+    forwarder_id: forwarderId,
+    forwarder_slug: forwarderSlug,
+    url,
+    page_title: pageTitle,
+    html_excerpt: htmlExcerpt,
+    fields: fields as Json,
+    user_note: userNote,
+  }
+
+  const { data: row, error } = await admin
     .from('b2b_forwarder_form_snapshots')
-    .insert({
-      account_id: auth.account_id,
-      forwarder_id: forwarderId,
-      forwarder_slug: forwarderSlug,
-      url,
-      page_title: pageTitle,
-      html_excerpt: htmlExcerpt,
-      fields,
-      user_note: userNote,
-    })
+    .insert(payload)
     .select('id')
     .single()
 
