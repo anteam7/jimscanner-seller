@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
+import { formatKRW } from '@/lib/b2b/format'
 
 export const metadata: Metadata = {
   title: '결제 · 구독',
@@ -29,11 +30,6 @@ type SubscriptionRow = {
     monthly_order_quota: number | null
     features: Record<string, boolean> | null
   } | null
-}
-
-function formatKRW(n: number | null): string {
-  if (n == null) return '—'
-  return new Intl.NumberFormat('ko-KR').format(n) + '원'
 }
 
 function formatDate(s: string | null): string {

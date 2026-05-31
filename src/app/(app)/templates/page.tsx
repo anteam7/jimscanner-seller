@@ -4,6 +4,7 @@ import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import TemplateUploadModal from '@/components/b2b/TemplateUploadModal'
 import ForkTemplateButton from '@/components/b2b/ForkTemplateButton'
+import { formatDateTime } from '@/lib/b2b/format'
 
 export const metadata: Metadata = {
   title: '배대지 양식',
@@ -26,15 +27,6 @@ type TemplateRow = {
 }
 
 type Forwarder = { id: string; name: string }
-
-function formatDateTime(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  })
-}
 
 function formatSize(b: number | null): string {
   if (b == null) return '—'

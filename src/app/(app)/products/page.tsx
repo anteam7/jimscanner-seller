@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
 import { SUPPLIER_SITES } from '@/lib/b2b/order-options'
 import FavoriteStar from '@/components/b2b/FavoriteStar'
+import { formatDateTime } from '@/lib/b2b/format'
 
 export const metadata: Metadata = {
   title: '해외 상품관리',
@@ -35,15 +36,6 @@ function formatPrice(p: number | string | null, c: string | null): string {
   const n = typeof p === 'number' ? p : Number(p)
   if (!Number.isFinite(n)) return '—'
   return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 2 }).format(n)} ${c}`
-}
-
-function formatDateTime(value: string): string {
-  const d = new Date(value)
-  if (Number.isNaN(d.getTime())) return value
-  return d.toLocaleString('ko-KR', {
-    year: 'numeric', month: '2-digit', day: '2-digit',
-    hour: '2-digit', minute: '2-digit',
-  })
 }
 
 export default async function ProductsPage({
