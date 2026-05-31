@@ -4,7 +4,12 @@ import { createClient } from '@/lib/auth/server'
 import { getNearLimitCards } from '@/lib/b2b/card-limits'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
 import { getMarginLossAlerts } from '@/lib/b2b/margin-loss'
-import NewOrderForm, { type ForwarderOption, type RecentBuyer } from './NewOrderForm'
+import NewOrderForm, {
+  type ForwarderOption,
+  type RecentBuyer,
+  type DuplicateSource,
+  type DuplicateLine,
+} from './NewOrderForm'
 
 export const metadata: Metadata = {
   title: '새 주문 입력',
@@ -13,8 +18,13 @@ export const metadata: Metadata = {
 
 export const dynamic = 'force-dynamic'
 
-export default async function NewOrderPage() {
+export default async function NewOrderPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ duplicate?: string }>
+}) {
   const supabase = await createClient()
+  const duplicateId = (await searchParams).duplicate
 
   // forwarders 는 public read 허용 (main repo schema)
   const { data: rows } = await supabase
@@ -35,6 +45,7 @@ export default async function NewOrderPage() {
   let lastForwarderId = ''
   let lastForwarderCountry = ''
   const recentBuyers: RecentBuyer[] = []
+  let duplicateSource: DuplicateSource | null = null
   if (user) {
     const { data: account } = await supabase
       .from('b2b_accounts')
@@ -43,6 +54,66 @@ export default async function NewOrderPage() {
       .single()
     if (account) {
       nearLimitCards = await getNearLimitCards(account.id)
+
+      // 주문 복제(재주문) — ?duplicate=<orderId> 로 들어오면 소유 주문을 prefill 소스로 로드
+      if (duplicateId) {
+        const { data: src } = await supabase
+          .from('b2b_orders')
+          .select(
+            'marketplace, forwarder_id, forwarder_country, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, b2b_order_items(display_order, product_id, product_name, product_url, market_option, quantity, currency, unit_price_foreign, weight_kg, sale_price_krw, image_url, supplier_site, forwarder_id, customs_category)',
+          )
+          .eq('id', duplicateId)
+          .eq('account_id', account.id) // 소유권 — RLS 외 명시 가드
+          .is('deleted_at', null)
+          .maybeSingle()
+        if (src) {
+          // 라인의 SKU 라벨 (productSku) 조회 — b2b_order_items.product_id FK 미등록이라 별도 쿼리
+          const items = (src.b2b_order_items ?? [])
+            .slice()
+            .sort((a, b) => (a.display_order ?? 0) - (b.display_order ?? 0))
+          const productIds = [...new Set(items.map((i) => i.product_id).filter((v): v is string => !!v))]
+          const skuByProductId: Record<string, string | null> = {}
+          if (productIds.length > 0) {
+            const { data: skuRows } = await supabase
+              .from('b2b_products')
+              .select('id, seller_sku')
+              .eq('account_id', account.id)
+              .in('id', productIds)
+            for (const r of skuRows ?? []) skuByProductId[r.id] = r.seller_sku
+          }
+          const dupLines: DuplicateLine[] = items.map((i) => ({
+            productId: i.product_id,
+            productSku: i.product_id ? skuByProductId[i.product_id] ?? null : null,
+            supplierSite: i.supplier_site ?? '',
+            productName: i.product_name ?? '',
+            productUrl: i.product_url ?? '',
+            marketOption: i.market_option ?? '',
+            quantity: i.quantity != null ? String(i.quantity) : '1',
+            currency: (i.currency || 'USD') as DuplicateLine['currency'],
+            unitPrice: i.unit_price_foreign != null ? String(i.unit_price_foreign) : '',
+            weightKg: i.weight_kg != null ? String(i.weight_kg) : '',
+            salePriceKrw: i.sale_price_krw != null ? String(i.sale_price_krw) : '',
+            imageUrl: i.image_url ?? '',
+            forwarderId: i.forwarder_id ?? '',
+            customsCategory: i.customs_category ?? '',
+          }))
+          duplicateSource = {
+            marketplace: src.marketplace ?? '',
+            forwarderId: src.forwarder_id ?? '',
+            forwarderCountry: src.forwarder_country ?? '',
+            buyer: {
+              buyer_name: src.buyer_name,
+              buyer_phone: src.buyer_phone,
+              buyer_postal_code: src.buyer_postal_code,
+              buyer_address: src.buyer_address,
+              buyer_detail_address: src.buyer_detail_address,
+              buyer_customs_code: src.buyer_customs_code,
+            },
+            lines: dupLines,
+          }
+        }
+      }
+
       // sticky 배대지 — 가장 최근 주문에서 사용한 배대지를 기본값으로
       const { data: lastOrder } = await supabase
         .from('b2b_orders')
@@ -126,6 +197,7 @@ export default async function NewOrderPage() {
         initialForwarderId={lastForwarderId}
         initialForwarderCountry={lastForwarderCountry}
         recentBuyers={recentBuyers}
+        duplicateFrom={duplicateSource}
       />
     </>
   )

@@ -47,12 +47,40 @@ export type RecentBuyer = {
   buyer_customs_code: string | null
 }
 
+/** 주문 복제(재주문)용 라인 prefill. 운송장·매입 주문번호 등 과거 매입 고유값은 제외. */
+export type DuplicateLine = {
+  productId: string | null
+  productSku: string | null
+  supplierSite: string
+  productName: string
+  productUrl: string
+  marketOption: string
+  quantity: string
+  currency: Currency
+  unitPrice: string
+  weightKg: string
+  salePriceKrw: string
+  imageUrl: string
+  forwarderId: string
+  customsCategory: string
+}
+
+/** 기존 주문 복제 시 폼 초기값. 마켓 주문번호·주문일·내부 주문번호는 새로 생성. */
+export type DuplicateSource = {
+  marketplace: string
+  forwarderId: string
+  forwarderCountry: string
+  buyer: RecentBuyer
+  lines: DuplicateLine[]
+}
+
 export default function NewOrderForm({
   forwarders,
   lossSkus = {},
   initialForwarderId = '',
   initialForwarderCountry = '',
   recentBuyers = [],
+  duplicateFrom = null,
 }: {
   forwarders: ForwarderOption[]
   /** product_id → 단위당 손실 KRW (최근 30일 마진 손실 SKU). 주문 입력 시 경고. */
@@ -62,6 +90,8 @@ export default function NewOrderForm({
   initialForwarderCountry?: string
   /** 최근 구매자 — 클릭 1번으로 수신자 정보 자동 채움 */
   recentBuyers?: RecentBuyer[]
+  /** 기존 주문 복제 — 구매자·배대지·상품 라인을 prefill (재주문) */
+  duplicateFrom?: DuplicateSource | null
 }) {
   const router = useRouter()
 
@@ -69,17 +99,18 @@ export default function NewOrderForm({
   const [orderNumber, setOrderNumber] = useState('')
   const [orderDate, setOrderDate] = useState(todayISO())
 
-  // 마켓
-  const [marketplace, setMarketplace] = useState('')
+  // 마켓 (복제 시 마켓은 같은 채널일 가능성 높아 유지, 마켓 주문번호는 중복 방지 위해 비움)
+  const [marketplace, setMarketplace] = useState(duplicateFrom?.marketplace ?? '')
   const [marketOrderNumber, setMarketOrderNumber] = useState('')
 
-  // 마켓 구매자 (배대지 양식의 수신자)
-  const [buyerName, setBuyerName] = useState('')
-  const [buyerPhone, setBuyerPhone] = useState('')
-  const [buyerPostalCode, setBuyerPostalCode] = useState('')
-  const [buyerAddress, setBuyerAddress] = useState('')
-  const [buyerDetailAddress, setBuyerDetailAddress] = useState('')
-  const [buyerCustomsCode, setBuyerCustomsCode] = useState('')
+  // 마켓 구매자 (배대지 양식의 수신자) — 복제 시 prefill
+  const dupBuyer = duplicateFrom?.buyer
+  const [buyerName, setBuyerName] = useState(dupBuyer?.buyer_name ?? '')
+  const [buyerPhone, setBuyerPhone] = useState(dupBuyer?.buyer_phone ?? '')
+  const [buyerPostalCode, setBuyerPostalCode] = useState(dupBuyer?.buyer_postal_code ?? '')
+  const [buyerAddress, setBuyerAddress] = useState(dupBuyer?.buyer_address ?? '')
+  const [buyerDetailAddress, setBuyerDetailAddress] = useState(dupBuyer?.buyer_detail_address ?? '')
+  const [buyerCustomsCode, setBuyerCustomsCode] = useState(dupBuyer?.buyer_customs_code ?? '')
 
   // 해외 매입 (라인 — N건)
   type LineItem = {
@@ -120,7 +151,28 @@ export default function NewOrderForm({
       customsCategory: '',
     }
   }
-  const [lines, setLines] = useState<LineItem[]>([blankLine()])
+  const [lines, setLines] = useState<LineItem[]>(() =>
+    duplicateFrom && duplicateFrom.lines.length > 0
+      ? duplicateFrom.lines.map((l) => ({
+          ...blankLine(),
+          productId: l.productId,
+          productSku: l.productSku,
+          supplierSite: l.supplierSite,
+          productName: l.productName,
+          productUrl: l.productUrl,
+          marketOption: l.marketOption,
+          quantity: l.quantity,
+          currency: l.currency,
+          unitPrice: l.unitPrice,
+          weightKg: l.weightKg,
+          salePriceKrw: l.salePriceKrw,
+          imageUrl: l.imageUrl,
+          forwarderId: l.forwarderId,
+          customsCategory: l.customsCategory,
+          // supplierOrderNumber·trackingNumberOverseas 는 과거 매입 고유값이라 비움
+        }))
+      : [blankLine()],
+  )
   function patchLine(i: number, p: Partial<LineItem>) {
     setLines((prev) => prev.map((l, idx) => (idx === i ? { ...l, ...p } : l)))
   }
@@ -131,9 +183,11 @@ export default function NewOrderForm({
     setLines((p) => (p.length <= 1 ? p : p.filter((_, idx) => idx !== i)))
   }
 
-  // 배대지 (sticky — 마지막 사용 배대지로 초기화, SKU 선택 시 SKU default 가 덮어씀)
-  const [forwarderId, setForwarderId] = useState(initialForwarderId)
-  const [forwarderCountry, setForwarderCountry] = useState(initialForwarderCountry)
+  // 배대지 (sticky — 마지막 사용 배대지로 초기화, 복제 시엔 원본 주문 배대지로 초기화)
+  const [forwarderId, setForwarderId] = useState(duplicateFrom?.forwarderId || initialForwarderId)
+  const [forwarderCountry, setForwarderCountry] = useState(
+    duplicateFrom?.forwarderCountry || initialForwarderCountry,
+  )
 
   // 메모
   const [requestNotes, setRequestNotes] = useState('')
@@ -370,12 +424,25 @@ export default function NewOrderForm({
           </svg>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">새 주문 입력</h1>
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+            {duplicateFrom ? '주문 복제 (재주문)' : '새 주문 입력'}
+          </h1>
           <p className="text-sm text-slate-600 mt-1">
             마켓 주문 → 해외 매입 → 배대지 → 마켓 구매자에게 배송. 한번에 등록합니다.
           </p>
         </div>
       </div>
+
+      {duplicateFrom && (
+        <div className="rounded-lg border border-indigo-200 bg-gradient-to-r from-indigo-50 to-white px-4 py-3">
+          <p className="text-sm font-medium text-indigo-800">
+            기존 주문을 복제했습니다 — 구매자·배대지·상품 라인이 채워졌습니다.
+          </p>
+          <p className="mt-0.5 text-[12px] text-indigo-600/80">
+            주문번호·주문일은 새로 발급됐고, 마켓 주문번호·매입 주문번호·운송장은 비워 두었습니다. 확인 후 등록하세요.
+          </p>
+        </div>
+      )}
 
       {error && (
         <div role="alert" className="rounded-lg border border-rose-200 bg-rose-50 px-4 py-3">
