@@ -15,8 +15,7 @@ export default function AccountSuspendedPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from('b2b_accounts')
         .select('verification_status, suspended_reason')
         .eq('user_id', user.id)
