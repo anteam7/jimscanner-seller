@@ -108,6 +108,16 @@ const NAV_ITEMS = [
     available: true,
   },
   {
+    href: '/simulator',
+    label: '마진 시뮬레이터',
+    icon: (
+      <svg className="w-4 h-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
+        <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 15.75V18m-7.5-6.75h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V13.5Zm0 2.25h.008v.008H8.25v-.008Zm0 2.25h.008v.008H8.25V18Zm2.498-6.75h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V13.5Zm0 2.25h.007v.008h-.007v-.008Zm0 2.25h.007v.008h-.007V18Zm2.504-6.75h.008v.008h-.008v-.008Zm0 2.25h.008v.008h-.008V13.5Zm0 2.25h.008v.008h-.008v-.008Zm-8.272-9h12.69c.621 0 1.125.504 1.125 1.125v15.75c0 .621-.504 1.125-1.125 1.125H5.232a1.125 1.125 0 0 1-1.125-1.125V3.375c0-.621.504-1.125 1.125-1.125Zm1.5 4.5h9.75v2.25H6.732V6.75Z" />
+      </svg>
+    ),
+    available: true,
+  },
+  {
     href: '/resources/customs-guide',
     label: '통관 가이드',
     icon: (
