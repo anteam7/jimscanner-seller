@@ -10,11 +10,11 @@ export async function GET(req: NextRequest) {
 
   if (errorParam) {
     const msg = encodeURIComponent(errorDescription ?? errorParam)
-    return NextResponse.redirect(`${origin}/seller/auth/callback?error=${msg}`)
+    return NextResponse.redirect(`${origin}/auth/callback?error=${msg}`)
   }
 
   if (!code) {
-    return NextResponse.redirect(`${origin}/seller/login`)
+    return NextResponse.redirect(`${origin}/login`)
   }
 
   const supabase = await createClient()
@@ -22,17 +22,17 @@ export async function GET(req: NextRequest) {
 
   if (exchangeError) {
     const msg = encodeURIComponent(exchangeError.message)
-    return NextResponse.redirect(`${origin}/seller/auth/callback?error=${msg}`)
+    return NextResponse.redirect(`${origin}/auth/callback?error=${msg}`)
   }
 
   const type = searchParams.get('type')
   if (type === 'recovery') {
-    return NextResponse.redirect(`${origin}/seller/auth/reset-password`)
+    return NextResponse.redirect(`${origin}/auth/reset-password`)
   }
 
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) {
-    return NextResponse.redirect(`${origin}/seller/login`)
+    return NextResponse.redirect(`${origin}/login`)
   }
 
   const admin = createAdminClient()
@@ -44,16 +44,16 @@ export async function GET(req: NextRequest) {
     .maybeSingle()
 
   if (!account || !account.business_no) {
-    return NextResponse.redirect(`${origin}/seller/signup/step-4`)
+    return NextResponse.redirect(`${origin}/signup/step-4`)
   }
 
   if (account.verification_level === 0) {
-    return NextResponse.redirect(`${origin}/seller/signup/step-5`)
+    return NextResponse.redirect(`${origin}/signup/step-5`)
   }
 
   if (account.verification_status === 'business_no_verified') {
-    return NextResponse.redirect(`${origin}/seller/signup/step-6`)
+    return NextResponse.redirect(`${origin}/signup/step-6`)
   }
 
-  return NextResponse.redirect(`${origin}/seller/dashboard`)
+  return NextResponse.redirect(`${origin}/dashboard`)
 }
