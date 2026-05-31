@@ -173,25 +173,33 @@ export default function PaymentCardsManager({
   }
 
   async function toggleActive(c: CardRow) {
-    await fetch(`/api/payment-cards/${c.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ is_active: !c.is_active }),
-    })
-    await reload()
-    router.refresh()
+    try {
+      await fetch(`/api/payment-cards/${c.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ is_active: !c.is_active }),
+      })
+      await reload()
+      router.refresh()
+    } catch {
+      alert('네트워크 오류로 카드 상태를 변경하지 못했습니다.')
+    }
   }
 
   async function remove(c: CardRow) {
     if (!confirm(`'${c.alias}' 카드를 삭제할까요? 기존 매입 라인의 매핑은 유지됩니다.`)) return
-    const res = await fetch(`/api/payment-cards/${c.id}`, { method: 'DELETE' })
-    if (!res.ok) {
-      const json = (await res.json().catch(() => ({}))) as { error?: string }
-      alert(json.error ?? '삭제 실패')
-      return
+    try {
+      const res = await fetch(`/api/payment-cards/${c.id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const json = (await res.json().catch(() => ({}))) as { error?: string }
+        alert(json.error ?? '삭제 실패')
+        return
+      }
+      await reload()
+      router.refresh()
+    } catch {
+      alert('네트워크 오류로 카드를 삭제하지 못했습니다.')
     }
-    await reload()
-    router.refresh()
   }
 
   return (
