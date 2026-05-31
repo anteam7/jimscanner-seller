@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 import { createClient } from '@/lib/auth/server'
+import { formatDateTimeShort as formatDate } from '@/lib/b2b/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,16 +23,6 @@ const STATUS_STYLE: Record<string, { label: string; cls: string }> = {
   open: { label: '답변 대기', cls: 'text-amber-800 bg-amber-50 border-amber-200' },
   answered: { label: '답변 도착', cls: 'text-emerald-800 bg-emerald-50 border-emerald-200' },
   closed: { label: '종료', cls: 'text-slate-600 bg-slate-100 border-slate-200' },
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  const yy = String(d.getFullYear()).slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${yy}.${mm}.${dd} ${hh}:${mi}`
 }
 
 export default async function SupportPage() {

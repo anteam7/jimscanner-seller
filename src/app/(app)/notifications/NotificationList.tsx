@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
+import { formatDateTimeShort as formatDate } from '@/lib/b2b/format'
 
 type Notification = {
   id: string
@@ -28,16 +29,6 @@ const TYPE_COLOR: Record<string, string> = {
   billing: 'border-l-emerald-500',
   exchange_rate_alert: 'border-l-amber-500',
   margin_warning: 'border-l-rose-500',
-}
-
-function formatDate(iso: string): string {
-  const d = new Date(iso)
-  const yy = String(d.getFullYear()).slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  const hh = String(d.getHours()).padStart(2, '0')
-  const mi = String(d.getMinutes()).padStart(2, '0')
-  return `${yy}.${mm}.${dd} ${hh}:${mi}`
 }
 
 export default function NotificationList({
