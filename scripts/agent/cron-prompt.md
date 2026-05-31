@@ -167,7 +167,11 @@ main repo agent 가 처리 후 close. 결과 알림 필요시 다음 회차에 i
 
 ## 6. 큐 비었거나 idle 조건
 
-- P1 에 pending 항목 없음 → `chore(queue): P1 소진 — idle` commit (변경 없음) push
+- P1 에 pending 항목 없음 → **즉시 idle 하지 말고 `_memory/auto-queue.md` 의 `## P1.5 — idle 라운드 자율 일감 풀` 에서 1건 pick**:
+  - 풀 위에서부터 점검, **명확한 net-positive 슬라이스** 가 있는 첫 항목을 한 회차 분량(페이지/컴포넌트 1개)만 처리
+  - 대부분 rolling 스윕이라 `[x]` 로 완료 마킹하지 않고, 처리한 슬라이스를 Fire 이력에 한 줄 기록(다음 회차가 이어받음)
+  - 변경 시 5번(완료) 절차 동일: build·lint 0 통과 + 변경 파일만 commit + push + b2b_auto_runs 기록
+  - **억지 변경 금지**: 풀 전체에서 명확한 개선 슬라이스가 없으면 → `chore(queue): P1 소진 — idle` commit (변경 없음) push. (agent-decision-rules 의 net-negative churn 회피)
 - 충돌·에러 발생 → `b2b_auto_runs` 에 task_status='failed' + error_message 기록 후 종료
 
 ## 7. 절대 하지 마

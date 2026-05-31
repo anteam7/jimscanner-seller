@@ -510,6 +510,31 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ---
 
+## P1.5 — idle 라운드 자율 일감 풀 (P1 비었을 때 1건씩 · decision_required: false)
+
+P1 (brainstorm 승인분) 이 비고 inbox 도 조용할 때, `chore(queue): P1 소진` 즉시 idle 대신
+아래 풀에서 **명확한 net-positive 슬라이스 1건**을 처리한다. 대부분 "스윕(sweep)" 이라
+한 회차에 페이지·컴포넌트 1개 단위로 잘라서 진행하고, 진행분을 Fire 이력에 한 줄 남겨 다음 회차가 이어받는다.
+
+**철칙 (agent-decision-rules 의 net-negative churn 회피와 동일)**: 억지로 변경을 만들지 말 것.
+명확한 개선 슬라이스가 없으면 그 항목 skip → 다음 항목 → 그래도 없으면 그냥 `chore(queue): P1 소진 — idle` 로 종료.
+모든 변경은 build·lint 0 통과 + 동작/시각 회귀 0 이어야 한다 (순수 additive·정리 위주).
+
+우선순위 순 (위에서부터 점검):
+
+- [ ] **#idle-1 디자인 시스템 일관성 스윕** _(rolling)_ — `_memory/design-system.md` 토큰 대비 한 회차 **1 페이지/섹션**. 카드 `shadow-sm` 누락, 비토큰 색(임의 hex/색), 간격·radius 불일치, accent `border-l-[3px]` 패턴 이탈, 본문 `text-white` 오용 등 1건씩 정렬. 시각 회귀 없는 토큰 정렬만.
+- [ ] **#idle-2 빈/로딩/에러 상태 보강** _(rolling)_ — 목록·상세 페이지 한 회차 1개. empty state 맥락 문구+CTA, 로딩 skeleton, 에러 분기(없으면 추가). 신규 페이지(재주문·타임라인·정산 등) 우선.
+- [ ] **#idle-3 a11y 일관성 스윕** _(rolling)_ — 신규/누락 컴포넌트 한 회차 1군. placeholder-only input 의 `aria-label`, 아이콘 버튼 라벨, focus ring, 대비(WCAG AA), 키보드 내비. (⌘K 팔레트·상태 타임라인·주문 복제 폼·BulkMatchBar 등 최근 추가분 우선)
+- [ ] **#idle-4 모바일 레이아웃 점검** _(rolling)_ — 핵심 플로우(주문 확인·매칭·알림·대시보드) 한 회차 1 페이지. 좁은 뷰포트 overflow·터치 타겟(≥40px)·가독성. gstack `/browse` 로 360px 스크린샷 근거 권장.
+- [ ] **#idle-5 중복 유틸 통합** _(rolling)_ — `formatKRW`·`formatForeign`·`formatDate`·`formatWeight` 등 여러 파일에 복붙된 헬퍼를 `src/lib/b2b/format.ts` 로 통합하고 import 교체. 한 회차 몇 파일씩, 동작 동일 보장.
+- [ ] **#idle-6 잔여 `as any` 제거 마무리** _(거의 소진)_ — 남은 route/컴포넌트의 느슨한 캐스트를 typed client 로. types/supabase.ts 에 타입 있는 것만. (이전에 대시보드 silent 버그를 숨긴 류라 예방 가치 있음)
+- [ ] **#idle-7 dead code·unused export 정리** _(rolling)_ — 미사용 export/변수/주석 처리된 코드 한 회차 1 모듈. lint 가 못 잡는 것 위주.
+- [ ] **#idle-8 DB 성능 모니터 점검(2026-08-28 재검토 대상)** _(점검만)_ — `#auto-G`·`#auto-H` 의 미인덱스 FK·unused index 후보가 행 수 증가로 활용 시작됐는지 advisor 로 확인만. 실제 인덱스 추가는 재검토 기한까지 보류 (변경 없이 점검 1줄 기록).
+
+> 추가 idle 일감이 떠오르면 이 풀 끝에 `#idle-N` 으로 append. 사용자 결정이 필요하면 P1.5 가 아니라 STOP&ASK(issue).
+
+---
+
 ## P2 — 도메인·운영 (사용자 액션 필요 — agent 가 알림만)
 
 - [ ] **#A `seller.jimscanner.co.kr` Vercel 도메인 매핑** — 사용자가 DNS CNAME 등록 + Vercel 측 도메인 추가. agent 는 30일 뒤에도 안 됐으면 reminder issue 생성.
@@ -536,6 +561,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 - P1 자율 가능: **40개 완료, pending 0** (#idea-19 ⌘K command palette 2026-05-31 55회차 commit bbf540c 완료. 52회차 brainstorm approved 4건(#idea-16/17/18/19) 전건 소진. **P1 큐 비었음 — 다음 brainstorm 승인 대기**).
 - Phase 0 잔여: **2개** (#PH0-5 detail page, #PH0-6 KPI 카드) — 둘 다 main repo 핸드오프이며 **base 페이지 핸드오프 (jimpass-agent-platform#3, PH0-4) 가 아직 open** 이라 blocked. main#3 close 되면 그 때 handoff issue 생성.
 - P0 결정 대기: **0개 (issue#7 답신 수신·종결 처리 중)** — 30회차에 사용자 최종 답신(item 2 적용요청, 나머지 no). item 2 는 GoTrue 대시보드 설정이라 agent MCP 적용 불가 → issue 에 단계 안내 댓글 + 사용자 토글 대기.
+- **P1.5 idle 라운드 자율 일감 풀: 8개** (#idle-1~8, rolling 스윕) — P1 비었을 때 1건씩. `as any` 즉흥 정리 대신 디자인 일관성·빈/로딩/에러 상태·a11y·모바일·유틸 통합 등 큐레이션된 일감.
 - P2 사용자 액션 대기: **4개**
 - P3 미래: **7개**
 
