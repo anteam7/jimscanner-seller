@@ -87,15 +87,13 @@ export default function SignupStep2Page() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const supabase = createClient() as any
+    const supabase = createClient()
     supabase
       .from('b2b_terms_versions')
       .select('id,version_code,category,title,body,is_required')
       .eq('is_active', true)
       .order('is_required', { ascending: false })
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .then(({ data, error: err }: any) => {
+      .then(({ data, error: err }) => {
         if (err || !data) {
           setError('약관을 불러오지 못했습니다. 잠시 후 다시 시도해 주세요.')
         } else {

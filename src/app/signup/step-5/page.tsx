@@ -37,8 +37,7 @@ export default function SignupStep5Page() {
         return
       }
       // step-4 완료 가드: business_no 없으면 step-4로 리다이렉트
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { data: account } = await (supabase as any)
+      const { data: account } = await supabase
         .from('b2b_accounts')
         .select('business_no')
         .eq('user_id', data.user.id)
