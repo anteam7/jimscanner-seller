@@ -46,18 +46,14 @@ export default async function TemplateEditPage({
   } = await sb.auth.getUser()
   if (!user) return null
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = sb as any
-  const { data: account } = await db
+  const { data: account } = await sb
     .from('b2b_accounts')
     .select('id')
     .eq('user_id', user.id)
     .single()
   if (!account) return null
 
-  const admin = createAdminClient()
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const adb = admin as any
+  const adb = createAdminClient()
 
   const { data: tpl } = (await adb
     .from('b2b_form_templates')
@@ -91,7 +87,7 @@ export default async function TemplateEditPage({
   const forwarders = (fwdRows ?? []) as EditorForwarder[]
 
   // 미리보기용 — 가장 최근 주문 1건 + 첫 라인
-  const { data: sampleOrderRows } = await db
+  const { data: sampleOrderRows } = await sb
     .from('b2b_orders')
     .select(
       'id, order_number, marketplace, market_order_number, buyer_name, buyer_phone, buyer_postal_code, buyer_address, buyer_detail_address, buyer_customs_code, request_notes, forwarder_country, forwarder_request_no, b2b_order_items(display_order, product_name, product_url, quantity, currency, unit_price_foreign, total_price_foreign, weight_kg, supplier_site, supplier_order_number, market_product_id, market_option, tracking_number)',
