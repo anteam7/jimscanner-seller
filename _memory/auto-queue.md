@@ -508,6 +508,45 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: `src/components/b2b/CommandPalette.tsx` (client) + SellerShell mount. ⌘K/Ctrl+K 전역 단축키 + 상단바 트리거 버튼(데스크탑 "검색… ⌘K" / 모바일 아이콘)으로 오픈, ESC·백드롭 닫기. 3 섹션: 메뉴(정적 21개 한·영 키워드 필터), 주문(`/api/orders?q=&limit=8`), 상품(`/api/products?q=`). 220ms 디바운스 + AbortController, trimmed 2자 이상일 때만 서버 검색(미만은 메뉴만). 방향키↑↓ 순환 탐색 + Enter SPA `router.push` + 마우스 hover 선택 + scrollIntoView. set-state-in-effect 회피: 부모가 `key` 로 열릴 때마다 remount(상태 초기화) + autoFocus, selected 는 effect 보정 대신 사용 시점 clamp(activeIndex). 기존 상단바 GET form 검색 제거(팔레트로 대체). DB 변경 0. build·lint(0) 통과.
   - 후속 (소형): 단골 구매자(/clients) 검색 결과 섹션 추가, 최근 방문/최근 검색 캐시, 결과 키보드 home/end 점프 — 운영 데이터 쌓인 뒤 검토.
 
+### Brainstorm approved (2026-06-01, 74회차)
+
+5건 모두 사용자 `approve` 댓글 수신 (2026-05-31, brainstorm cron 생성분) → P1 추가. issue open 유지 (작업 완료 시 close).
+
+- [ ] **#idea-20 구매 전 마진 시뮬레이터 — "이거 사도 남나" 30초 계산** _(brainstorm approved 2026-06-01)_
+  - estimated: 1.5-2h
+  - prereq: 없음
+  - decision_required: false (신규 페이지 → AUTO-RUN BUT REPORT)
+  - source: github issue#20
+  - sketch: 신규 `/simulator` 페이지 (client). 입력 판매가(KRW)·매입가(외화+통화)·수량·예상 배대지비(KRW)·마켓 수수료율(마켓 프리셋)·관부가세 토글 → 순마진(KRW)/마진율(%)/손익분기 매입가/역마진 경고. 실시간 환율(`getExchangeRates` 재사용). 마켓 수수료 프리셋(쿠팡/스마트스토어/11번가 등). 결과→`/orders/new` prefill 링크(선택). SellerShell 메뉴 추가. DB 변경 0.
+
+- [ ] **#idea-21 주간 운영 요약 다이제스트 — 월요일에 지난주를 한 카드로** _(brainstorm approved 2026-06-01)_
+  - estimated: 1-1.5h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#21
+  - sketch: 대시보드 주간 요약 카드 (지난주 월~일 KST, "이번주" 토글). 집계: 신규주문/매입완료/도착/총매입액·판매액(KRW)/예상마진/미매칭 영수증/지연 배송. analytics·dashboard 기존 집계 재사용. #idea-9 sparkline(일별) 과 중복 않게 주간 스냅샷. 전전주 比 화살표(선택).
+
+- [ ] **#idea-22 SKU 매입가 추세 + 인상 경고 — 마진 새기 전에** _(brainstorm approved 2026-06-01)_
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false
+  - source: github issue#22
+  - sketch: `/products/[id]` 매입가 추세 (b2b_order_items.unit_price_foreign 통화별 시계열, 평균/최저/최고 + 최근 vs 평균 델타%). `/orders/new` SKU 선택 시 "최근 평균 ¥X (최근 ¥Y, +Z%)" 인라인 힌트. 인상률 기본 10% 초과 amber 경고. quick-pick(#idea-10) 연계(선택). 대시보드 "매입가 오른 SKU" 미니카드(선택). DB 변경 0.
+
+- [ ] **#idea-23 /orders 모바일 카드 레이아웃 — 가로 스크롤 테이블 탈출** _(brainstorm approved 2026-06-01)_
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false (디자인/CSS — AUTO-RUN)
+  - source: github issue#23
+  - sketch: OrderListClient `md:` 미만에서 테이블→카드 리스트 (CSS만, 데이터 동일). 카드: 주문번호+상태배지(상단), 구매자명, 마켓, 금액, 주문일. 탭 타겟 ≥44px, 카드 전체 상세 링크. 데스크탑 테이블 유지. 행 클릭 하이라이트(#L-7) 로직 보존. design-system 카드 패턴 재사용.
+
+- [ ] **#idea-24 대시보드 정보 위계 정리 — 15+ 카드를 섹션으로** _(brainstorm approved 2026-06-01)_
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false (배치 재구성 → AUTO-RUN BUT REPORT)
+  - source: github issue#24
+  - sketch: 대시보드 카드를 4~5 섹션 그룹핑 ("오늘 할 일"=행동큐·미매칭·지연 / "실적"=매출·마진·sparkline / "배송·ETA"=ETA·보관기간 / "재무"=카드지출·정산 / "시스템"=cron 활동). 섹션 헤더(아이콘+제목) + 카드 그리드. 카드 자체 유지, 배치만 재구성. 접기/펴기 localStorage(선택).
+
 ---
 
 ## P1.5 — idle 라운드 자율 일감 풀 (P1 비었을 때 1건씩 · decision_required: false)
