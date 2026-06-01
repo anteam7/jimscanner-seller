@@ -83,11 +83,12 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - body 에 포함: 테이블 스키마 / 4 KPI 카드 / row table / 필터 / 모바일 우선
   - main repo agent 처리 대기 (issue close 되면 PH0-5 진행)
 
-- [ ] **#PH0-5 [handoff] main repo `/admin/b2b/health/[account_id]` detail 모달/페이지**
+- [x] **#PH0-5 [handoff] main repo `/admin/b2b/health/[account_id]` detail 모달/페이지** _(handoff: jimpass-agent-platform#5, 2026-06-02)_
   - estimated: 5m (handoff issue 생성)
   - prereq: #PH0-4 issue 생성 후 (같은 main agent 가 후속 처리)
   - decision_required: false
   - 셀러 단건 클릭 시: 30일 trend chart, 이슈 카테고리 칩, 정지/plan 변경 액션
+  - 완료: 2026-06-02 — PH0-4(#3) close 확인 후 detail 페이지 spec handoff. spec-key=phase0-admin-health-detail. b2b_seller_health_snapshot 30일 시계열 + issue_flags 칩 + admin 가드 spec 포함. main repo agent 처리 대기.
 
 - [ ] **#PH0-6 [handoff] main repo `/admin/dashboard` 에 셀러 KPI 4 카드**
   - estimated: 5m
