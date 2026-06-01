@@ -106,7 +106,8 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
   const [highlightId, setHighlightId] = useState<string | null>(null)
-  const rowRefs = useRef<Map<string, HTMLTableRowElement>>(new Map())
+  const rowRefs = useRef<Map<string, HTMLElement>>(new Map())
+  const cardRefs = useRef<Map<string, HTMLElement>>(new Map())
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -121,9 +122,12 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setHighlightId(lastId)
     requestAnimationFrame(() => {
+      // 데스크탑 테이블 행 / 모바일 카드 중 화면에 보이는 쪽으로 스크롤 (display:none 이면 offsetParent === null)
       const row = rowRefs.current.get(lastId)
-      if (row) {
-        row.scrollIntoView({ block: 'center', behavior: 'auto' })
+      const card = cardRefs.current.get(lastId)
+      const target = row && row.offsetParent !== null ? row : card && card.offsetParent !== null ? card : (row ?? card)
+      if (target) {
+        target.scrollIntoView({ block: 'center', behavior: 'auto' })
       } else if (scrollY) {
         const y = Number.parseInt(scrollY, 10)
         if (Number.isFinite(y)) window.scrollTo({ top: y, behavior: 'auto' })
@@ -209,8 +213,8 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
         </div>
       )}
 
-      {/* 목록 */}
-      <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+      {/* 목록 — 데스크탑 테이블 (md 이상) */}
+      <div className="hidden md:block rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-slate-50 border-b border-slate-200">
@@ -334,6 +338,81 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 목록 — 모바일 카드 (md 미만) */}
+      <div className="md:hidden space-y-2.5">
+        {orders.map((o) => {
+          const items = o.b2b_order_items ?? []
+          const firstName = items[0]?.product_name ?? '—'
+          const extra = items.length > 1 ? ` 외 ${items.length - 1}건` : ''
+          const totalSale = sumSale(items)
+          const detailHref = `/orders/${o.id}`
+          const meta = statusMeta[o.status] ?? statusMeta.pending
+          const checked = selected.has(o.id)
+          const isHighlighted = highlightId === o.id
+          return (
+            <div
+              key={o.id}
+              ref={(el) => {
+                if (el) cardRefs.current.set(o.id, el)
+                else cardRefs.current.delete(o.id)
+              }}
+              className={`relative rounded-xl border bg-white shadow-sm transition-colors ${
+                isHighlighted
+                  ? 'border-amber-300 ring-2 ring-amber-300 ring-inset'
+                  : checked
+                    ? 'border-indigo-200 bg-indigo-50/40'
+                    : 'border-slate-200'
+              }`}
+            >
+              {/* 선택 체크박스 — 카드 링크와 분리, 탭 타겟 ≥44px */}
+              <label className="absolute top-1 left-1 z-10 flex items-center justify-center p-3 cursor-pointer">
+                <input
+                  type="checkbox"
+                  aria-label={`주문 ${o.market_order_number ?? o.order_number} 선택`}
+                  checked={checked}
+                  onChange={() => toggle(o.id)}
+                  className="w-5 h-5 rounded border-slate-300"
+                />
+              </label>
+              <Link
+                href={detailHref}
+                onClick={() => rememberClick(o.id)}
+                className="block p-4 pl-12 rounded-xl hover:bg-slate-50/70"
+              >
+                <div className="flex items-start justify-between gap-2">
+                  <span className="font-mono text-sm font-semibold text-slate-900">
+                    {o.market_order_number ?? (
+                      <span className="text-slate-400 font-sans font-normal">{o.order_number}</span>
+                    )}
+                  </span>
+                  <span className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[11px] font-medium whitespace-nowrap ${meta.cls}`}>
+                    {meta.label}
+                  </span>
+                </div>
+                <div className="mt-2 flex items-center gap-2 text-sm">
+                  <span className="font-medium text-slate-800">
+                    {o.buyer_name ?? <span className="text-slate-400 font-normal">구매자 미입력</span>}
+                  </span>
+                  {o.marketplace && (
+                    <span className="inline-flex items-center rounded bg-slate-100 px-1.5 py-0.5 text-[11px] font-medium text-slate-600">
+                      {marketplaceLabel[o.marketplace] ?? o.marketplace}
+                    </span>
+                  )}
+                </div>
+                <div className="mt-1 text-xs text-slate-500 truncate">
+                  {firstName}
+                  {extra && <span className="text-slate-400 ml-1">{extra}</span>}
+                </div>
+                <div className="mt-2 flex items-center justify-between text-xs">
+                  <span className="font-semibold text-slate-700 tabular-nums">{formatKRW(totalSale)}</span>
+                  <span className="text-slate-400">{formatDate(o.order_date)}</span>
+                </div>
+              </Link>
+            </div>
+          )
+        })}
       </div>
 
       <BulkExportModal
