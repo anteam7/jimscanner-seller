@@ -543,12 +543,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: `src/lib/b2b/sku-price-trend.ts` (getSkuPriceTrend 단건 통화별 시계열, getRecentSkuPriceHints 벌크 대표통화 요약, PRICE_HIKE_WARN_PCT=10). `src/components/b2b/SkuPriceTrend.tsx` 통화별 카드(sparkline+평균/최저/최고+델타배지+amber 경고). /products/[id] 섹션 추가, /orders/new 라인 인라인 힌트(인상 시 amber). 환산 없이 통화별만 집계 — DB 변경 0.
   - 미구현(선택): quick-pick 연계, 대시보드 "매입가 오른 SKU" 미니카드. 후속 idle 라운드 또는 별도 항목으로 가능.
 
-- [ ] **#idea-23 /orders 모바일 카드 레이아웃 — 가로 스크롤 테이블 탈출** _(brainstorm approved 2026-06-01)_
+- [x] **#idea-23 /orders 모바일 카드 레이아웃 — 가로 스크롤 테이블 탈출** _(brainstorm approved 2026-06-01)_
   - estimated: 1h
   - prereq: 없음
   - decision_required: false (디자인/CSS — AUTO-RUN)
   - source: github issue#23
   - sketch: OrderListClient `md:` 미만에서 테이블→카드 리스트 (CSS만, 데이터 동일). 카드: 주문번호+상태배지(상단), 구매자명, 마켓, 금액, 주문일. 탭 타겟 ≥44px, 카드 전체 상세 링크. 데스크탑 테이블 유지. 행 클릭 하이라이트(#L-7) 로직 보존. design-system 카드 패턴 재사용.
+  - 완료: 2026-06-01 commit 3646b4f (77회차)
+  - 구현: OrderListClient 데스크탑 테이블을 `hidden md:block`, 신규 `md:hidden` 카드 리스트 추가. 카드 = relative div + absolute 체크박스(p-3 wrapper 로 탭 ≥44px, 카드 Link 와 분리) + 전체 상세 Link(`pl-12`). 상단 주문번호+상태배지, 구매자명·마켓 배지, 상품(외 N건), 하단 판매가·주문일. 하이라이트(#L-7) 로직 보존 — `cardRefs` 추가하고 effect 에서 `offsetParent !== null` 로 화면에 보이는 테이블행/카드 중 골라 scrollIntoView. 데이터·동작 동일, CSS-only 분기. build·lint(0) 통과.
 
 - [ ] **#idea-24 대시보드 정보 위계 정리 — 15+ 카드를 섹션으로** _(brainstorm approved 2026-06-01)_
   - estimated: 1.5h
