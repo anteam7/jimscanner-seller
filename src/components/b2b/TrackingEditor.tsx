@@ -187,7 +187,17 @@ export function TrackingEditor({
         💡 현지 트래킹 입력 시 주문 상태가 <b>해외 매입 완료</b> 라면 자동으로 <b>한국행 운송 중</b> 으로 전이됩니다.
       </p>
 
-      {error && <p className="text-[11px] text-rose-700">{error}</p>}
+      {/* async 저장/에러를 live region 으로 → 스크린리더 announce.
+          저장 진행은 별도 표시 텍스트가 없어 sr-only 로만(버튼 라벨은 그대로), 에러는 비활성 시 sr-only 로 흐름에서 빠져 시각 무변경 (OrderStatusSelector/BulkMatchBar 패턴과 동일). */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {saving ? '운송장 정보 저장 중…' : ''}
+      </p>
+      <p
+        role="alert"
+        className={error ? 'text-[11px] text-rose-700' : 'sr-only'}
+      >
+        {error ?? ''}
+      </p>
 
       <div className="flex items-center justify-end gap-1.5 pt-0.5">
         <button
@@ -202,6 +212,7 @@ export function TrackingEditor({
           type="button"
           onClick={save}
           disabled={saving}
+          aria-busy={saving}
           className="h-7 px-3 text-[11px] font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded"
         >
           {saving ? '저장 중…' : '저장'}
