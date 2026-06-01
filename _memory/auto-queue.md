@@ -552,12 +552,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-06-01 commit 3646b4f (77회차)
   - 구현: OrderListClient 데스크탑 테이블을 `hidden md:block`, 신규 `md:hidden` 카드 리스트 추가. 카드 = relative div + absolute 체크박스(p-3 wrapper 로 탭 ≥44px, 카드 Link 와 분리) + 전체 상세 Link(`pl-12`). 상단 주문번호+상태배지, 구매자명·마켓 배지, 상품(외 N건), 하단 판매가·주문일. 하이라이트(#L-7) 로직 보존 — `cardRefs` 추가하고 effect 에서 `offsetParent !== null` 로 화면에 보이는 테이블행/카드 중 골라 scrollIntoView. 데이터·동작 동일, CSS-only 분기. build·lint(0) 통과.
 
-- [ ] **#idea-24 대시보드 정보 위계 정리 — 15+ 카드를 섹션으로** _(brainstorm approved 2026-06-01)_
+- [x] **#idea-24 대시보드 정보 위계 정리 — 15+ 카드를 섹션으로** _(brainstorm approved 2026-06-01)_
   - estimated: 1.5h
   - prereq: 없음
   - decision_required: false (배치 재구성 → AUTO-RUN BUT REPORT)
   - source: github issue#24
   - sketch: 대시보드 카드를 4~5 섹션 그룹핑 ("오늘 할 일"=행동큐·미매칭·지연 / "실적"=매출·마진·sparkline / "배송·ETA"=ETA·보관기간 / "재무"=카드지출·정산 / "시스템"=cron 활동). 섹션 헤더(아이콘+제목) + 카드 그리드. 카드 자체 유지, 배치만 재구성. 접기/펴기 localStorage(선택).
+  - 완료: 2026-06-01 commit e3b21e5 (78회차)
+  - 구현: `SectionHeading` 컴포넌트(아이콘+제목+구분선) 추가 + 5개 라벨 섹션(⚡오늘 할 일 / 📈이번 달 실적 / 🚚배송 현황 / 💳주문·정산 / ⚙️시스템). 기존 카드 순서 유지하며 그룹 래퍼(`space-y-4`)로 묶음. 빈 헤더 방지: 오늘할일=`marginLossAlerts||totalActions`, 주문정산=`recentOrders||cardSpends||refundSummary`, 시스템=`recentAgentRuns` 있을 때만 렌더. 카드/데이터/조건부 로직 동일. localStorage 접기는 v0 범위 외(미구현). 상태 zone(배너·health·쿼터·인증·체크리스트)은 상단 컨텍스트로 헤더 없이 유지.
 
 ---
 
