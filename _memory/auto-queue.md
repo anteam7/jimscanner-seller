@@ -471,10 +471,11 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### Audit 발견 2026-06-02 (daily self-audit · 93회차)
 
-- [ ] **#auto-K a11y: signup step-2(약관 동의)·step-6(서류 업로드) async 에러 메시지 live region 누락** _(audit 발견 2026-06-02)_
+- [x] **#auto-K a11y: signup step-2(약관 동의)·step-6(서류 업로드) async 에러 메시지 live region 누락** _(audit 발견 2026-06-02)_
   - estimated: 10m
   - prereq: 없음
   - decision_required: false
+  - 완료: 2026-06-02 commit 52024f0 — step-2 error 블록 + step-6 uploadError 블록에 role="alert" 부여 (순수 additive, step-3/4/5 패턴 일치). build·lint(0) 통과.
   - finding: (1) `src/app/signup/step-2/page.tsx:209` — 약관 동의 제출(`/api/signup/terms-consent` await fetch) 실패 시 보이는 `{error && <div>}` 블록이 `role`·`aria-live` 둘 다 없어 스크린리더가 에러를 announce 못함. (2) `src/app/signup/step-6/page.tsx:317` — 사업자등록증 업로드(`/api/signup/document-upload` await fetch) 실패 시 `{uploadError && <div>}` 블록도 동일하게 live region 없음. (step-4 는 이미 `role="alert"` 보유 = 암묵적 assertive live region 이라 충분, 제외. step-3·step-5 는 91·92회차에서 이미 보강.)
   - severity: low
   - fix 방향: 두 에러 블록에 `role="alert"` 부여 (signup 다른 단계·#idle-3 패턴과 동일, 순수 additive). 진행 announce 까지 원하면 sr-only `role=status aria-live=polite` 추가 가능하나 에러 announce 가 핵심. 92회차가 다음 후보로 지목한 step-2·step-6 와 정확히 일치 — 다음 #idle-3 회차가 이어받아 처리.
