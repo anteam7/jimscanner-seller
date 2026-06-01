@@ -105,6 +105,25 @@ export default function SignupStep5Page() {
             국세청 데이터베이스에서 입력하신 사업자등록번호의 영업 상태를 자동으로 확인합니다.
           </p>
 
+          {/* SR 전용 진행·결과 live region — 항상 DOM 에 존재하여 verifyState 전환 시
+              스크린리더가 진행·성공·실패를 announce (시각 블록은 role 없어 중복 announce 없음) */}
+          <p className="sr-only" role="status" aria-live="polite">
+            {verifyState === 'loading'
+              ? '국세청에서 사업자등록번호 진위를 확인하는 중입니다.'
+              : verifyState === 'success'
+                ? alreadyVerified
+                  ? '이미 인증된 사업자입니다. 진위 확인이 완료되었습니다.'
+                  : '진위 확인이 완료되어 인증 레벨이 L1로 상승했습니다.'
+                : ''}
+          </p>
+          <p className="sr-only" role="alert">
+            {verifyState === 'failed'
+              ? (failReason ? FAIL_MESSAGES[failReason] : null) ?? '사업자 진위 확인에 실패했습니다.'
+              : verifyState === 'error'
+                ? errorMsg ?? '진위 확인 중 오류가 발생했습니다.'
+                : ''}
+          </p>
+
           {verifyState === 'idle' && (
             <VerifyPrompt onVerify={handleVerify} />
           )}
