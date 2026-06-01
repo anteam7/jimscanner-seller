@@ -320,10 +320,18 @@ export default function ForwarderExportModal({
           )}
 
           {error && (
-            <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+            <div
+              role="alert"
+              className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2"
+            >
               {error}
             </div>
           )}
+
+          {/* 다운로드 진행은 버튼 라벨(생성 중…)에만 있어 스크린리더가 못 읽음 → 항상 존재하는 sr-only live region 으로 announce (시각 무변경). */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {submitting ? '배대지 양식 생성 중…' : ''}
+          </p>
         </div>
 
         {/* 푸터 */}
@@ -340,6 +348,7 @@ export default function ForwarderExportModal({
             type="button"
             onClick={onDownload}
             disabled={!tpl || submitting || templates.length === 0}
+            aria-busy={submitting}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
           >
             {submitting ? (
