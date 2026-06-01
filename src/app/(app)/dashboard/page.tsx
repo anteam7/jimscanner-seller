@@ -526,6 +526,19 @@ function QuickActionCard({
   )
 }
 
+// #idea-24: 대시보드 정보 위계 — 카드 그룹을 섹션 헤더로 묶어 세로 스크롤 탐색성 개선
+function SectionHeading({ icon, title }: { icon: string; title: string }) {
+  return (
+    <div className="flex items-center gap-2 pt-1">
+      <span className="text-base leading-none" aria-hidden="true">
+        {icon}
+      </span>
+      <h2 className="text-sm font-semibold text-slate-800 tracking-tight">{title}</h2>
+      <div className="flex-1 h-px bg-slate-200/70" />
+    </div>
+  )
+}
+
 export default async function SellerDashboardPage() {
   const supabase = await createClient()
   const {
@@ -907,6 +920,9 @@ export default async function SellerDashboardPage() {
     weeklyDigest = null
   }
 
+  // #idea-24: "오늘 할 일" 섹션은 행동 필요 항목이 있을 때만 (빈 헤더 방지)
+  const hasTodoSection = marginLossAlerts.length > 0 || totalActions > 0
+
   return (
     <div className="p-4 md:p-8 space-y-6 md:space-y-8 max-w-5xl">
       {/* B3: 첫 로그인 환영 모달 (신규 셀러 + localStorage dismiss 추적) */}
@@ -951,63 +967,70 @@ export default async function SellerDashboardPage() {
       {/* Progressive checklist — 미완료 단계 있으면 항상 표시 */}
       {showChecklist && <OnboardingGuide progress={progress} />}
 
-      {/* H3 — 마진 손실 알림 */}
-      {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
+      {/* === ⚡ 오늘 할 일 — 행동 필요 항목 (H3 마진 손실 + 행동 큐) === */}
+      {hasTodoSection && (
+        <div className="space-y-4">
+          <SectionHeading icon="⚡" title="오늘 할 일" />
 
-      {/* 오늘 행동 큐 — 3건 미만이면 슬림 인라인 배너로 노이즈 감축 */}
-      {totalActions > 0 && totalActions < 3 && (
-        <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-          <span className="font-semibold text-amber-900">⚡ 행동 필요</span>
-          {actionQueue.unmatchedReceipts > 0 && (
-            <Link href="/imports" className="text-amber-800 hover:text-amber-900 underline">매칭 대기 영수증 {actionQueue.unmatchedReceipts}건</Link>
+          {/* H3 — 마진 손실 알림 */}
+          {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
+
+          {/* 오늘 행동 큐 — 3건 미만이면 슬림 인라인 배너로 노이즈 감축 */}
+          {totalActions > 0 && totalActions < 3 && (
+            <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
+              <span className="font-semibold text-amber-900">⚡ 행동 필요</span>
+              {actionQueue.unmatchedReceipts > 0 && (
+                <Link href="/imports" className="text-amber-800 hover:text-amber-900 underline">매칭 대기 영수증 {actionQueue.unmatchedReceipts}건</Link>
+              )}
+              {actionQueue.refundRequests > 0 && (
+                <Link href="/orders?status=refund_requested" className="text-rose-700 hover:text-rose-800 underline">환불 신청 {actionQueue.refundRequests}건</Link>
+              )}
+              {actionQueue.oldPending > 0 && (
+                <Link href="/orders?status=pending" className="text-amber-800 hover:text-amber-900 underline">매입 미진행(1일+) {actionQueue.oldPending}건</Link>
+              )}
+              {actionQueue.oldUnmatched > 0 && (
+                <Link href="/imports" className="text-rose-700 hover:text-rose-800 underline">⏰ 무매칭 7일+ {actionQueue.oldUnmatched}건</Link>
+              )}
+            </div>
           )}
-          {actionQueue.refundRequests > 0 && (
-            <Link href="/orders?status=refund_requested" className="text-rose-700 hover:text-rose-800 underline">환불 신청 {actionQueue.refundRequests}건</Link>
-          )}
-          {actionQueue.oldPending > 0 && (
-            <Link href="/orders?status=pending" className="text-amber-800 hover:text-amber-900 underline">매입 미진행(1일+) {actionQueue.oldPending}건</Link>
-          )}
-          {actionQueue.oldUnmatched > 0 && (
-            <Link href="/imports" className="text-rose-700 hover:text-rose-800 underline">⏰ 무매칭 7일+ {actionQueue.oldUnmatched}건</Link>
+          {totalActions >= 3 && (
+            <section className="rounded-xl bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm p-5">
+              <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-1.5">
+                <span>⚡</span> 오늘 행동 큐 ({totalActions}건)
+              </h3>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                {actionQueue.unmatchedReceipts > 0 && (
+                  <Link href="/imports" className="block rounded-lg bg-white border border-amber-200 px-4 py-3 hover:shadow-md transition-shadow">
+                    <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold">매칭 대기 영수증</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.unmatchedReceipts}건</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">/imports 에서 매칭 →</p>
+                  </Link>
+                )}
+                {actionQueue.refundRequests > 0 && (
+                  <Link href="/orders?status=refund_requested" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
+                    <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">환불 신청 주문</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.refundRequests}건</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">처리 필요 →</p>
+                  </Link>
+                )}
+                {actionQueue.oldPending > 0 && (
+                  <Link href="/orders?status=pending" className="block rounded-lg bg-white border border-slate-200 px-4 py-3 hover:shadow-md transition-shadow">
+                    <p className="text-[11px] uppercase tracking-wider text-slate-700 font-semibold">매입 미진행 (1일+)</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">매입 발주 권장 →</p>
+                  </Link>
+                )}
+                {actionQueue.oldUnmatched > 0 && (
+                  <Link href="/imports" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
+                    <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">⏰ 무매칭 7일+</p>
+                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldUnmatched}건</p>
+                    <p className="mt-0.5 text-[11px] text-slate-500">방치된 영수증 처리 →</p>
+                  </Link>
+                )}
+              </div>
+            </section>
           )}
         </div>
-      )}
-      {totalActions >= 3 && (
-        <section className="rounded-xl bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm p-5">
-          <h2 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-1.5">
-            <span>⚡</span> 오늘 행동 큐 ({totalActions}건)
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {actionQueue.unmatchedReceipts > 0 && (
-              <Link href="/imports" className="block rounded-lg bg-white border border-amber-200 px-4 py-3 hover:shadow-md transition-shadow">
-                <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold">매칭 대기 영수증</p>
-                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.unmatchedReceipts}건</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">/imports 에서 매칭 →</p>
-              </Link>
-            )}
-            {actionQueue.refundRequests > 0 && (
-              <Link href="/orders?status=refund_requested" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
-                <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">환불 신청 주문</p>
-                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.refundRequests}건</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">처리 필요 →</p>
-              </Link>
-            )}
-            {actionQueue.oldPending > 0 && (
-              <Link href="/orders?status=pending" className="block rounded-lg bg-white border border-slate-200 px-4 py-3 hover:shadow-md transition-shadow">
-                <p className="text-[11px] uppercase tracking-wider text-slate-700 font-semibold">매입 미진행 (1일+)</p>
-                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">매입 발주 권장 →</p>
-              </Link>
-            )}
-            {actionQueue.oldUnmatched > 0 && (
-              <Link href="/imports" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
-                <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">⏰ 무매칭 7일+</p>
-                <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldUnmatched}건</p>
-                <p className="mt-0.5 text-[11px] text-slate-500">방치된 영수증 처리 →</p>
-              </Link>
-            )}
-          </div>
-        </section>
       )}
 
       {/* 빠른 작업 — D: 보조 색 + 새로운 entry */}
@@ -1039,88 +1062,110 @@ export default async function SellerDashboardPage() {
         </div>
       </section>
 
-      {/* 통계 — E: 카드 shadow + accent border + #idea-9 sparkline + WoW */}
-      <section>
-        <h2 className="text-sm font-semibold text-slate-900 mb-3">이번 달 현황</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <StatCard
-            label="처리된 주문"
-            accent="indigo"
-            value={ordersValue}
-            sub={`최근 7일 ${sevenDayTrend.thisOrders}건`}
-            sparkline={sevenDayTrend.daily.slice(7).map((d) => d.orderCount)}
-            wowPct={sevenDayTrend.wowOrdersPct}
-            href="/analytics"
-          />
-          <StatCard
-            label="이번 달 판매 합계 (KRW)"
-            accent="emerald"
-            value={saleValue}
-            sub={
-              sevenDayTrend.thisSaleKrw > 0
-                ? `최근 7일 ₩${Math.round(sevenDayTrend.thisSaleKrw).toLocaleString('ko-KR')}`
-                : monthSaleKrw > 0
-                  ? '주문 라인 합산'
-                  : 'sale_price_krw 입력 시 집계'
-            }
-            sparkline={sevenDayTrend.daily.slice(7).map((d) => d.saleKrw)}
-            wowPct={sevenDayTrend.wowSalePct}
-            href="/analytics"
-          />
-          <StatCard
-            label="주문 할당량"
-            accent="sky"
-            value={quotaValue}
-            sub={quotaSub}
-          />
-        </div>
-        <p className="mt-3 text-xs text-slate-500">
-          상품 SKU {skuSub}.
-        </p>
-      </section>
+      {/* === 📈 이번 달 실적 — 통계 + 주간 다이제스트 === */}
+      <div className="space-y-4">
+        <SectionHeading icon="📈" title="이번 달 실적" />
 
-      {/* #idea-21: 주간 운영 요약 — 지난주/이번주 활동이 있을 때만 */}
-      {weeklyDigest &&
-        (weeklyDigest.lastWeek.orderCount > 0 || weeklyDigest.thisWeek.orderCount > 0) && (
-          <WeeklyDigestCard digest={weeklyDigest} />
+        {/* 통계 — E: 카드 shadow + accent border + #idea-9 sparkline + WoW */}
+        <section>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <StatCard
+              label="처리된 주문"
+              accent="indigo"
+              value={ordersValue}
+              sub={`최근 7일 ${sevenDayTrend.thisOrders}건`}
+              sparkline={sevenDayTrend.daily.slice(7).map((d) => d.orderCount)}
+              wowPct={sevenDayTrend.wowOrdersPct}
+              href="/analytics"
+            />
+            <StatCard
+              label="이번 달 판매 합계 (KRW)"
+              accent="emerald"
+              value={saleValue}
+              sub={
+                sevenDayTrend.thisSaleKrw > 0
+                  ? `최근 7일 ₩${Math.round(sevenDayTrend.thisSaleKrw).toLocaleString('ko-KR')}`
+                  : monthSaleKrw > 0
+                    ? '주문 라인 합산'
+                    : 'sale_price_krw 입력 시 집계'
+              }
+              sparkline={sevenDayTrend.daily.slice(7).map((d) => d.saleKrw)}
+              wowPct={sevenDayTrend.wowSalePct}
+              href="/analytics"
+            />
+            <StatCard
+              label="주문 할당량"
+              accent="sky"
+              value={quotaValue}
+              sub={quotaSub}
+            />
+          </div>
+          <p className="mt-3 text-xs text-slate-500">
+            상품 SKU {skuSub}.
+          </p>
+        </section>
+
+        {/* #idea-21: 주간 운영 요약 — 지난주/이번주 활동이 있을 때만 */}
+        {weeklyDigest &&
+          (weeklyDigest.lastWeek.orderCount > 0 || weeklyDigest.thisWeek.orderCount > 0) && (
+            <WeeklyDigestCard digest={weeklyDigest} />
+          )}
+      </div>
+
+      {/* === 🚚 배송 현황 — 환율·파이프라인 + ETA + 보관 === */}
+      <div className="space-y-4">
+        <SectionHeading icon="🚚" title="배송 현황" />
+
+        {/* 환율 + 상태 파이프라인 */}
+        <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <ExchangeRatesCard rates={rates} yesterday={yesterdayRates} />
+          <StatusPipelineCard counts={statusCounts} total={monthOrderCount ?? 0} />
+        </section>
+
+        {/* #idea-5: 도착 예정 (ETA) 미니카드 — 지연/이번주 있을 때만 */}
+        {(etaSummary.overdue > 0 || etaSummary.thisWeek > 0) && (
+          <EtaMiniCard
+            overdue={etaSummary.overdue}
+            thisWeek={etaSummary.thisWeek}
+            upcoming={etaSummary.nextThree}
+          />
         )}
 
-      {/* 환율 + 상태 파이프라인 */}
-      <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <ExchangeRatesCard rates={rates} yesterday={yesterdayRates} />
-        <StatusPipelineCard counts={statusCounts} total={monthOrderCount ?? 0} />
-      </section>
+        {/* #idea-14: 배대지 보관 임박/초과 — 임박 또는 초과 건이 있을 때만 */}
+        {(storageSummary.over > 0 || storageSummary.warn > 0) && (
+          <StorageDeadlineMiniCard
+            over={storageSummary.over}
+            warn={storageSummary.warn}
+            top={storageSummary.top}
+            freeDays={storageSummary.freeDays}
+          />
+        )}
+      </div>
 
-      {/* #idea-5: 도착 예정 (ETA) 미니카드 — 지연/이번주 있을 때만 */}
-      {(etaSummary.overdue > 0 || etaSummary.thisWeek > 0) && (
-        <EtaMiniCard
-          overdue={etaSummary.overdue}
-          thisWeek={etaSummary.thisWeek}
-          upcoming={etaSummary.nextThree}
-        />
+      {/* === 💳 주문 · 정산 — 최근 주문 + 카드 매입 + 환불 === */}
+      {(recentOrders.length > 0 || cardSpends.length > 0 || refundSummary != null) && (
+        <div className="space-y-4">
+          <SectionHeading icon="💳" title="주문 · 정산" />
+
+          {/* 최근 주문 */}
+          <RecentOrdersCard orders={recentOrders} />
+
+          {/* #idea-4: 카드별 매입 합계 — 등록 카드가 있을 때만 */}
+          {cardSpends.length > 0 && <CardSpendCard spends={cardSpends} />}
+
+          {/* #idea-3b 후속: 이달 환불 현황 — 이달 환불 신청이 있을 때만 */}
+          {refundSummary && <RefundMiniCard summary={refundSummary} />}
+        </div>
       )}
 
-      {/* #idea-14: 배대지 보관 임박/초과 — 임박 또는 초과 건이 있을 때만 */}
-      {(storageSummary.over > 0 || storageSummary.warn > 0) && (
-        <StorageDeadlineMiniCard
-          over={storageSummary.over}
-          warn={storageSummary.warn}
-          top={storageSummary.top}
-          freeDays={storageSummary.freeDays}
-        />
+      {/* === ⚙️ 시스템 — 최근 agent 활동 === */}
+      {recentAgentRuns.length > 0 && (
+        <div className="space-y-4">
+          <SectionHeading icon="⚙️" title="시스템" />
+          {/* #12: 최근 agent 활동 — 시스템이 일하고 있다는 transparency */}
+          <RecentAgentActivityCard runs={recentAgentRuns} />
+        </div>
       )}
-
-      {/* 최근 주문 */}
-      <RecentOrdersCard orders={recentOrders} />
-
-      {/* #idea-4: 카드별 매입 합계 — 등록 카드가 있을 때만 */}
-      {cardSpends.length > 0 && <CardSpendCard spends={cardSpends} />}
-
-      {/* #idea-3b 후속: 이달 환불 현황 — 이달 환불 신청이 있을 때만 */}
-      {refundSummary && <RefundMiniCard summary={refundSummary} />}
-
-      {/* #12: 최근 agent 활동 — 시스템이 일하고 있다는 transparency */}
-      {recentAgentRuns.length > 0 && <RecentAgentActivityCard runs={recentAgentRuns} />}
     </div>
   )
 }
