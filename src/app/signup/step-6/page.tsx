@@ -315,7 +315,7 @@ export default function SignupStep6Page() {
               )}
 
               {uploadError && (
-                <div className="mt-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
+                <div role="alert" className="mt-3 rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
                   {uploadError}
                 </div>
               )}

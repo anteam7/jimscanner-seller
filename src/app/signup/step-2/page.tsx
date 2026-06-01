@@ -207,7 +207,7 @@ export default function SignupStep2Page() {
               </div>
 
               {error && (
-                <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
+                <div role="alert" className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700">
                   {error}
                 </div>
               )}
