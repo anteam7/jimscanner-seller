@@ -44,6 +44,16 @@ export function formatWeight(value: number | string | null): string {
   return `${new Intl.NumberFormat('ko-KR', { maximumFractionDigits: 3 }).format(n)} kg`
 }
 
+/** ISO 문자열 → "YY.MM.DD" (로컬 시간, 2자리 연도). null/빈값 → '—'. 목록 컴팩트 날짜 표기용. */
+export function formatDateShort(value: string | null): string {
+  if (!value) return '—'
+  const d = new Date(value)
+  const yy = String(d.getFullYear()).slice(2)
+  const mm = String(d.getMonth() + 1).padStart(2, "0")
+  const dd = String(d.getDate()).padStart(2, "0")
+  return `${yy}.${mm}.${dd}`
+}
+
 /** ISO 문자열 → "YY.MM.DD HH:MM" (로컬 시간, 2자리 연도). 알림·문의 목록 등 컴팩트 표기용. */
 export function formatDateTimeShort(value: string): string {
   const d = new Date(value)

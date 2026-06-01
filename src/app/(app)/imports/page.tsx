@@ -10,6 +10,7 @@ import { ImportMatchAction } from './ImportMatchAction'
 import { ManualReceiptCreate } from './ManualReceiptCreate'
 import { BulkMatchBar, type BulkCandidate } from './BulkMatchBar'
 import { AutoMatchThreshold, DEFAULT_AUTOMATCH_THRESHOLD } from './AutoMatchThreshold'
+import { formatDateShort } from '@/lib/b2b/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,15 +75,6 @@ function formatForeign(v: number | string | null | undefined, currency: string |
   if (currency === 'JPY') return `¥${n.toLocaleString('ko-KR')}`
   if (currency === 'USD') return `$${n.toFixed(2)}`
   return `${n.toLocaleString('ko-KR')} ${currency ?? ''}`.trim()
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  const yy = String(d.getFullYear()).slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yy}.${mm}.${dd}`
 }
 
 function orderDisplayLabel(o: { market_order_number: string | null; order_number: string | null; marketplace: string | null }): string {
@@ -374,7 +366,7 @@ export default async function ImportsPage({
                         {formatForeign(r.total_foreign, r.currency)}
                       </td>
                       <td className="px-4 py-3 text-[11px] text-slate-600 tabular-nums">
-                        {formatDate(r.purchased_at ?? r.created_at)}
+                        {formatDateShort(r.purchased_at ?? r.created_at)}
                       </td>
                       <td className="px-4 py-3">
                         <ImportMatchAction

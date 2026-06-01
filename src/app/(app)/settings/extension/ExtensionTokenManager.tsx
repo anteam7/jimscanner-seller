@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { formatDateShort } from '@/lib/b2b/format'
 
 type TokenRow = {
   id: string
@@ -10,15 +11,6 @@ type TokenRow = {
   last_used_at: string | null
   created_at: string
   revoked_at: string | null
-}
-
-function formatDate(iso: string | null): string {
-  if (!iso) return '—'
-  const d = new Date(iso)
-  const yy = String(d.getFullYear()).slice(2)
-  const mm = String(d.getMonth() + 1).padStart(2, '0')
-  const dd = String(d.getDate()).padStart(2, '0')
-  return `${yy}.${mm}.${dd}`
 }
 
 export default function ExtensionTokenManager({ initialTokens }: { initialTokens: TokenRow[] }) {
@@ -157,8 +149,8 @@ export default function ExtensionTokenManager({ initialTokens }: { initialTokens
               <tr key={t.id}>
                 <td className="px-4 py-2.5 text-slate-900">{t.label}</td>
                 <td className="px-4 py-2.5 font-mono text-[11px] text-slate-700">{t.token_prefix}…</td>
-                <td className="px-4 py-2.5 text-[11px] text-slate-600 tabular-nums">{formatDate(t.created_at)}</td>
-                <td className="px-4 py-2.5 text-[11px] text-slate-600 tabular-nums">{formatDate(t.last_used_at)}</td>
+                <td className="px-4 py-2.5 text-[11px] text-slate-600 tabular-nums">{formatDateShort(t.created_at)}</td>
+                <td className="px-4 py-2.5 text-[11px] text-slate-600 tabular-nums">{formatDateShort(t.last_used_at)}</td>
                 <td className="px-4 py-2.5">
                   {t.revoked_at ? (
                     <span className="inline-flex items-center px-1.5 py-0.5 text-[10px] font-semibold text-slate-600 bg-slate-100 border border-slate-200 rounded">
