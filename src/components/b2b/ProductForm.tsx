@@ -375,8 +375,13 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
         </div>
       </section>
 
+      {/* 저장·삭제 진행을 스크린리더에 announce (시각 무변경, 버튼 라벨은 그대로) */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {submitting ? (mode === 'create' ? 'SKU 등록 중…' : 'SKU 저장 중…') : deleting ? 'SKU 비활성화 중…' : ''}
+      </p>
+
       {error && (
-        <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+        <div role="alert" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
           {error}
         </div>
       )}
@@ -387,6 +392,7 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
             type="button"
             onClick={onDelete}
             disabled={submitting || deleting}
+            aria-busy={deleting}
             className="text-xs font-medium text-rose-700 hover:text-rose-800 px-3 py-1.5 rounded hover:bg-rose-50 disabled:opacity-50"
           >
             {deleting ? '비활성화 중…' : '비활성화'}
@@ -406,6 +412,7 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
           <button
             type="submit"
             disabled={!canSubmit}
+            aria-busy={submitting}
             className="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
           >
             {submitting ? '저장 중…' : mode === 'create' ? 'SKU 등록' : '저장'}
