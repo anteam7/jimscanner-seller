@@ -133,9 +133,13 @@ export default function TransitOverrideEditor({
           <span className="font-semibold text-indigo-700 tabular-nums">{overrideCount}건</span>
         </p>
         {error && (
-          <p className="text-xs text-rose-600">{error}</p>
+          <p className="text-xs text-rose-600" role="alert">{error}</p>
         )}
       </div>
+
+      <p className="sr-only" role="status" aria-live="polite">
+        {busyKey ? '운송일수 보정 적용 중…' : ''}
+      </p>
 
       <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-white shadow-sm overflow-hidden">
         <table className="w-full text-sm">
@@ -192,6 +196,7 @@ export default function TransitOverrideEditor({
                         type="button"
                         disabled={busy || (drafts[k] ?? '') === ''}
                         onClick={() => save(d.origin_country, d.method)}
+                        aria-busy={busy}
                         aria-label={`${countryLabel} ${methodLabel} 운송일수 보정 저장`}
                         className="inline-flex items-center rounded-md bg-indigo-600 px-2.5 py-1 text-xs font-semibold text-white shadow-sm hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                       >
@@ -202,6 +207,7 @@ export default function TransitOverrideEditor({
                           type="button"
                           disabled={busy}
                           onClick={() => clear(d.origin_country, d.method)}
+                          aria-busy={busy}
                           aria-label={`${countryLabel} ${methodLabel} 보정 초기화 (글로벌 시드값으로 복귀)`}
                           className="inline-flex items-center rounded-md border border-slate-200 px-2.5 py-1 text-xs font-medium text-slate-600 hover:bg-slate-50 disabled:opacity-40 transition-colors"
                           title="글로벌 시드값으로 복귀"
