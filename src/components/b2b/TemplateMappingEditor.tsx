@@ -495,8 +495,14 @@ export default function TemplateMappingEditor({
       </section>
 
       {/* 메시지 + 저장 */}
+      {/* 진행 상태 — 항상 DOM 에 존재하는 sr-only live region (저장/삭제 중 announce, 시각 무변경) */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {saving ? '양식 저장 중…' : deleting ? '양식 삭제 중…' : ''}
+      </p>
       {msg && (
         <div
+          role={msg.kind === 'ok' ? 'status' : 'alert'}
+          aria-live={msg.kind === 'ok' ? 'polite' : 'assertive'}
           className={`text-xs rounded-md px-3 py-2 ${msg.kind === 'ok' ? 'text-emerald-700 bg-emerald-50 border border-emerald-200' : 'text-rose-700 bg-rose-50 border border-rose-200'}`}
         >
           {msg.text}
@@ -507,6 +513,7 @@ export default function TemplateMappingEditor({
           type="button"
           onClick={onDelete}
           disabled={saving || deleting}
+          aria-busy={deleting}
           className="text-xs font-medium text-rose-700 hover:text-rose-800 px-3 py-1.5 rounded hover:bg-rose-50 disabled:opacity-50"
         >
           {deleting ? '삭제 중…' : '양식 삭제'}
@@ -515,6 +522,7 @@ export default function TemplateMappingEditor({
           type="button"
           onClick={onSave}
           disabled={saving || deleting}
+          aria-busy={saving}
           className="inline-flex items-center gap-1.5 px-5 py-2 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
         >
           {saving ? '저장 중…' : '저장'}
