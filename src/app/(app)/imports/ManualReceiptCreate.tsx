@@ -261,12 +261,20 @@ export function ManualReceiptCreate() {
           className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 resize-vertical" />
       </div>
 
-      {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
+      {/* 에러는 항상 DOM 에 존재하는 role=alert 로 두어 스크린리더가 검증·등록 실패를 announce (비활성 시 sr-only 라 시각·레이아웃 무변경). */}
+      <p role="alert" className={error ? 'text-xs text-rose-600 font-medium' : 'sr-only'}>
+        {error ?? ''}
+      </p>
+
+      {/* 등록 진행은 버튼 라벨(등록 중…)에만 있어 스크린리더가 못 읽음 → 항상 존재하는 sr-only live region 으로 announce (시각 무변경). */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {busy ? '영수증 등록 중…' : ''}
+      </p>
 
       <div className="flex items-center justify-end gap-2">
         <button type="button" onClick={() => setOpen(false)}
           className="px-3 py-1.5 text-xs font-semibold text-slate-600 bg-white border border-slate-300 rounded-md hover:bg-slate-50">취소</button>
-        <button type="submit" disabled={busy}
+        <button type="submit" disabled={busy} aria-busy={busy}
           className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md disabled:opacity-50">
           {busy ? '등록 중…' : '영수증 등록'}
         </button>
