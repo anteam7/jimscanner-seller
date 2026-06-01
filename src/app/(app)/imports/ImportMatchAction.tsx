@@ -106,6 +106,7 @@ export function ImportMatchAction({
           type="button"
           onClick={() => setModalOpen(true)}
           disabled={busy}
+          aria-busy={busy}
           className="text-[10px] text-slate-500 hover:text-indigo-700 hover:underline underline-offset-2 disabled:opacity-50"
           title="다른 주문으로 변경"
         >
@@ -115,11 +116,19 @@ export function ImportMatchAction({
           type="button"
           onClick={() => link(null)}
           disabled={busy}
+          aria-busy={busy}
           className="text-[10px] text-slate-500 hover:text-rose-600 hover:underline underline-offset-2 disabled:opacity-50"
           title="매칭 해제"
         >
           해제
         </button>
+        {/* async 진행·실패를 스크린리더에 announce (시각 무변경 — 항상 sr-only) */}
+        <span role="status" aria-live="polite" className="sr-only">
+          {busy ? '매칭 변경 처리 중…' : ''}
+        </span>
+        <span role="alert" className="sr-only">
+          {error ?? ''}
+        </span>
         {modalOpen && (
           <SearchModal
             onClose={() => setModalOpen(false)}
@@ -140,6 +149,7 @@ export function ImportMatchAction({
             type="button"
             onClick={() => link(recommendation.orderId, { confirmText: confirmTextFor(recommendation) })}
             disabled={busy}
+            aria-busy={busy}
             className={`inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold border rounded hover:opacity-80 disabled:opacity-50 transition-colors ${
               recommendation.score >= 90
                 ? 'text-indigo-700 bg-indigo-50 border-indigo-300'
@@ -163,13 +173,20 @@ export function ImportMatchAction({
           type="button"
           onClick={() => setModalOpen(true)}
           disabled={busy}
+          aria-busy={busy}
           className="inline-flex items-center gap-1 px-2 py-0.5 text-[11px] font-semibold text-slate-600 bg-white border border-slate-300 rounded hover:bg-slate-50 hover:border-indigo-300 hover:text-indigo-700 disabled:opacity-50 transition-colors"
           title="주문 검색해서 매칭"
         >
           🔍 검색
         </button>
       </div>
-      {error && <span className="text-[10px] text-rose-600">{error}</span>}
+      {/* 매칭 실패를 스크린리더에 announce — 에러 없을 땐 sr-only 빈 노드라 시각·레이아웃 무변경 */}
+      <span role="alert" className={error ? 'text-[10px] text-rose-600' : 'sr-only'}>
+        {error ?? ''}
+      </span>
+      <span role="status" aria-live="polite" className="sr-only">
+        {busy ? '주문 매칭 처리 중…' : ''}
+      </span>
       {modalOpen && (
         <SearchModal
           onClose={() => setModalOpen(false)}
@@ -243,11 +260,14 @@ function SearchModal({
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="import-search-title"
         className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">짐스캐너 주문 검색</h3>
+          <h3 id="import-search-title" className="text-sm font-bold text-slate-900">짐스캐너 주문 검색</h3>
           <button
             type="button"
             onClick={onClose}
@@ -266,7 +286,7 @@ function SearchModal({
             placeholder="마켓 주문번호 / 셀러 주문번호 / 구매자명 / 전화번호"
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
           />
-          <p className="mt-1.5 text-[11px] text-slate-500">
+          <p role="status" aria-live="polite" className="mt-1.5 text-[11px] text-slate-500">
             {loading ? '검색 중…' : `${results.length}건${q ? ` (검색: ${q})` : ' (최근 주문)'}`}
           </p>
         </div>
@@ -310,7 +330,7 @@ function SearchModal({
           )}
         </div>
         {error && (
-          <div className="px-5 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700">
+          <div role="alert" className="px-5 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700">
             {error}
           </div>
         )}
