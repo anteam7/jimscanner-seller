@@ -4,6 +4,8 @@ import { getExchangeRates, getYesterdayRates, type ExchangeRates } from '@/lib/b
 import { MARKETPLACES } from '@/lib/b2b/order-options'
 import { getDashboardStats, getSevenDayTrend } from '@/lib/b2b/dashboard-data'
 import { getMarginLossAlerts, type MarginLossAlert } from '@/lib/b2b/margin-loss'
+import { getWeeklyDigest, type WeeklyDigest, type RatesMap } from '@/lib/b2b/weekly-digest'
+import WeeklyDigestCard from '@/components/b2b/WeeklyDigestCard'
 import { createClient } from '@/lib/auth/server'
 import { createAdminClient } from '@/lib/auth/admin-supabase'
 import type { SellerAccount } from '@/components/b2b/SellerShell'
@@ -879,18 +881,30 @@ export default async function SellerDashboardPage() {
     recentAgentRuns = []
   }
 
-  // H3 — 마진 손실 SKU (환율이 있어야 계산 가능)
-  let marginLossAlerts: MarginLossAlert[] = []
+  // 환율 → ratesMap (마진 계산용 공용). 환율 없으면 빈 맵 (외화 매입은 환산 누락 처리).
+  const ratesMap: RatesMap = {}
   if (rates) {
-    const ratesMap: Record<string, { rate: number; unit: number }> = {}
     for (const [k, v] of Object.entries(rates.rates)) {
       ratesMap[k] = { rate: v.rate, unit: v.unit }
     }
+  }
+
+  // H3 — 마진 손실 SKU (환율이 있어야 계산 가능)
+  let marginLossAlerts: MarginLossAlert[] = []
+  if (rates) {
     try {
       marginLossAlerts = await getMarginLossAlerts(account.id, ratesMap)
     } catch {
       marginLossAlerts = []
     }
+  }
+
+  // #idea-21: 주간 운영 요약 다이제스트 (지난주/이번주 토글)
+  let weeklyDigest: WeeklyDigest | null = null
+  try {
+    weeklyDigest = await getWeeklyDigest(account.id, ratesMap, nowMs)
+  } catch {
+    weeklyDigest = null
   }
 
   return (
@@ -1064,6 +1078,12 @@ export default async function SellerDashboardPage() {
           상품 SKU {skuSub}.
         </p>
       </section>
+
+      {/* #idea-21: 주간 운영 요약 — 지난주/이번주 활동이 있을 때만 */}
+      {weeklyDigest &&
+        (weeklyDigest.lastWeek.orderCount > 0 || weeklyDigest.thisWeek.orderCount > 0) && (
+          <WeeklyDigestCard digest={weeklyDigest} />
+        )}
 
       {/* 환율 + 상태 파이프라인 */}
       <section className="grid grid-cols-1 md:grid-cols-2 gap-4">
