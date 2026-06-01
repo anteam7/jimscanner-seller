@@ -469,6 +469,16 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-05-31 commit eb41b3d
   - fix: `.then(() => refresh()).catch(() => {})` 추가 — fire-and-forget 동작·네비게이션(router.push) 무지연 유지하면서 네트워크 실패 시 unhandled promise rejection 만 제거. 16회차에서 `await` 추가는 router.push 지연 회귀라 보류했으나 `.catch()` 는 그와 무관한 순수 additive 하드닝 (sibling markAllRead 방어 패턴과 정렬, zero regression). 빌드 compiled · lint 0 problems.
 
+### Audit 발견 2026-06-02 (daily self-audit · 93회차)
+
+- [ ] **#auto-K a11y: signup step-2(약관 동의)·step-6(서류 업로드) async 에러 메시지 live region 누락** _(audit 발견 2026-06-02)_
+  - estimated: 10m
+  - prereq: 없음
+  - decision_required: false
+  - finding: (1) `src/app/signup/step-2/page.tsx:209` — 약관 동의 제출(`/api/signup/terms-consent` await fetch) 실패 시 보이는 `{error && <div>}` 블록이 `role`·`aria-live` 둘 다 없어 스크린리더가 에러를 announce 못함. (2) `src/app/signup/step-6/page.tsx:317` — 사업자등록증 업로드(`/api/signup/document-upload` await fetch) 실패 시 `{uploadError && <div>}` 블록도 동일하게 live region 없음. (step-4 는 이미 `role="alert"` 보유 = 암묵적 assertive live region 이라 충분, 제외. step-3·step-5 는 91·92회차에서 이미 보강.)
+  - severity: low
+  - fix 방향: 두 에러 블록에 `role="alert"` 부여 (signup 다른 단계·#idle-3 패턴과 동일, 순수 additive). 진행 announce 까지 원하면 sr-only `role=status aria-live=polite` 추가 가능하나 에러 announce 가 핵심. 92회차가 다음 후보로 지목한 step-2·step-6 와 정확히 일치 — 다음 #idle-3 회차가 이어받아 처리.
+
 ### Brainstorm approved (2026-05-31, 52회차)
 
 - [x] **#idea-16 주문 1-click 복제 (재주문)** _(brainstorm approved 2026-05-31)_
