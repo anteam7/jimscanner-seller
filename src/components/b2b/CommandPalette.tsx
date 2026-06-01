@@ -183,6 +183,8 @@ export default function CommandPalette({
   const orderStart = menuHits.length
   const productStart = menuHits.length + orders.length
   const showServerSections = trimmed.length >= 2
+  // aria-activedescendant 가 가리킬 현재 활성 옵션 id (combobox/listbox 패턴)
+  const activeId = activeIndex >= 0 ? `cmdk-opt-${activeIndex}` : undefined
 
   return (
     <div
@@ -214,6 +216,11 @@ export default function CommandPalette({
             type="text"
             placeholder="주문번호·구매자·전화·SKU·메뉴 검색…"
             aria-label="빠른 검색 입력"
+            role="combobox"
+            aria-expanded
+            aria-controls="cmdk-results"
+            aria-autocomplete="list"
+            aria-activedescendant={activeId}
             className="flex-1 py-3.5 text-sm bg-transparent text-slate-900 placeholder-slate-400 focus:outline-none"
           />
           <kbd className="hidden sm:inline-flex items-center text-[10px] font-medium text-slate-400 bg-slate-100 border border-slate-200 rounded px-1.5 py-0.5">
@@ -222,13 +229,20 @@ export default function CommandPalette({
         </div>
 
         {/* 결과 목록 */}
-        <div ref={listRef} className="max-h-[55vh] overflow-y-auto py-2">
+        <div
+          ref={listRef}
+          id="cmdk-results"
+          role="listbox"
+          aria-label="검색 결과"
+          className="max-h-[55vh] overflow-y-auto py-2"
+        >
           {/* 메뉴 섹션 */}
           {menuHits.length > 0 && (
             <Section title="메뉴">
               {menuHits.map((m, i) => (
                 <Row
                   key={m.href}
+                  id={`cmdk-opt-${i}`}
                   selected={activeIndex === i}
                   onMouseEnter={() => setSelected(i)}
                   onClick={() => go(m.href)}
@@ -248,6 +262,7 @@ export default function CommandPalette({
                 return (
                   <Row
                     key={o.id}
+                    id={`cmdk-opt-${idx}`}
                     selected={activeIndex === idx}
                     onMouseEnter={() => setSelected(idx)}
                     onClick={() => go(`/orders/${o.id}`)}
@@ -274,6 +289,7 @@ export default function CommandPalette({
                 return (
                   <Row
                     key={p.id}
+                    id={`cmdk-opt-${idx}`}
                     selected={activeIndex === idx}
                     onMouseEnter={() => setSelected(idx)}
                     onClick={() => go(`/products/${p.id}`)}
@@ -334,6 +350,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
 }
 
 function Row({
+  id,
   selected,
   onMouseEnter,
   onClick,
@@ -341,6 +358,7 @@ function Row({
   title,
   meta,
 }: {
+  id: string
   selected: boolean
   onMouseEnter: () => void
   onClick: () => void
@@ -351,6 +369,10 @@ function Row({
   return (
     <button
       type="button"
+      id={id}
+      role="option"
+      aria-selected={selected}
+      tabIndex={-1}
       data-selected={selected ? 'true' : undefined}
       onMouseEnter={onMouseEnter}
       onClick={onClick}
