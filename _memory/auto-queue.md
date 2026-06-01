@@ -90,11 +90,12 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 셀러 단건 클릭 시: 30일 trend chart, 이슈 카테고리 칩, 정지/plan 변경 액션
   - 완료: 2026-06-02 — PH0-4(#3) close 확인 후 detail 페이지 spec handoff. spec-key=phase0-admin-health-detail. b2b_seller_health_snapshot 30일 시계열 + issue_flags 칩 + admin 가드 spec 포함. main repo agent 처리 대기.
 
-- [ ] **#PH0-6 [handoff] main repo `/admin/dashboard` 에 셀러 KPI 4 카드**
+- [x] **#PH0-6 [handoff] main repo `/admin/dashboard` 에 셀러 KPI 4 카드** _(handoff: jimpass-agent-platform#6, 2026-06-02)_
   - estimated: 5m
   - prereq: #PH0-4 완료 또는 동시
   - decision_required: false
   - 어드민 메인 페이지에 "B2B 셀러" 섹션 — 가입 총, 활성, 위험, 우수 4 카드 (서버 컴포넌트로 b2b_seller_health_snapshot 의 오늘 row 집계)
+  - 완료: 2026-06-02 — spec-key=phase0-admin-dashboard-seller-kpi 로 handoff. PH0-4(#3)·PH0-5(#5) close 확인 후 메인 대시보드 요약 섹션 spec 핸드오프. 오늘(최신) snapshot 집계 4 KPI (가입 총=row 수 / 활성=orders_30d>0 / 위험=health_score<40 / 우수=health_score≥80) + score 버킷 기준(seller 대시보드 동일) + admin 가드 + /admin/b2b/health 패턴 재사용 명시. main repo agent 처리 대기.
 
 ---
 
