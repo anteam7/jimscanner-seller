@@ -522,12 +522,16 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 구현: 서버 `/simulator/page.tsx` (getExchangeRates→toSnapshot) + client `MarginSimulator.tsx`. 입력: 통화(환율 지원 USD/JPY/CNY/EUR)·매입 단가(외화)·수량·판매 단가(KRW)·마켓 수수료 프리셋(쿠팡10.8/스마트스토어5.85/11번가·지마켓·옥션12/롯데온11/자사몰3/직접입력)·배대지 배송비(기본 6000, margin-loss SHIPPING_EST_KRW 동일)·기타비용(관세·수수료). 출력: 순마진/마진율(역마진 rose<0·주의 amber<10%·양호 emerald)·매입환산단가·매입합계·판매합계·마켓수수료·총비용·손익분기 판매단가(수수료 반영 fixedCost/(1-f)/q). KRW 환산 `(foreign*rate)/unit` (margin-loss·NewOrderForm 동일). 환율 fallback 배지 + 수수료 추정 안내문 + aria-label. SellerShell 메뉴 '마진 시뮬레이터' 추가. CTA 는 prefill 미구현이라 `/orders/new` 단순 이동. DB·외부의존 0. build·lint(0 problems) 통과.
   - 후속 (소형): `/orders/new` 에 sim 값 prefill(query param) 연계, 대시보드 빠른작업 카드 진입점, 관·부가세 자동 계산(현재 수동 기타비용).
 
-- [ ] **#idea-21 주간 운영 요약 다이제스트 — 월요일에 지난주를 한 카드로** _(brainstorm approved 2026-06-01)_
+- [x] **#idea-21 주간 운영 요약 다이제스트 — 월요일에 지난주를 한 카드로** _(brainstorm approved 2026-06-01)_
   - estimated: 1-1.5h
   - prereq: 없음
   - decision_required: false
   - source: github issue#21
   - sketch: 대시보드 주간 요약 카드 (지난주 월~일 KST, "이번주" 토글). 집계: 신규주문/매입완료/도착/총매입액·판매액(KRW)/예상마진/미매칭 영수증/지연 배송. analytics·dashboard 기존 집계 재사용. #idea-9 sparkline(일별) 과 중복 않게 주간 스냅샷. 전전주 比 화살표(선택).
+  - 완료: 2026-06-01 commit 1fdad17 (75회차)
+  - 구현: `src/lib/b2b/weekly-digest.ts` (지난주/이번주 KST 월~일 스냅샷 계산, analytics 와 동일 마진 규칙 — 판매=sale_price_krw, 매입=qty×unit_price_foreign→KRW환산, 마진=판매−매입 known 시만) + client `WeeklyDigestCard.tsx` (지난주/이번주 토글). 4 KPI(신규주문·판매액·매입액·예상마진) + 지난주는 전전주比 WoW 화살표. 운영 노트 칩(미매칭 영수증·매입 미진행·도착·완료). 대시보드 "이번 달 현황" 아래 mount, 두 주 모두 주문 0 이면 hide. DB·외부의존 0. build·lint(0) 통과.
+  - note: sketch 의 "매입완료/지연 배송" 은 status_history 파싱 회피 위해 현재상태 기반 "도착·완료"·"매입 미진행(pending)" 으로 대체 (week-attribution 정확성 우선). "이번주" 토글은 진행 중이라 WoW 미표시.
+  - 후속(소형): #idea-9 일별 sparkline 을 주간 카드에 inline, 도착 status_history 기반 정밀 집계, "이번주 vs 지난주 동일시점" 비교.
 
 - [ ] **#idea-22 SKU 매입가 추세 + 인상 경고 — 마진 새기 전에** _(brainstorm approved 2026-06-01)_
   - estimated: 1.5h
