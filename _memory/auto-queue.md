@@ -533,12 +533,15 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - note: sketch 의 "매입완료/지연 배송" 은 status_history 파싱 회피 위해 현재상태 기반 "도착·완료"·"매입 미진행(pending)" 으로 대체 (week-attribution 정확성 우선). "이번주" 토글은 진행 중이라 WoW 미표시.
   - 후속(소형): #idea-9 일별 sparkline 을 주간 카드에 inline, 도착 status_history 기반 정밀 집계, "이번주 vs 지난주 동일시점" 비교.
 
-- [ ] **#idea-22 SKU 매입가 추세 + 인상 경고 — 마진 새기 전에** _(brainstorm approved 2026-06-01)_
+- [x] **#idea-22 SKU 매입가 추세 + 인상 경고 — 마진 새기 전에** _(brainstorm approved 2026-06-01)_
   - estimated: 1.5h
   - prereq: 없음
   - decision_required: false
   - source: github issue#22
   - sketch: `/products/[id]` 매입가 추세 (b2b_order_items.unit_price_foreign 통화별 시계열, 평균/최저/최고 + 최근 vs 평균 델타%). `/orders/new` SKU 선택 시 "최근 평균 ¥X (최근 ¥Y, +Z%)" 인라인 힌트. 인상률 기본 10% 초과 amber 경고. quick-pick(#idea-10) 연계(선택). 대시보드 "매입가 오른 SKU" 미니카드(선택). DB 변경 0.
+  - 완료: 2026-06-01 commit a38ad4f (76회차)
+  - 구현: `src/lib/b2b/sku-price-trend.ts` (getSkuPriceTrend 단건 통화별 시계열, getRecentSkuPriceHints 벌크 대표통화 요약, PRICE_HIKE_WARN_PCT=10). `src/components/b2b/SkuPriceTrend.tsx` 통화별 카드(sparkline+평균/최저/최고+델타배지+amber 경고). /products/[id] 섹션 추가, /orders/new 라인 인라인 힌트(인상 시 amber). 환산 없이 통화별만 집계 — DB 변경 0.
+  - 미구현(선택): quick-pick 연계, 대시보드 "매입가 오른 SKU" 미니카드. 후속 idle 라운드 또는 별도 항목으로 가능.
 
 - [ ] **#idea-23 /orders 모바일 카드 레이아웃 — 가로 스크롤 테이블 탈출** _(brainstorm approved 2026-06-01)_
   - estimated: 1h
