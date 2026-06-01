@@ -125,6 +125,7 @@ export function LinePaymentCardSelector({ orderId, itemId, initialCardId, initia
                       <button
                         type="button"
                         disabled={busy}
+                        aria-busy={busy}
                         onClick={() => assign(selected ? null : c)}
                         className={`w-full flex items-center gap-2 text-left px-2 py-1 rounded text-[11px] hover:bg-white border ${
                           selected ? 'border-emerald-300 bg-emerald-50' : 'border-transparent'
@@ -152,6 +153,7 @@ export function LinePaymentCardSelector({ orderId, itemId, initialCardId, initia
               <button
                 type="button"
                 disabled={busy}
+                aria-busy={busy}
                 onClick={() => assign(null)}
                 className="text-[10px] text-rose-600 hover:text-rose-800"
               >
@@ -159,7 +161,14 @@ export function LinePaymentCardSelector({ orderId, itemId, initialCardId, initia
               </button>
             )}
           </div>
-          {error && <p className="text-[11px] text-rose-600">{error}</p>}
+          <p role="status" aria-live="polite" className="sr-only">
+            {busy ? '결제 카드 저장 중…' : ''}
+          </p>
+          {error && (
+            <p role="alert" className="text-[11px] text-rose-600">
+              {error}
+            </p>
+          )}
         </div>
       )}
     </div>
