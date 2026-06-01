@@ -92,6 +92,7 @@ export default function OrderStatusSelector({
         value={currentStatus}
         onChange={onChange}
         disabled={disabled}
+        aria-busy={updating || pending}
         className="block w-full px-3 py-2 text-sm rounded-md border border-slate-200 bg-white text-slate-900 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-60 disabled:cursor-not-allowed transition-colors"
       >
         <option value={currentStatus} disabled>
@@ -106,8 +107,21 @@ export default function OrderStatusSelector({
           )
         })}
       </select>
-      {updating && <p className="text-xs text-slate-500">변경 중…</p>}
-      {error && <p className="text-xs text-rose-700">{error}</p>}
+      {/* async 상태/에러를 항상 DOM 에 존재하는 live region 으로 → 스크린리더 announce.
+          비활성 시 sr-only 로 흐름에서 빠져 시각·레이아웃 무변경 (BulkMatchBar/⌘K 패턴과 동일). */}
+      <p
+        role="status"
+        aria-live="polite"
+        className={updating ? 'text-xs text-slate-500' : 'sr-only'}
+      >
+        {updating ? '상태 변경 중…' : ''}
+      </p>
+      <p
+        role="alert"
+        className={error ? 'text-xs text-rose-700' : 'sr-only'}
+      >
+        {error ?? ''}
+      </p>
     </div>
   )
 }
