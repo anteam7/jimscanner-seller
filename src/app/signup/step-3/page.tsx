@@ -106,22 +106,28 @@ export default function SignupStep3Page() {
 
           {/* 성공 메시지 */}
           {resendMsg && (
-            <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 mb-4">
+            <div className="rounded-lg bg-emerald-50 border border-emerald-200 px-4 py-3 text-sm text-emerald-700 mb-4" role="status" aria-live="polite">
               {resendMsg}
             </div>
           )}
 
           {/* 오류 메시지 */}
           {error && (
-            <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700 mb-4">
+            <div className="rounded-lg bg-rose-50 border border-rose-200 px-4 py-3 text-sm text-rose-700 mb-4" role="alert">
               {error}
             </div>
           )}
+
+          {/* 진행 상태 (스크린리더 전용 — 버튼 라벨의 '확인 중…'/'발송 중…' 은 시각 전용이라 announce 안 됨) */}
+          <p className="sr-only" role="status" aria-live="polite">
+            {checking ? '인증 상태 확인 중…' : resending ? '인증 이메일 발송 중…' : ''}
+          </p>
 
           <div className="space-y-3">
             <Button
               onClick={handleContinue}
               disabled={checking}
+              aria-busy={checking}
               className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-50"
             >
               {checking ? '확인 중…' : '인증 완료, 다음 단계로'}
@@ -132,6 +138,7 @@ export default function SignupStep3Page() {
               variant="outline"
               onClick={handleResend}
               disabled={resending || resendCooldown > 0}
+              aria-busy={resending}
               className="w-full border-slate-300 text-slate-500 hover:bg-slate-100 hover:text-slate-900 h-10 disabled:opacity-50"
             >
               {resending
