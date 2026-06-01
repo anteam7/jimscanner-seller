@@ -215,8 +215,13 @@ export default function NewRefundForm({
         />
       </div>
 
+      {/* async 등록 진행을 live region 으로 → 스크린리더 announce.
+          진행은 별도 표시 텍스트가 없어 sr-only 로만(버튼 라벨은 그대로), 에러는 기존 시각 블록에 role="alert" 만 부여 (TrackingEditor/OrderStatusSelector 패턴과 동일, 시각 무변경). */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {submitting ? '환불 요청 등록 중…' : ''}
+      </p>
       {error && (
-        <div className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
+        <div role="alert" className="rounded-md border border-rose-200 bg-rose-50 px-3 py-2 text-sm text-rose-900">
           {error}
         </div>
       )}
