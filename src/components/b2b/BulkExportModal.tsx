@@ -332,8 +332,16 @@ export default function BulkExportModal({
             </div>
           )}
 
+          {/* async 진행 상태 — 스크린리더 announce용 (시각 무변경, 버튼 라벨은 그대로) */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {submitting ? '합배송 양식 생성 중…' : ''}
+          </p>
+
           {error && (
-            <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+            <div
+              role="alert"
+              className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2"
+            >
               {error}
             </div>
           )}
@@ -352,6 +360,7 @@ export default function BulkExportModal({
             type="button"
             onClick={onDownload}
             disabled={!tpl || submitting || templates.length === 0}
+            aria-busy={submitting}
             className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
           >
             {submitting ? '생성 중…' : `${orderCount}건 다운로드`}
