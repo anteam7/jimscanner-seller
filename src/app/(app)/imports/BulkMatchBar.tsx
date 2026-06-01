@@ -61,6 +61,7 @@ export function BulkMatchBar({ high, mid }: { high: BulkCandidate[]; mid: BulkCa
           type="button"
           onClick={() => run(high, 'high')}
           disabled={busy !== null}
+          aria-busy={busy === 'high'}
           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md text-white bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50 transition-colors"
         >
           ≥90점 {high.length}건 일괄 수락
@@ -71,13 +72,16 @@ export function BulkMatchBar({ high, mid }: { high: BulkCandidate[]; mid: BulkCa
           type="button"
           onClick={() => run(mid, 'mid')}
           disabled={busy !== null}
+          aria-busy={busy === 'mid'}
           className="inline-flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-md text-amber-800 border border-amber-300 bg-white hover:bg-amber-50 disabled:opacity-50 transition-colors"
         >
           70–89점 {mid.length}건 검토 수락
         </button>
       )}
-      {busy && <span className="text-xs text-slate-500">매칭 중…</span>}
-      {result && <span className="text-xs text-emerald-700 font-medium">{result}</span>}
+      <span role="status" aria-live="polite" className="text-xs">
+        {busy && <span className="text-slate-500">매칭 중…</span>}
+        {!busy && result && <span className="text-emerald-700 font-medium">{result}</span>}
+      </span>
       <span className="w-full text-[11px] text-slate-500">
         점수가 높을수록 통화·날짜·금액 일치도가 높습니다. 70~89점은 오매칭 가능성이 있어 검토를 권장합니다. 매칭 후 각 영수증에서 [해제]로 되돌릴 수 있습니다.
       </span>
