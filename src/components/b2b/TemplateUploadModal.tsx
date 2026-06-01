@@ -90,6 +90,7 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
           }}
           role="dialog"
           aria-modal="true"
+          aria-labelledby="tpl_modal_title"
         >
           <form
             onSubmit={onSubmit}
@@ -97,7 +98,7 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
           >
             <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
               <div>
-                <h2 className="text-base font-semibold text-slate-900">새 양식 업로드</h2>
+                <h2 id="tpl_modal_title" className="text-base font-semibold text-slate-900">새 양식 업로드</h2>
                 <p className="text-xs text-slate-500 mt-0.5">
                   배대지에서 받은 xlsx 또는 xls 양식을 업로드합니다. 첫 행 헤더를 읽어 매핑 항목을 자동 생성합니다.
                 </p>
@@ -204,10 +205,14 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
               </details>
 
               {error && (
-                <div className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
+                <div role="alert" className="text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-md px-3 py-2">
                   {error}
                 </div>
               )}
+
+              <p role="status" aria-live="polite" className="sr-only">
+                {submitting ? '배대지 양식 업로드 중…' : ''}
+              </p>
             </div>
 
             <div className="px-6 py-3 border-t border-slate-200 bg-slate-50/50 flex items-center justify-end gap-2 rounded-b-xl">
@@ -222,6 +227,7 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
               <button
                 type="submit"
                 disabled={submitting}
+                aria-busy={submitting}
                 className="inline-flex items-center gap-1.5 px-4 py-1.5 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-700 disabled:bg-slate-300 disabled:cursor-not-allowed"
               >
                 {submitting ? '업로드 중…' : '업로드'}
