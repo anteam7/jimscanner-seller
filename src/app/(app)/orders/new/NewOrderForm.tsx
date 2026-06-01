@@ -14,6 +14,8 @@ import SKUQuickPick from '@/components/b2b/SKUQuickPick'
 import { CustomsGuidePanel } from '@/components/b2b/CustomsGuidePanel'
 import { CustomsCategoryHint } from '@/components/b2b/CustomsCategoryHint'
 import { matchCustomsCategory } from '@/lib/b2b/customs-guide'
+import { type SkuPriceHint, PRICE_HIKE_WARN_PCT } from '@/lib/b2b/sku-price-trend'
+import { formatForeign } from '@/lib/b2b/format'
 
 function suggestOrderNumber(): string {
   const now = new Date()
@@ -77,6 +79,7 @@ export type DuplicateSource = {
 export default function NewOrderForm({
   forwarders,
   lossSkus = {},
+  priceHints = {},
   initialForwarderId = '',
   initialForwarderCountry = '',
   recentBuyers = [],
@@ -85,6 +88,8 @@ export default function NewOrderForm({
   forwarders: ForwarderOption[]
   /** product_id → 단위당 손실 KRW (최근 30일 마진 손실 SKU). 주문 입력 시 경고. */
   lossSkus?: Record<string, number>
+  /** product_id → 매입가 힌트 (대표 통화 평균·최근·인상폭). SKU 선택 시 인라인 표시. */
+  priceHints?: Record<string, SkuPriceHint>
   /** 마지막 사용 배대지 — 새 주문 시 sticky pre-select */
   initialForwarderId?: string
   initialForwarderCountry?: string
@@ -629,6 +634,30 @@ export default function NewOrderForm({
                   {' '}추정입니다 (환산 매입가 + 배대지비 추정 대비). 판매가·매입 단가를 확인하세요.
                 </div>
               )}
+              {(() => {
+                const pid = line.productId
+                const h = pid ? priceHints[pid] : undefined
+                if (!h) return null
+                const hike = h.deltaPct != null && h.deltaPct > PRICE_HIKE_WARN_PCT
+                return (
+                  <div
+                    className={`rounded-md border px-3 py-2 text-[11px] ${
+                      hike ? 'border-amber-200 bg-amber-50 text-amber-800' : 'border-slate-200 bg-slate-50 text-slate-600'
+                    }`}
+                  >
+                    매입가 기록 ({h.count}건) — 최근 평균{' '}
+                    <span className="font-semibold tabular-nums">{formatForeign(Math.round(h.avg * 100) / 100, h.currency)}</span>
+                    {' · '}최근{' '}
+                    <span className="font-semibold tabular-nums">{formatForeign(h.recent, h.currency)}</span>
+                    {h.deltaPct != null && Math.abs(h.deltaPct) >= 0.5 && (
+                      <span className={`ml-1 font-semibold tabular-nums ${hike ? 'text-amber-900' : h.deltaPct > 0 ? 'text-rose-600' : 'text-emerald-700'}`}>
+                        ({h.deltaPct > 0 ? '+' : ''}{h.deltaPct.toFixed(1)}%)
+                      </span>
+                    )}
+                    {hike && <span className="ml-1">⚠ 평균보다 올랐습니다. 매입처 가격을 확인하세요.</span>}
+                  </div>
+                )
+              })()}
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <Field label="해외 사이트" htmlFor={`supplier_site_${i}`}>
                   <select id={`supplier_site_${i}`} value={line.supplierSite} onChange={(e) => patchLine(i, { supplierSite: e.target.value })} className={inputCls}>

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/auth/server'
 import { getNearLimitCards } from '@/lib/b2b/card-limits'
 import { getExchangeRates } from '@/lib/b2b/exchange-rate'
 import { getMarginLossAlerts } from '@/lib/b2b/margin-loss'
+import { getRecentSkuPriceHints, type SkuPriceHint } from '@/lib/b2b/sku-price-trend'
 import NewOrderForm, {
   type ForwarderOption,
   type RecentBuyer,
@@ -42,6 +43,7 @@ export default async function NewOrderPage({
   } = await supabase.auth.getUser()
   let nearLimitCards: Awaited<ReturnType<typeof getNearLimitCards>> = []
   const lossSkus: Record<string, number> = {}
+  let priceHints: Record<string, SkuPriceHint> = {}
   let lastForwarderId = ''
   let lastForwarderCountry = ''
   const recentBuyers: RecentBuyer[] = []
@@ -54,6 +56,9 @@ export default async function NewOrderPage({
       .single()
     if (account) {
       nearLimitCards = await getNearLimitCards(account.id)
+
+      // SKU 매입가 힌트 — 라인에 SKU 매핑 시 최근 평균/최근 단가·인상폭 인라인 표시 (#idea-22)
+      priceHints = await getRecentSkuPriceHints(account.id)
 
       // 주문 복제(재주문) — ?duplicate=<orderId> 로 들어오면 소유 주문을 prefill 소스로 로드
       if (duplicateId) {
@@ -194,6 +199,7 @@ export default async function NewOrderPage({
       <NewOrderForm
         forwarders={forwarders}
         lossSkus={lossSkus}
+        priceHints={priceHints}
         initialForwarderId={lastForwarderId}
         initialForwarderCountry={lastForwarderCountry}
         recentBuyers={recentBuyers}

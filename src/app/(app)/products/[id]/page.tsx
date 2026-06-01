@@ -4,6 +4,8 @@ import { notFound } from 'next/navigation'
 import { createClient } from '@/lib/auth/server'
 import ProductForm, { type ForwarderOption, type MarketLink, type SupplierLink } from '@/components/b2b/ProductForm'
 import FavoriteStar from '@/components/b2b/FavoriteStar'
+import SkuPriceTrend from '@/components/b2b/SkuPriceTrend'
+import { getSkuPriceTrend } from '@/lib/b2b/sku-price-trend'
 
 export const metadata: Metadata = {
   title: 'SKU 편집',
@@ -94,6 +96,9 @@ export default async function ProductEditPage({
     .returns<ForwarderOption[]>()
   const forwarders = fwdRows ?? []
 
+  // 매입가 추세 — 이 SKU 로 실제 매입된 라인의 통화별 단가 시계열 (#idea-22)
+  const priceTrends = await getSkuPriceTrend(account.id, p.id)
+
   const marketLinks: MarketLink[] = (p.b2b_product_market_links ?? []).map((m) => ({
     id: m.id,
     marketplace: m.marketplace,
@@ -153,6 +158,7 @@ export default async function ProductEditPage({
           supplier_links: supplierLinks,
         }}
       />
+      <SkuPriceTrend trends={priceTrends} />
     </div>
   )
 }
