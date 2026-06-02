@@ -484,13 +484,14 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### Audit 발견 2026-06-03 (daily self-audit · 113회차)
 
-- [ ] **#auto-L ui: seller 앱 favicon 누락 (`/favicon.ico` 404)** _(audit 발견 2026-06-03)_
+- [x] **#auto-L ui: seller 앱 favicon 누락 (`/favicon.ico` 404)** _(audit 발견 2026-06-03)_
   - estimated: 15m
   - prereq: 없음
   - decision_required: false
   - finding: 셀러 prod 앱 모든 페이지에서 `GET /favicon.ico` → 404 (QA 콘솔 에러로 노출). `src/app/` 에 `favicon.ico`·`icon.*`·`apple-icon.*` 파일 0개 + `src/app/layout.tsx` metadata 에 `icons` 항목 없음 → 브라우저 탭/북마크에 기본 아이콘 없음. B2C 짐스캐너 로고 자산 활용 가능 (디자인 컨셉의 invert SELLER 로고).
   - severity: low
-  - fix 방향: Next.js App Router 컨벤션으로 `src/app/icon.svg`(또는 `favicon.ico`) 추가 — 짐스캐너 로고 기반 정적 파일이면 metadata 자동 연결. 또는 `layout.tsx` metadata 에 `icons` 명시. 순수 additive (라우트·동작 무변경). noindex 정책과 무관.
+  - 완료: 2026-06-03 commit 93c60b0
+  - fix: Next.js App Router 컨벤션 `src/app/icon.svg` 추가 (32×32, navy `#0F172A` 라운드 사각 + 블루 스캐너 swoosh `#60A5FA`/`#3B82F6` + 화이트 J 마크). build 시 `/icon.svg` 라우트 생성 → Next 가 `<link rel="icon" type="image/svg+xml">` 자동 주입 → 모던 브라우저가 SVG 사용하고 `/favicon.ico` fallback 요청 중단. layout.tsx metadata 무수정 (파일 기반 자동 감지). 순수 additive — 라우트·동작·noindex 정책 무변경. build·lint(0) 통과.
 
 - [x] **#idea-16 주문 1-click 복제 (재주문)** _(brainstorm approved 2026-05-31)_
   - estimated: 45m
