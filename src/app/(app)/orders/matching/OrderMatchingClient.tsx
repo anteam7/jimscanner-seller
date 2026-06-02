@@ -111,14 +111,14 @@ export function OrderMatchingClient({ items }: { items: Item[] }) {
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-[11px] font-bold text-indigo-900">🔗 일괄 매칭:</span>
             {high90.length > 0 && (
-              <button type="button" disabled={bulkBusy}
+              <button type="button" disabled={bulkBusy} aria-busy={bulkBusy}
                 onClick={() => bulkApply(high90, '90점 이상 추천')}
                 className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-white border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50">
                 90+ 점 일괄 적용 ({high90.length})
               </button>
             )}
             {mid70.length > 0 && (
-              <button type="button" disabled={bulkBusy}
+              <button type="button" disabled={bulkBusy} aria-busy={bulkBusy}
                 onClick={() => bulkApply(mid70, '70~89점 추천')}
                 className="px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-white border border-amber-300 rounded hover:bg-amber-50 disabled:opacity-50">
                 70~89점 일괄 적용 ({mid70.length}) <span className="text-[9px]">(검증 권장)</span>
@@ -130,6 +130,10 @@ export function OrderMatchingClient({ items }: { items: Item[] }) {
               ✓ {bulkResult.ok}건 매칭{bulkResult.fail > 0 && <span className="text-rose-600 ml-2">✗ {bulkResult.fail}건 실패</span>}
             </span>
           )}
+          {/* 스크린리더 전용: 일괄 매칭 진행/결과 announce (시각 표시는 위 bulkResult span) */}
+          <span role="status" aria-live="polite" className="sr-only">
+            {bulkBusy ? '추천 주문 일괄 매칭 적용 중…' : bulkResult ? `${bulkResult.ok}건 매칭 완료${bulkResult.fail > 0 ? `, ${bulkResult.fail}건 실패` : ''}` : ''}
+          </span>
         </div>
       )}
 
@@ -219,16 +223,19 @@ function ReceiptRow({ item }: { item: Item }) {
             <p className="text-[11px] text-amber-700">추천 없음 — [🔍 검색] 으로 매칭</p>
           )}
           <AmountWarning item={item} />
-          {error && <p className="text-[10px] text-rose-600 mt-1">{error}</p>}
+          {/* 매칭 실패 에러: 항상 DOM 존재(빈 값은 sr-only) → SR announce, 시각·레이아웃 무변경 */}
+          <p role="alert" className={error ? 'text-[10px] text-rose-600 mt-1' : 'sr-only'}>{error}</p>
+          {/* 스크린리더 전용: 매칭 추가/해제 진행 announce */}
+          <span role="status" aria-live="polite" className="sr-only">{busy ? '주문 매칭 처리 중…' : ''}</span>
         </div>
         <div className="flex items-center gap-1.5 flex-wrap">
           {item.matched_order_label ? (
             <>
-              <button type="button" onClick={() => setModalOpen(true)} disabled={busy}
+              <button type="button" onClick={() => setModalOpen(true)} disabled={busy} aria-busy={busy}
                 className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
                 변경
               </button>
-              <button type="button" onClick={() => link(null)} disabled={busy}
+              <button type="button" onClick={() => link(null)} disabled={busy} aria-busy={busy}
                 className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded hover:bg-rose-100 disabled:opacity-50">
                 해제
               </button>
@@ -236,12 +243,12 @@ function ReceiptRow({ item }: { item: Item }) {
           ) : (
             <>
               {item.suggestion && (
-                <button type="button" onClick={() => link(item.suggestion!.orderId)} disabled={busy}
+                <button type="button" onClick={() => link(item.suggestion!.orderId)} disabled={busy} aria-busy={busy}
                   className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-300 rounded hover:bg-indigo-100 disabled:opacity-50">
                   🔗 추천 적용
                 </button>
               )}
-              <button type="button" onClick={() => setModalOpen(true)} disabled={busy}
+              <button type="button" onClick={() => setModalOpen(true)} disabled={busy} aria-busy={busy}
                 className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
                 🔍 검색
               </button>
@@ -327,16 +334,18 @@ function SearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/40" onClick={onClose}>
-      <div className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="order-match-search-title"
+        className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">짐스캐너 주문 검색</h3>
+          <h3 id="order-match-search-title" className="text-sm font-bold text-slate-900">짐스캐너 주문 검색</h3>
           <button type="button" onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
         </div>
         <div className="px-5 py-3 border-b border-slate-100">
           <input ref={inputRef} type="text" value={q} onChange={(e) => onChange(e.target.value)}
+            aria-label="매칭할 주문 검색 (마켓 주문번호·셀러 주문번호·구매자명·전화번호)"
             placeholder="마켓 주문번호 / 셀러 주문번호 / 구매자명 / 전화번호"
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500" />
-          <p className="mt-1.5 text-[11px] text-slate-500">{loading ? '검색 중…' : `${results.length}건${q ? ` (검색: ${q})` : ' (최근 주문)'}`}</p>
+          <p role="status" aria-live="polite" className="mt-1.5 text-[11px] text-slate-500">{loading ? '검색 중…' : `${results.length}건${q ? ` (검색: ${q})` : ' (최근 주문)'}`}</p>
         </div>
         <div className="overflow-y-auto max-h-96">
           {results.length === 0 && !loading ? (
@@ -345,7 +354,7 @@ function SearchModal({
             <ul className="divide-y divide-slate-100">
               {results.map((o) => (
                 <li key={o.id}>
-                  <button type="button" onClick={() => onPick(o.id)} disabled={busy}
+                  <button type="button" onClick={() => onPick(o.id)} disabled={busy} aria-busy={busy}
                     className="w-full text-left px-5 py-3 hover:bg-indigo-50 disabled:opacity-50 transition-colors">
                     <div className="flex items-center gap-2 flex-wrap mb-0.5">
                       <span className="font-mono text-[12px] font-semibold text-slate-900">{orderLabel(o)}</span>
@@ -358,7 +367,7 @@ function SearchModal({
             </ul>
           )}
         </div>
-        {error && <div className="px-5 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700">{error}</div>}
+        {error && <div role="alert" className="px-5 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700">{error}</div>}
         <div className="px-5 py-2.5 border-t border-slate-100 bg-slate-50 text-[11px] text-slate-500 flex items-center justify-between">
           <span>주문 클릭 → 즉시 매칭</span>
           <span>ESC 로 닫기</span>
