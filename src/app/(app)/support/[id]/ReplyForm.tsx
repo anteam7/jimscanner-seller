@@ -44,14 +44,21 @@ export default function ReplyForm({ ticketId }: { ticketId: string }) {
         onChange={(e) => setBody(e.target.value.slice(0, 5000))}
         rows={5}
         placeholder="추가로 알려주실 내용이 있으면 적어 주세요."
+        aria-label="답글 내용"
         className="block w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
       />
-      {error && <p className="mt-2 text-xs text-rose-700">{error}</p>}
+      <p role="status" aria-live="polite" className="sr-only">
+        {submitting ? '답글 전송 중…' : ''}
+      </p>
+      <p role="alert" className={error ? 'mt-2 text-xs text-rose-700' : 'sr-only'}>
+        {error}
+      </p>
       <div className="mt-3 flex justify-end">
         <button
           type="button"
           onClick={send}
           disabled={submitting}
+          aria-busy={submitting}
           className="h-9 px-5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded transition-colors"
         >
           {submitting ? '전송 중…' : '답글 전송'}
