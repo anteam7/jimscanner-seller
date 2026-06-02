@@ -30,7 +30,7 @@ CLAUDE.md §2 기준 오리지널 repo 운영 중:
 |---|---|---|---|---|
 | `phase0-admin-health-page` | 셀러 health 스냅샷(#PH0-1~3) | 셀러 종합 health 모니터 페이지 `/admin/b2b/health` (4 KPI + row table) | `b2b_seller_health_snapshot` | **issued(main#3, 2026-05-27)** — main build 대기 |
 | `admin-orders-pipeline` | 주문 관리·상태 전이·일괄입력 | 전 셀러 주문 처리 파이프라인 관제 (상태별 병목·정체 셀러) | `b2b_orders`,`b2b_order_items` | **issued(main#4, 2026-06-02)** |
-| `admin-refunds-monitor` | 환불 관리(/refunds) | 전 셀러 환불 현황·승인 SLA·이상치 관제 | `b2b_refunds` | 미등록 |
+| `admin-refunds-monitor` | 환불 관리(/refunds) | 전 셀러 환불 현황·승인 SLA·이상치 관제 | `b2b_refunds` | **issued(main#8, 2026-06-03)** |
 | `admin-settlement-variance` | 배대지 정산 대조(/settlement) | 예측 대비 실청구 ±15% 이상 셀러·배대지 관제 | `b2b_orders.estimated/actual_cost_krw` | 미등록 |
 | `admin-storage-risk` | 보관기간 deadline(/eta) | 배대지 보관비 임박·초과 위험 셀러 목록 관제 | `b2b_orders.forwarder_submitted_at` | 미등록 |
 | `admin-margin-loss` | 마진 손실 경고(대시보드 H3) | 마진 손실 SKU·셀러 집계 관제 | `b2b_products`,`b2b_order_items` | 미등록 |
