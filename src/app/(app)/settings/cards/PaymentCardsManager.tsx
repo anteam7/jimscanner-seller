@@ -304,14 +304,20 @@ export default function PaymentCardsManager({
             </Field>
           </div>
 
-          {error && (
-            <p className="text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded px-3 py-2">{error}</p>
-          )}
+          {/* async 저장 진행 announce (항상 DOM 존재, sr-only — 시각·레이아웃 무변경) */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {busy ? (editingId ? '카드 정보 수정 중…' : '카드 저장 중…') : ''}
+          </p>
+          {/* 저장/수정 실패 announce (항상 DOM 존재, 비활성 시 sr-only — 시각·레이아웃 무변경) */}
+          <p role="alert" className={error ? 'text-sm text-rose-600 bg-rose-50 border border-rose-200 rounded px-3 py-2' : 'sr-only'}>
+            {error ?? ''}
+          </p>
 
           <div className="flex items-center gap-2 pt-2">
             <button
               type="submit"
               disabled={busy}
+              aria-busy={busy}
               className="h-9 px-4 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded disabled:opacity-60 transition-colors"
             >
               {busy ? '저장 중…' : editingId ? '수정' : '저장'}
