@@ -187,7 +187,14 @@ export function DomesticProductCreate() {
           />
         </div>
       </div>
-      {error && <p className="text-xs text-rose-600 font-medium">{error}</p>}
+      {/* async 등록 진행 announce (항상 DOM 존재, sr-only — 시각·레이아웃 무변경) */}
+      <p role="status" aria-live="polite" className="sr-only">
+        {busy ? '국내 상품 등록 중…' : ''}
+      </p>
+      {/* 등록 실패 announce (항상 DOM 존재, 비활성 시 sr-only) */}
+      <p role="alert" className={error ? 'text-xs text-rose-600 font-medium' : 'sr-only'}>
+        {error ?? ''}
+      </p>
       <div className="flex items-center justify-end gap-2">
         <button
           type="button"
@@ -199,6 +206,7 @@ export function DomesticProductCreate() {
         <button
           type="submit"
           disabled={busy}
+          aria-busy={busy}
           className="px-4 py-1.5 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-500 rounded-md disabled:opacity-50"
         >
           {busy ? '등록 중…' : '등록'}
