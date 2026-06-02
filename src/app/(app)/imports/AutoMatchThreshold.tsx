@@ -47,6 +47,8 @@ export function AutoMatchThreshold({ value }: { value: number }) {
           type="button"
           onClick={() => pick(o.value)}
           disabled={saving}
+          aria-pressed={val === o.value}
+          aria-busy={saving}
           title={o.hint}
           className={`px-2.5 py-1 rounded-md font-medium transition-colors disabled:opacity-60 ${
             val === o.value ? 'bg-indigo-600 text-white' : 'text-slate-600 border border-slate-200 bg-white hover:bg-slate-50'
@@ -56,6 +58,9 @@ export function AutoMatchThreshold({ value }: { value: number }) {
         </button>
       ))}
       <span className="text-[11px] text-slate-400">이 점수 이상은 개별 매칭 시 확인 창을 생략합니다.</span>
+      <span role="status" aria-live="polite" className="sr-only">
+        {saving ? '자동 매칭 임계값 저장 중…' : ''}
+      </span>
     </div>
   )
 }

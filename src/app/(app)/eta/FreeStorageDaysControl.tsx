@@ -42,10 +42,14 @@ export function FreeStorageDaysControl({ value }: { value: number }) {
         onChange={(e) => setDays(Number(e.target.value))}
         onBlur={() => apply(days)}
         aria-label="무료 보관일 (일, 1~60)"
+        aria-busy={saving}
         className="w-14 px-1.5 py-0.5 text-xs text-right tabular-nums rounded border border-slate-200 bg-white focus:outline-none focus:ring-1 focus:ring-indigo-500"
       />
       <span className="text-slate-400">일</span>
-      {saving && <span className="text-slate-400">…</span>}
+      {saving && <span className="text-slate-400" aria-hidden="true">…</span>}
+      <span role="status" aria-live="polite" className="sr-only">
+        {saving ? '무료 보관일 저장 중…' : ''}
+      </span>
     </label>
   )
 }
