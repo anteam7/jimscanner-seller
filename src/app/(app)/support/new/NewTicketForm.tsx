@@ -89,9 +89,16 @@ export default function NewTicketForm() {
         />
       </label>
 
-      {error && (
-        <p className="text-xs text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded">{error}</p>
-      )}
+      <p
+        role="alert"
+        className={error ? 'text-xs text-rose-700 bg-rose-50 border border-rose-200 px-3 py-2 rounded' : 'sr-only'}
+      >
+        {error}
+      </p>
+
+      <p role="status" aria-live="polite" className="sr-only">
+        {submitting ? '문의를 등록하는 중입니다…' : ''}
+      </p>
 
       <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
         <button
@@ -105,6 +112,7 @@ export default function NewTicketForm() {
         <button
           type="submit"
           disabled={submitting}
+          aria-busy={submitting}
           className="h-9 px-5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded transition-colors"
         >
           {submitting ? '저장 중…' : '문의 등록'}
