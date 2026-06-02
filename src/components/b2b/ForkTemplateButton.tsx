@@ -28,14 +28,20 @@ export default function ForkTemplateButton({ templateId, templateName }: { templ
   }
 
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      disabled={busy}
-      className="text-xs font-medium text-indigo-700 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50 disabled:opacity-50"
-      title="내 양식으로 복사하여 매핑 커스터마이즈"
-    >
-      {busy ? '복사 중…' : '복사 →'}
-    </button>
+    <>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={busy}
+        aria-busy={busy}
+        className="text-xs font-medium text-indigo-700 hover:text-indigo-800 px-2 py-1 rounded hover:bg-indigo-50 disabled:opacity-50"
+        title="내 양식으로 복사하여 매핑 커스터마이즈"
+      >
+        {busy ? '복사 중…' : '복사 →'}
+      </button>
+      <span role="status" aria-live="polite" className="sr-only">
+        {busy ? `'${templateName}' 양식 복사 중…` : ''}
+      </span>
+    </>
   )
 }
