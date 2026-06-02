@@ -11,8 +11,6 @@
  *   - 이미 다른 receipt 가 매칭한 order 는 -10 (충돌 회피)
  */
 
-export type SupplierSource = 'amazon_us' | 'amazon_jp' | 'rakuten' | 'yahoo'
-
 export type ReceiptForMatching = {
   id: string
   source: string

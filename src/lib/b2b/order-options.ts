@@ -71,4 +71,3 @@ export const SUPPLIER_COUNTRIES: { value: string; label: string }[] = [
 ]
 
 export const MARKETPLACE_LABEL = new Map(MARKETPLACES.map((m) => [m.value, m.label]))
-export const SUPPLIER_SITE_LABEL = new Map(SUPPLIER_SITES.map((s) => [s.value, s.label]))

@@ -290,35 +290,6 @@ export function expandRows(
 }
 
 // ============================================================
-// 누락 경고 (UI 미리보기용)
-// ============================================================
-
-export type MissingWarning = {
-  column_index: number
-  column_label: string
-  reason: string
-}
-
-export function findMissing(
-  columns: TemplateColumn[],
-  ctx: EvaluationContext,
-): MissingWarning[] {
-  const out: MissingWarning[] = []
-  for (const c of columns) {
-    if (!c.required) continue
-    const v = evaluateColumn(c, ctx)
-    if (v == null || v === '') {
-      out.push({
-        column_index: c.column_index,
-        column_label: c.column_label,
-        reason: '필수 값이 비어 있음',
-      })
-    }
-  }
-  return out
-}
-
-// ============================================================
 // xlsx 채우기 (메인)
 // ============================================================
 
