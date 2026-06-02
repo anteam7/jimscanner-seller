@@ -140,7 +140,7 @@ export function MultiMatchPanel({ receiptId }: { receiptId: string }) {
       ) : (
         <p className="text-xs text-slate-500">아직 매칭된 주문이 없습니다.</p>
       )}
-      {error && <p className="text-xs text-rose-600">{error}</p>}
+      <p role="alert" className={error ? 'text-xs text-rose-600' : 'sr-only'}>{error}</p>
       {modalOpen && (
         <SearchModal
           onClose={() => setModalOpen(false)}
@@ -199,16 +199,17 @@ function SearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/40" onClick={onClose}>
-      <div className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
+      <div role="dialog" aria-modal="true" aria-labelledby="multimatch-search-title" className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
-          <h3 className="text-sm font-bold text-slate-900">매칭할 주문 검색</h3>
+          <h3 id="multimatch-search-title" className="text-sm font-bold text-slate-900">매칭할 주문 검색</h3>
           <button type="button" onClick={onClose} aria-label="닫기" className="text-slate-400 hover:text-slate-600 text-xl leading-none">×</button>
         </div>
         <div className="px-5 py-3 border-b border-slate-100">
           <input ref={inputRef} type="text" value={q} onChange={(e) => onChange(e.target.value)}
+            aria-label="매칭할 주문 검색 (주문번호·구매자명·전화번호)"
             placeholder="주문번호 / 구매자명 / 전화번호"
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-          <p className="mt-1.5 text-[11px] text-slate-500">{loading ? '검색 중…' : `${results.length}건`}</p>
+          <p role="status" aria-live="polite" className="mt-1.5 text-[11px] text-slate-500">{loading ? '검색 중…' : `${results.length}건`}</p>
         </div>
         <div className="overflow-y-auto max-h-96">
           {results.length === 0 && !loading ? (
