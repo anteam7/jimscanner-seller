@@ -365,7 +365,14 @@ export default function ForwarderAddressManager({
             <span>기본 주소로 설정 (확장이 우선 추천)</span>
           </label>
 
-          {error && <p className="text-xs text-rose-700">{error}</p>}
+          {/* async 저장 진행 announce (항상 DOM 존재, sr-only — 시각·레이아웃 무변경) */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {busy ? '배대지 주소 저장 중…' : ''}
+          </p>
+          {/* 저장/수정 실패 announce (항상 DOM 존재, 비활성 시 sr-only) */}
+          <p role="alert" className={error ? 'text-xs text-rose-700' : 'sr-only'}>
+            {error ?? ''}
+          </p>
 
           <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
             <button
@@ -383,6 +390,7 @@ export default function ForwarderAddressManager({
             <button
               type="submit"
               disabled={busy}
+              aria-busy={busy}
               className="h-9 px-5 text-sm font-semibold text-white bg-indigo-600 hover:bg-indigo-700 disabled:opacity-50 rounded"
             >
               {busy ? '저장 중…' : editingId ? '수정 저장' : '저장'}
