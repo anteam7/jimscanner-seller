@@ -153,6 +153,7 @@ export function ProductMatchingClient({
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="상품명 / SKU 검색"
+            aria-label="국내 상품 검색 (상품명·SKU)"
             className="mt-2 w-full px-2.5 py-1.5 text-xs border border-slate-300 rounded-md focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
           />
         </div>
@@ -223,6 +224,7 @@ export function ProductMatchingClient({
                       type="button"
                       onClick={() => removeMapping(m.id)}
                       disabled={busy}
+                      aria-busy={busy}
                       className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded hover:bg-rose-100 disabled:opacity-50"
                     >
                       해제
@@ -232,7 +234,17 @@ export function ProductMatchingClient({
               })}
             </ul>
           )}
-          {error && <div className="px-4 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700">{error}</div>}
+          {/* SR: async 매칭 진행 announce (시각 무변경 — sr-only) */}
+          <p role="status" aria-live="polite" className="sr-only">
+            {busy ? '상품 매칭 처리 중…' : ''}
+          </p>
+          {/* 에러는 항상 DOM 존재 role=alert — 비활성 시 sr-only 라 시각·레이아웃 무변경 */}
+          <div
+            role="alert"
+            className={error ? 'px-4 py-2 border-t border-rose-100 bg-rose-50 text-[11px] text-rose-700' : 'sr-only'}
+          >
+            {error}
+          </div>
         </div>
 
         {/* 미매칭 해외 상품 — 추가 */}
@@ -260,6 +272,7 @@ export function ProductMatchingClient({
                     type="button"
                     onClick={() => addMapping(fp.id)}
                     disabled={busy || !selectedDomesticId}
+                    aria-busy={busy}
                     className="px-2.5 py-1 text-[11px] font-semibold text-emerald-700 bg-emerald-50 border border-emerald-200 rounded hover:bg-emerald-100 disabled:opacity-50"
                   >
                     + 매칭
