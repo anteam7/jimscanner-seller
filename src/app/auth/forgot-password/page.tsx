@@ -120,6 +120,7 @@ function RequestForm({
         <Button
           type="submit"
           disabled={loading}
+          aria-busy={loading}
           className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
         >
           {loading ? '처리 중…' : '재설정 이메일 보내기'}
@@ -206,6 +207,7 @@ function SentState({ email, onResend }: { email: string; onResend: () => Promise
           type="button"
           onClick={handleResend}
           disabled={resending || cooldown > 0}
+          aria-busy={resending}
           variant="outline"
           className="border-slate-300 text-slate-700 hover:bg-slate-100 hover:text-slate-900 disabled:opacity-50 disabled:cursor-not-allowed"
         >

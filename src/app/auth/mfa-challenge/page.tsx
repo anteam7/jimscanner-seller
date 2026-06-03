@@ -128,6 +128,7 @@ function MfaChallengeContent() {
             <button
               onClick={handleSignOut}
               disabled={signingOut}
+              aria-busy={signingOut}
               className="w-full text-sm text-slate-600 hover:text-slate-900 transition-colors disabled:opacity-50 py-2"
             >
               {signingOut ? '로그아웃 중…' : '로그인 페이지로 돌아가기'}
@@ -200,6 +201,7 @@ function MfaChallengeContent() {
           <Button
             type="submit"
             disabled={loading || code.length !== 6 || !factorId || !!cooldownUntil}
+            aria-busy={loading}
             className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
           >
             {loading ? '확인 중…' : cooldownUntil ? `재시도 대기 (${cooldownSecs}초)` : '확인'}

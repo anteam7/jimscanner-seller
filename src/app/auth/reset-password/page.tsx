@@ -233,6 +233,7 @@ export default function ResetPasswordPage() {
             <Button
               type="submit"
               disabled={loading || (confirm.length > 0 && password !== confirm)}
+              aria-busy={loading}
               className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
             >
               {loading ? '변경 중…' : '비밀번호 변경하기'}

@@ -195,6 +195,7 @@ function SellerLoginContent() {
               <Button
                 type="submit"
                 disabled={loading}
+                aria-busy={loading}
                 className="w-full bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-semibold h-11 shadow-sm hover:shadow-md disabled:opacity-50 transition-all"
               >
                 {loading ? '로그인 중…' : '로그인'}
