@@ -142,6 +142,7 @@ export default function TransitOverrideEditor({
       </p>
 
       <div className="rounded-xl border border-slate-200 border-l-[3px] border-l-sky-500 bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left">
@@ -222,6 +223,7 @@ export default function TransitOverrideEditor({
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   )

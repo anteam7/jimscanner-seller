@@ -133,6 +133,7 @@ export default function ExtensionTokenManager({ initialTokens }: { initialTokens
       {tokens.length === 0 ? (
         <div className="px-5 py-8 text-center text-xs text-slate-500">발급된 토큰이 없습니다.</div>
       ) : (
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200 text-[11px] uppercase tracking-wider text-slate-600 font-semibold">
             <tr>
@@ -177,6 +178,7 @@ export default function ExtensionTokenManager({ initialTokens }: { initialTokens
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </section>
   )
