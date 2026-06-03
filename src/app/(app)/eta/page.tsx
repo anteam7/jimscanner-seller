@@ -316,6 +316,7 @@ function Section({
         </span>
       </summary>
       <div className={`mt-2 rounded-xl border border-slate-200 ${toneCls} border-l-[3px] bg-white shadow-sm overflow-hidden`}>
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left">
@@ -403,6 +404,7 @@ function Section({
             })}
           </tbody>
         </table>
+        </div>
       </div>
     </details>
   )
@@ -434,6 +436,7 @@ function StorageSection({
         <Kpi label="입고 중" value={counts.total} tone="slate" hint="배대지 보관 중 전체" />
       </div>
       <div className="rounded-xl border border-slate-200 border-l-amber-500 border-l-[3px] bg-white shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr className="text-left">
@@ -509,6 +512,7 @@ function StorageSection({
             })}
           </tbody>
         </table>
+        </div>
       </div>
       <p className="text-[11px] text-slate-500">
         무료 보관일은 배대지마다 다릅니다(보통 7~30일). 현재 기준은 {freeDays}일{freeDays === DEFAULT_FREE_STORAGE_DAYS ? ' (기본값)' : ' (직접 설정)'}이며,
