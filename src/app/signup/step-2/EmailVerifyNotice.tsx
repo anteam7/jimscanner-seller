@@ -72,6 +72,7 @@ export function EmailVerifyNotice() {
           type="button"
           onClick={resend}
           disabled={resending || resent}
+          aria-busy={resending}
           className="inline-flex items-center gap-1 px-2.5 py-1 text-xs font-semibold rounded-md text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 disabled:opacity-50 transition-colors"
         >
           {resending ? '재전송 중…' : resent ? '재전송 완료' : '인증 메일 재전송'}

@@ -215,6 +215,7 @@ export default function SignupStep2Page() {
               <Button
                 type="submit"
                 disabled={submitting || !allRequiredChecked}
+                aria-busy={submitting}
                 className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-50"
               >
                 {submitting ? '저장 중…' : '동의하고 다음 단계로'}

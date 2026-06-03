@@ -415,6 +415,7 @@ export default function SignupStep4Page() {
             <Button
               type="submit"
               disabled={loading}
+              aria-busy={loading}
               className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-50"
             >
               {loading ? '저장 중…' : '다음 단계 — 사업자 진위 확인'}

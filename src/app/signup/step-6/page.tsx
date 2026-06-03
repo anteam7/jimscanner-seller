@@ -324,6 +324,7 @@ export default function SignupStep6Page() {
                 <Button
                   onClick={handleUpload}
                   disabled={uploadState !== 'selected' || !selectedFile}
+                  aria-busy={uploadState === 'uploading'}
                   className="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-semibold h-11 disabled:opacity-40"
                 >
                   {uploadState === 'uploading' ? (
