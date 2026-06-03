@@ -193,6 +193,7 @@ export type Database = {
           communication_sales_no: string | null
           created_at: string
           deleted_at: string | null
+          deleted_reason: string | null
           detail_address: string | null
           document_reviewed_at: string | null
           email: string
@@ -227,6 +228,7 @@ export type Database = {
           communication_sales_no?: string | null
           created_at?: string
           deleted_at?: string | null
+          deleted_reason?: string | null
           detail_address?: string | null
           document_reviewed_at?: string | null
           email: string
@@ -261,6 +263,7 @@ export type Database = {
           communication_sales_no?: string | null
           created_at?: string
           deleted_at?: string | null
+          deleted_reason?: string | null
           detail_address?: string | null
           document_reviewed_at?: string | null
           email?: string

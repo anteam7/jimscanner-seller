@@ -35,8 +35,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: '비밀번호가 일치하지 않습니다.' }, { status: 400 })
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const admin = createAdminClient() as any
+  const admin = createAdminClient()
 
   const { data: account } = await admin
     .from('b2b_accounts')
@@ -79,17 +78,15 @@ export async function POST(request: Request) {
   )
 
   // ④ audit_log
-  await admin
-    .from('b2b_audit_log')
-    .insert({
-      account_id: account.id,
-      user_id: user.id,
-      action: 'account_self_deleted',
-      target_type: 'account',
-      target_id: account.id,
-      metadata: { deleted_at: now, deleted_reason: 'self_requested' },
-    })
-    .catch((err: Error) => console.error('[account/delete] audit_log 실패:', err))
+  const { error: auditErr } = await admin.from('b2b_audit_log').insert({
+    account_id: account.id,
+    user_id: user.id,
+    action: 'account_self_deleted',
+    target_type: 'account',
+    target_id: account.id,
+    metadata: { deleted_at: now, deleted_reason: 'self_requested' },
+  })
+  if (auditErr) console.error('[account/delete] audit_log 실패:', auditErr)
 
   // ⑤ 탈퇴 확인 이메일
   await sendAccountDeletedEmail(account.email, account.business_name).catch((err: Error) =>
