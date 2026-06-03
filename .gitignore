@@ -18,3 +18,6 @@ logs/
 next-env.d.ts
 node_modules
 out
+
+# QA/audit screenshot artifacts (root-level only; tracked assets live in subdirs)
+/*.png
