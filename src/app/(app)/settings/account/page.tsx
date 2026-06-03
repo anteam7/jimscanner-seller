@@ -278,6 +278,7 @@ export default function AccountSettingsPage() {
             <Button
               type="submit"
               disabled={infoLoading}
+              aria-busy={infoLoading}
               className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm h-9 px-4 disabled:opacity-50"
             >
               {infoLoading ? '저장 중...' : '변경 저장'}
@@ -339,6 +340,7 @@ export default function AccountSettingsPage() {
             <Button
               type="submit"
               disabled={emailLoading || !newEmail}
+              aria-busy={emailLoading}
               className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm h-9 px-4 disabled:opacity-50"
             >
               {emailLoading ? '처리 중...' : '확인 이메일 발송'}
@@ -445,6 +447,7 @@ export default function AccountSettingsPage() {
             <Button
               type="submit"
               disabled={pwLoading || !currentPw || !newPw || !confirmPw || newPw !== confirmPw}
+              aria-busy={pwLoading}
               className="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 text-white text-sm h-9 px-4 disabled:opacity-50"
             >
               {pwLoading ? '변경 중...' : '비밀번호 변경'}

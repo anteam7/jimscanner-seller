@@ -189,6 +189,7 @@ export default function SecuritySettingsPage() {
           <Button
             onClick={startEnroll}
             disabled={loading}
+            aria-busy={loading}
             className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold disabled:opacity-50"
           >
             {loading ? '준비 중…' : '2단계 인증 활성화'}
@@ -275,6 +276,7 @@ export default function SecuritySettingsPage() {
               <Button
                 onClick={confirmEnroll}
                 disabled={loading || verifyCode.length !== 6}
+                aria-busy={loading}
                 className="bg-indigo-600 hover:bg-indigo-500 text-white font-semibold disabled:opacity-50"
               >
                 {loading ? '확인 중…' : '활성화 완료'}
@@ -386,6 +388,7 @@ export default function SecuritySettingsPage() {
               <Button
                 onClick={confirmDisable}
                 disabled={loading || disableCode.length !== 6}
+                aria-busy={loading}
                 className="flex-1 bg-rose-700 hover:bg-rose-600 text-white font-semibold disabled:opacity-50"
               >
                 {loading ? '처리 중…' : '비활성화'}
