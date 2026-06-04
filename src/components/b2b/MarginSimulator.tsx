@@ -270,7 +270,7 @@ export default function MarginSimulator({ snapshot }: { snapshot: RateSnapshot }
         <h2 className="text-sm font-semibold text-slate-900">결과</h2>
 
         {!result ? (
-          <p className="py-8 text-center text-sm text-slate-400">
+          <p className="py-8 text-center text-sm text-slate-500">
             매입 단가·수량을 입력하면 마진이 계산됩니다.
           </p>
         ) : (
