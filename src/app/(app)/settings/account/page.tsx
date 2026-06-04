@@ -205,23 +205,23 @@ export default function AccountSettingsPage() {
     <div className="p-8 max-w-3xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">계정 정보</h1>
-        <p className="text-sm text-slate-400 mt-0.5">연락처·주소·이메일·비밀번호를 수정합니다.</p>
+        <p className="text-sm text-slate-600 mt-0.5">연락처·주소·이메일·비밀번호를 수정합니다.</p>
       </div>
 
       {/* 기본 정보 */}
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <h2 className="text-sm font-semibold text-slate-900">기본 정보</h2>
         <div className="space-y-1">
-          <p className="text-xs text-slate-400">상호</p>
+          <p className="text-xs text-slate-500">상호</p>
           <p className="text-sm text-slate-500">{account.business_name || '—'}</p>
         </div>
         <div className="space-y-1">
-          <p className="text-xs text-slate-400">대표자</p>
+          <p className="text-xs text-slate-500">대표자</p>
           <p className="text-sm text-slate-500">{account.ceo_name || '—'}</p>
         </div>
         <form onSubmit={handleInfoSave} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="phone" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="phone" className="block text-xs font-medium text-slate-500">
               연락처
             </label>
             <Input
@@ -235,7 +235,7 @@ export default function AccountSettingsPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="postal-code" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="postal-code" className="block text-xs font-medium text-slate-500">
               우편번호
             </label>
             <Input
@@ -248,7 +248,7 @@ export default function AccountSettingsPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="address" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="address" className="block text-xs font-medium text-slate-500">
               주소
             </label>
             <Input
@@ -260,7 +260,7 @@ export default function AccountSettingsPage() {
             />
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="detail-address" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="detail-address" className="block text-xs font-medium text-slate-500">
               상세 주소
             </label>
             <Input
@@ -314,11 +314,11 @@ export default function AccountSettingsPage() {
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">이메일 변경</h2>
-          <p className="text-xs text-slate-400 mt-0.5">변경 후 새 이메일로 확인 링크가 발송됩니다.</p>
+          <p className="text-xs text-slate-500 mt-0.5">변경 후 새 이메일로 확인 링크가 발송됩니다.</p>
         </div>
         <form onSubmit={handleEmailChange} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="email" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="email" className="block text-xs font-medium text-slate-500">
               새 이메일
             </label>
             <Input
@@ -353,11 +353,11 @@ export default function AccountSettingsPage() {
       <section className="rounded-xl border border-slate-200 bg-white shadow-sm p-6 space-y-4">
         <div>
           <h2 className="text-sm font-semibold text-slate-900">비밀번호 변경</h2>
-          <p className="text-xs text-slate-400 mt-0.5">현재 비밀번호를 확인한 후 변경합니다.</p>
+          <p className="text-xs text-slate-500 mt-0.5">현재 비밀번호를 확인한 후 변경합니다.</p>
         </div>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div className="space-y-1.5">
-            <label htmlFor="current-pw" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="current-pw" className="block text-xs font-medium text-slate-500">
               현재 비밀번호
             </label>
             <div className="relative">
@@ -389,7 +389,7 @@ export default function AccountSettingsPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="new-pw" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="new-pw" className="block text-xs font-medium text-slate-500">
               새 비밀번호 <span className="text-slate-400">(8자 이상)</span>
             </label>
             <div className="relative">
@@ -421,7 +421,7 @@ export default function AccountSettingsPage() {
             </div>
           </div>
           <div className="space-y-1.5">
-            <label htmlFor="confirm-pw" className="block text-xs font-medium text-slate-400">
+            <label htmlFor="confirm-pw" className="block text-xs font-medium text-slate-500">
               새 비밀번호 확인
             </label>
             <Input
@@ -460,7 +460,7 @@ export default function AccountSettingsPage() {
       <section className="rounded-xl border border-rose-900/40 bg-rose-50 p-6 space-y-3">
         <div>
           <h2 className="text-sm font-semibold text-rose-700">계정 탈퇴</h2>
-          <p className="text-xs text-slate-400 mt-0.5">탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
+          <p className="text-xs text-slate-500 mt-0.5">탈퇴 후에는 모든 데이터가 삭제되며 복구할 수 없습니다.</p>
         </div>
         <a
           href="/settings/account/delete"
