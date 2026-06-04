@@ -71,6 +71,7 @@ export default function NewTicketForm() {
           onChange={(e) => setSubject(e.target.value)}
           placeholder="간단한 제목"
           maxLength={200}
+          aria-required
           className="block w-full h-9 px-3 text-sm bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500"
         />
       </label>
@@ -85,6 +86,7 @@ export default function NewTicketForm() {
           onChange={(e) => setBody(e.target.value.slice(0, 5000))}
           placeholder="언제, 어디서, 어떤 동작에서 발생했는지 적어 주시면 답변이 빨라집니다."
           rows={10}
+          aria-required
           className="block w-full px-3 py-2 text-sm bg-white border border-slate-200 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 resize-y"
         />
       </label>
