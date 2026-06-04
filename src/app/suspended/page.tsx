@@ -50,13 +50,13 @@ export default function AccountSuspendedPage() {
         </div>
 
         <h1 className="text-2xl font-bold mb-2">계정이 정지되었습니다</h1>
-        <p className="text-slate-400 text-sm mb-4">
+        <p className="text-slate-600 text-sm mb-4">
           운영 정책 위반으로 인해 계정 이용이 일시 정지되었습니다.
         </p>
 
         {suspendedReason && (
-          <div className="rounded-lg border border-orange-800/50 bg-orange-950/30 px-4 py-3 text-sm text-orange-300 text-left mb-6">
-            <p className="font-medium text-orange-200 mb-1">정지 사유</p>
+          <div className="rounded-lg border border-orange-200 bg-orange-50 px-4 py-3 text-sm text-orange-800 text-left mb-6">
+            <p className="font-medium text-orange-900 mb-1">정지 사유</p>
             <p>{suspendedReason}</p>
           </div>
         )}
