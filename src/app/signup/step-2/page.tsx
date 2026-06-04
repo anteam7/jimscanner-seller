@@ -50,7 +50,7 @@ function TermRow({
             <span className="text-sm font-medium text-slate-900">{term.title}</span>
             <span
               className={`text-xs px-1.5 py-0.5 rounded font-semibold
-                ${term.is_required ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-400'}`}
+                ${term.is_required ? 'bg-indigo-50 text-indigo-700' : 'bg-slate-100 text-slate-500'}`}
             >
               {term.is_required ? '필수' : '선택'}
             </span>
@@ -68,7 +68,7 @@ function TermRow({
       {expanded && (
         <div className="px-4 pb-4">
           <div className="max-h-48 overflow-y-auto rounded bg-slate-50 border border-slate-200 p-3">
-            <pre className="text-xs text-slate-400 whitespace-pre-wrap font-sans leading-relaxed">
+            <pre className="text-xs text-slate-600 whitespace-pre-wrap font-sans leading-relaxed">
               {term.body}
             </pre>
           </div>
@@ -161,7 +161,7 @@ export default function SignupStep2Page() {
 
         <div className="w-full max-w-md">
           <h1 className="text-2xl font-bold tracking-tight mb-1">약관 동의</h1>
-          <p className="text-slate-400 text-sm mb-6">서비스 이용을 위해 약관에 동의해 주세요.</p>
+          <p className="text-slate-600 text-sm mb-6">서비스 이용을 위해 약관에 동의해 주세요.</p>
 
           <EmailVerifyNotice />
 
