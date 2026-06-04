@@ -945,6 +945,7 @@ function Cell({
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={handleKeyDown}
         aria-label={ariaLabel}
+        aria-required={col.required || undefined}
         title={!value && autoLabel ? '비우면 상품명에서 자동 인식됩니다' : 'Ctrl+D: 아래 행에 채우기'}
         className={`block w-full h-7 px-1.5 text-xs bg-transparent focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${
           !value && autoLabel ? 'text-emerald-600' : 'text-slate-900'
@@ -964,6 +965,7 @@ function Cell({
       onChange={(e) => onChange(e.target.value)}
       onKeyDown={handleKeyDown}
       aria-label={ariaLabel}
+      aria-required={col.required || undefined}
       placeholder={col.placeholder}
       step={col.type === 'number' ? 'any' : undefined}
       className={`block w-full h-7 px-1.5 text-xs bg-transparent text-slate-900 placeholder-slate-300 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:ring-inset focus:bg-white ${col.type === 'number' ? 'text-right tabular-nums' : ''}`}
@@ -1089,6 +1091,7 @@ function SkuPickerCell({
         onKeyDown={onKeyDown}
         placeholder="상품명 또는 SKU 검색"
         aria-label={`상품명 또는 SKU 검색 (${rowNumber}행)`}
+        aria-required={true}
         role="combobox"
         aria-autocomplete="list"
         aria-expanded={open}
