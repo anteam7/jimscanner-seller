@@ -148,61 +148,61 @@ export function ManualReceiptCreate() {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">매입처 *</label>
-          <select value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}
+          <label htmlFor="mr-source" className="block text-[11px] font-semibold text-slate-700 mb-1">매입처 *</label>
+          <select id="mr-source" value={form.source} onChange={(e) => setForm({ ...form, source: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             {SOURCE_OPTIONS.map((s) => <option key={s.value} value={s.value}>{s.label}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">매입 주문번호 *</label>
-          <input type="text" value={form.supplier_order_number}
+          <label htmlFor="mr-order-number" className="block text-[11px] font-semibold text-slate-700 mb-1">매입 주문번호 *</label>
+          <input id="mr-order-number" type="text" value={form.supplier_order_number}
             onChange={(e) => setForm({ ...form, supplier_order_number: e.target.value })}
             placeholder="예: 123456789"
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 font-mono"
             required />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">매입일</label>
-          <input type="date" value={form.purchased_at}
+          <label htmlFor="mr-purchased-at" className="block text-[11px] font-semibold text-slate-700 mb-1">매입일</label>
+          <input id="mr-purchased-at" type="date" value={form.purchased_at}
             onChange={(e) => setForm({ ...form, purchased_at: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">통화</label>
-          <select value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}
+          <label htmlFor="mr-currency" className="block text-[11px] font-semibold text-slate-700 mb-1">통화</label>
+          <select id="mr-currency" value={form.currency} onChange={(e) => setForm({ ...form, currency: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
             {CURRENCY_OPTIONS.map((c) => <option key={c} value={c}>{c}</option>)}
           </select>
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">소계 (상품 합)</label>
-          <input type="number" step="0.01" min={0} value={form.subtotal_foreign}
+          <label htmlFor="mr-subtotal" className="block text-[11px] font-semibold text-slate-700 mb-1">소계 (상품 합)</label>
+          <input id="mr-subtotal" type="number" step="0.01" min={0} value={form.subtotal_foreign}
             onChange={(e) => setForm({ ...form, subtotal_foreign: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums" />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">배송비</label>
-          <input type="number" step="0.01" min={0} value={form.shipping_foreign}
+          <label htmlFor="mr-shipping" className="block text-[11px] font-semibold text-slate-700 mb-1">배송비</label>
+          <input id="mr-shipping" type="number" step="0.01" min={0} value={form.shipping_foreign}
             onChange={(e) => setForm({ ...form, shipping_foreign: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums" />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">세금·기타</label>
-          <input type="number" step="0.01" min={0} value={form.tax_foreign}
+          <label htmlFor="mr-tax" className="block text-[11px] font-semibold text-slate-700 mb-1">세금·기타</label>
+          <input id="mr-tax" type="number" step="0.01" min={0} value={form.tax_foreign}
             onChange={(e) => setForm({ ...form, tax_foreign: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums" />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">총액 *</label>
-          <input type="number" step="0.01" min={0} value={form.total_foreign}
+          <label htmlFor="mr-total" className="block text-[11px] font-semibold text-slate-700 mb-1">총액 *</label>
+          <input id="mr-total" type="number" step="0.01" min={0} value={form.total_foreign}
             onChange={(e) => setForm({ ...form, total_foreign: e.target.value })}
             placeholder="결제한 총액"
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 tabular-nums" />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">매입 페이지 URL (선택)</label>
-          <input type="url" value={form.source_url}
+          <label htmlFor="mr-source-url" className="block text-[11px] font-semibold text-slate-700 mb-1">매입 페이지 URL (선택)</label>
+          <input id="mr-source-url" type="url" value={form.source_url}
             onChange={(e) => setForm({ ...form, source_url: e.target.value })}
             placeholder="https://rakuten.co.jp/..."
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" />
@@ -218,27 +218,27 @@ export function ManualReceiptCreate() {
         {items.map((it, i) => (
           <div key={i} className="grid grid-cols-12 gap-2 items-end">
             <div className="col-span-5">
-              <label className="block text-[10px] text-slate-500 mb-0.5">상품명</label>
-              <input type="text" value={it.name}
+              <label htmlFor={`mr-item-name-${i}`} className="block text-[10px] text-slate-500 mb-0.5">상품명</label>
+              <input id={`mr-item-name-${i}`} type="text" value={it.name}
                 onChange={(e) => updateItem(i, 'name', e.target.value)}
                 placeholder="예: SK-II 한정판"
                 className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
             <div className="col-span-2">
-              <label className="block text-[10px] text-slate-500 mb-0.5">수량</label>
-              <input type="number" min={1} value={it.qty}
+              <label htmlFor={`mr-item-qty-${i}`} className="block text-[10px] text-slate-500 mb-0.5">수량</label>
+              <input id={`mr-item-qty-${i}`} type="number" min={1} value={it.qty}
                 onChange={(e) => updateItem(i, 'qty', e.target.value)}
                 className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums" />
             </div>
             <div className="col-span-2">
-              <label className="block text-[10px] text-slate-500 mb-0.5">단가</label>
-              <input type="number" step="0.01" min={0} value={it.unit_price}
+              <label htmlFor={`mr-item-price-${i}`} className="block text-[10px] text-slate-500 mb-0.5">단가</label>
+              <input id={`mr-item-price-${i}`} type="number" step="0.01" min={0} value={it.unit_price}
                 onChange={(e) => updateItem(i, 'unit_price', e.target.value)}
                 className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500 tabular-nums" />
             </div>
             <div className="col-span-2">
-              <label className="block text-[10px] text-slate-500 mb-0.5">상품 URL</label>
-              <input type="url" value={it.product_url}
+              <label htmlFor={`mr-item-url-${i}`} className="block text-[10px] text-slate-500 mb-0.5">상품 URL</label>
+              <input id={`mr-item-url-${i}`} type="url" value={it.product_url}
                 onChange={(e) => updateItem(i, 'product_url', e.target.value)}
                 className="w-full px-2 py-1.5 text-xs border border-slate-300 rounded focus:outline-none focus:ring-1 focus:ring-indigo-500" />
             </div>
@@ -253,8 +253,8 @@ export function ManualReceiptCreate() {
       </div>
 
       <div>
-        <label className="block text-[11px] font-semibold text-slate-700 mb-1">메모 (선택)</label>
-        <textarea value={form.user_note}
+        <label htmlFor="mr-note" className="block text-[11px] font-semibold text-slate-700 mb-1">메모 (선택)</label>
+        <textarea id="mr-note" value={form.user_note}
           onChange={(e) => setForm({ ...form, user_note: e.target.value })}
           rows={2}
           placeholder="예: 라쿠텐 슈퍼세일 포인트 ¥3,000 환급 예정"
