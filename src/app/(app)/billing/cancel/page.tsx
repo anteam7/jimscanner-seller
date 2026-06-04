@@ -110,7 +110,7 @@ export default function BillingCancelPage() {
             </svg>
           </div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">구독 취소</h1>
-          <p className="mt-1 text-sm text-slate-400">짐스캐너 B2B를 떠나시는 이유를 알려주세요</p>
+          <p className="mt-1 text-sm text-slate-600">짐스캐너 B2B를 떠나시는 이유를 알려주세요</p>
         </div>
 
         {/* Step: 이유 선택 */}
@@ -191,7 +191,7 @@ export default function BillingCancelPage() {
               </div>
               <div>
                 <p className="text-base font-semibold text-slate-900">잠깐, 특별 혜택을 드릴게요</p>
-                <p className="text-xs text-slate-400 mt-0.5">지금 취소를 보류하시면 아래 혜택을 드립니다</p>
+                <p className="text-xs text-slate-500 mt-0.5">지금 취소를 보류하시면 아래 혜택을 드립니다</p>
               </div>
             </div>
 
@@ -235,7 +235,7 @@ export default function BillingCancelPage() {
                 type="button"
                 onClick={() => setStep('select_reason')}
                 disabled={loading}
-                className="w-full px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-400 transition-colors"
+                className="w-full px-4 py-2 rounded-lg text-sm text-slate-400 hover:text-slate-500 transition-colors"
               >
                 ← 이유 다시 선택
               </button>
@@ -248,7 +248,7 @@ export default function BillingCancelPage() {
           <div className="bg-white border border-slate-300 rounded-2xl p-6 space-y-5">
             <div className="text-center space-y-2">
               <p className="text-base font-semibold text-slate-900">정말 취소하시겠습니까?</p>
-              <p className="text-sm text-slate-400 leading-relaxed">
+              <p className="text-sm text-slate-600 leading-relaxed">
                 취소 후에도 현재 구독 기간이 끝날 때까지 서비스를 이용하실 수 있습니다.
                 취소 확인 이메일이 발송됩니다.
               </p>
@@ -256,14 +256,14 @@ export default function BillingCancelPage() {
 
             <div className="bg-slate-100 border border-slate-300 rounded-xl px-4 py-3 space-y-2">
               <div>
-                <p className="text-xs text-slate-400">선택한 취소 이유</p>
+                <p className="text-xs text-slate-500">선택한 취소 이유</p>
                 <p className="text-sm font-medium text-slate-500 mt-0.5">
                   {reason === '기타' && detail ? `기타: ${detail}` : reason}
                 </p>
               </div>
               {formattedEnd && (
                 <div className="pt-1 border-t border-slate-300">
-                  <p className="text-xs text-slate-400">서비스 이용 가능 기간</p>
+                  <p className="text-xs text-slate-500">서비스 이용 가능 기간</p>
                   <p className="text-sm font-medium text-slate-500 mt-0.5">
                     {formattedEnd}까지 이용 가능합니다
                   </p>
@@ -306,7 +306,7 @@ export default function BillingCancelPage() {
             </div>
             <div>
               <p className="text-lg font-semibold text-slate-900">구독이 취소되었습니다</p>
-              <p className="mt-2 text-sm text-slate-400 leading-relaxed">
+              <p className="mt-2 text-sm text-slate-600 leading-relaxed">
                 {formattedEnd
                   ? `${formattedEnd}까지 서비스를 계속 이용하실 수 있습니다.`
                   : '현재 구독 기간 종료 시까지 서비스를 계속 이용하실 수 있습니다.'}
