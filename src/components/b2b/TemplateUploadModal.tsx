@@ -1,6 +1,6 @@
 'use client'
 
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 type Forwarder = { id: string; name: string }
@@ -20,6 +20,17 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
   const [dataStartRow, setDataStartRow] = useState('2')
   const [dataSheetName, setDataSheetName] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
+
+  // 앱 전역 모달 패턴(BulkExportModal·ForwarderExportModal·OrderMatchingClient 등)과 동일하게
+  // Escape 로 닫기 지원 — 업로드 진행 중에는 백드롭·닫기 버튼과 동일하게 닫힘 방지 (WCAG 2.1.2 키보드 트랩 회피)
+  useEffect(() => {
+    if (!open) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !submitting) setOpen(false)
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [open, submitting])
 
   function reset() {
     setName('')
