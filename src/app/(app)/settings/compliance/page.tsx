@@ -90,7 +90,7 @@ export default function CompliancePage() {
     <div className="p-8 max-w-3xl space-y-8">
       <div>
         <h1 className="text-2xl font-bold text-slate-900 tracking-tight">법규 컴플라이언스</h1>
-        <p className="text-sm text-slate-400 mt-0.5">전자상거래법 의무 고지 및 법정 문서 설정을 관리합니다.</p>
+        <p className="text-sm text-slate-600 mt-0.5">전자상거래법 의무 고지 및 법정 문서 설정을 관리합니다.</p>
       </div>
 
       {/* 청약철회 고지 섹션 */}
@@ -166,7 +166,7 @@ export default function CompliancePage() {
         {/* 저장 버튼 */}
         <div className="flex items-center justify-between gap-4 pt-1">
           {saveMsg ? (
-            <p className={`text-sm ${saveMsg.type === 'success' ? 'text-emerald-400' : 'text-red-600'}`}>
+            <p className={`text-sm ${saveMsg.type === 'success' ? 'text-emerald-600' : 'text-red-600'}`}>
               {saveMsg.text}
             </p>
           ) : (
@@ -185,7 +185,7 @@ export default function CompliancePage() {
       {/* 최근 30일 발송 현황 */}
       {data && (
         <section className="space-y-3">
-          <h2 className="text-sm font-semibold text-slate-400 uppercase tracking-wider">최근 30일 발송 현황</h2>
+          <h2 className="text-sm font-semibold text-slate-500 uppercase tracking-wider">최근 30일 발송 현황</h2>
           <div className="grid grid-cols-3 gap-3">
             <StatCard label="총 발송 시도" value={data.stats.total_30d.toString()} />
             <StatCard label="발송 성공" value={data.stats.sent_30d.toString()} />
@@ -195,7 +195,7 @@ export default function CompliancePage() {
               cls={
                 data.stats.success_rate !== null && data.stats.success_rate < 80
                   ? 'text-amber-600'
-                  : 'text-emerald-400'
+                  : 'text-emerald-600'
               }
             />
           </div>
