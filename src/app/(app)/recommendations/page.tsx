@@ -41,6 +41,7 @@ export default async function RecommendationsPage() {
 
   const jpItems = RECOMMENDED_PRODUCTS.filter((p) => p.origin === 'JP')
   const usItems = RECOMMENDED_PRODUCTS.filter((p) => p.origin === 'US')
+  const noRates = Object.keys(rates).length === 0
 
   return (
     <div className="max-w-6xl mx-auto p-4 md:p-8 space-y-8">
@@ -55,6 +56,19 @@ export default async function RecommendationsPage() {
           <p className="mt-1 text-[11px] text-amber-700">⚠ 환율 캐시 (한국수출입은행 API 일시 지연)</p>
         )}
       </header>
+
+      {noRates && (
+        <div
+          role="status"
+          className="rounded-lg border border-amber-200 bg-gradient-to-r from-amber-50 to-white px-5 py-4"
+        >
+          <p className="text-sm font-semibold text-amber-800">환율 정보를 불러오지 못했습니다</p>
+          <p className="mt-1 text-xs text-amber-700">
+            한국수출입은행 환율 API 가 일시적으로 응답하지 않아 KRW 환산가·예상 마진을 계산할 수 없습니다. 현지 가격·예상 판매가는
+            그대로 확인하실 수 있으며, 환산값은 환율 복구 후 다시 표시됩니다.
+          </p>
+        </div>
+      )}
 
       <Section title="🇯🇵 일본 트렌딩" subtitle="라쿠텐 / 아마존 JP" items={jpItems} rates={rates} />
       <Section title="🇺🇸 미국 트렌딩" subtitle="아마존 US" items={usItems} rates={rates} />
