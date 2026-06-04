@@ -158,11 +158,11 @@ export default function SignupStep6Page() {
             <>
               <div className="flex items-center gap-2 mb-1">
                 <h1 className="text-2xl font-bold">사업자등록증 업로드</h1>
-                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-400 border border-slate-300">
+                <span className="text-xs px-2 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-300">
                   선택
                 </span>
               </div>
-              <p className="text-slate-400 text-sm mb-6">
+              <p className="text-slate-600 text-sm mb-6">
                 사업자등록증을 업로드하면 인증 레벨이 L2로 상승하여 Pro 플랜 신청이 가능합니다.
                 지금 건너뛰어도 마이페이지에서 나중에 업로드할 수 있습니다.
               </p>
@@ -176,7 +176,7 @@ export default function SignupStep6Page() {
                     '파일 크기 최대 5MB',
                     '암호화 저장 — 운영팀 외 열람 불가',
                   ].map((item) => (
-                    <li key={item} className="flex items-center gap-2 text-xs text-slate-400">
+                    <li key={item} className="flex items-center gap-2 text-xs text-slate-600">
                       <svg
                         className="w-3.5 h-3.5 text-indigo-600 flex-shrink-0"
                         fill="none"
@@ -383,7 +383,7 @@ function CompleteCard() {
 
         <div>
           <p className="text-xl font-bold text-indigo-700">가입 신청 완료!</p>
-          <p className="text-sm text-slate-400 mt-2 leading-relaxed">
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed">
             사업자 계정 신청이 접수되었습니다.<br />
             검토 완료 후 등록한 이메일로 안내 드리겠습니다.
           </p>
@@ -400,7 +400,7 @@ function CompleteCard() {
               <span className="flex-shrink-0 w-5 h-5 rounded-full bg-indigo-50 border border-indigo-200 flex items-center justify-center text-xs text-indigo-600 font-bold">
                 {i + 1}
               </span>
-              <p className="text-xs text-slate-400 leading-relaxed">{text}</p>
+              <p className="text-xs text-slate-600 leading-relaxed">{text}</p>
             </div>
           ))}
         </div>
