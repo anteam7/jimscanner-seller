@@ -84,7 +84,7 @@ export default function AccountDeletePage() {
             </svg>
           </div>
           <h2 className="text-xl font-semibold text-slate-900">탈퇴 처리가 완료되었습니다</h2>
-          <p className="text-slate-400 text-sm">탈퇴 확인 이메일이 발송되었습니다.<br/>3초 후 로그인 페이지로 이동합니다.</p>
+          <p className="text-slate-600 text-sm">탈퇴 확인 이메일이 발송되었습니다.<br/>3초 후 로그인 페이지로 이동합니다.</p>
         </div>
       </div>
     )
@@ -102,7 +102,7 @@ export default function AccountDeletePage() {
           </Link>
           <h1 className="text-xl font-semibold text-slate-900">계정 탈퇴</h1>
         </div>
-        <p className="text-sm text-slate-400 pl-6">개인정보보호법 §21에 따라 탈퇴 자유를 보장합니다</p>
+        <p className="text-sm text-slate-600 pl-6">개인정보보호법 §21에 따라 탈퇴 자유를 보장합니다</p>
       </div>
 
       {step === 'warning' && (
@@ -163,7 +163,7 @@ export default function AccountDeletePage() {
           <div className="rounded-xl border border-slate-200 bg-slate-50 p-5 space-y-4">
             <div>
               <h2 className="text-base font-semibold text-slate-800 mb-1">비밀번호로 신원 확인</h2>
-              <p className="text-sm text-slate-400">탈퇴를 완료하려면 현재 비밀번호를 입력해 주세요.</p>
+              <p className="text-sm text-slate-600">탈퇴를 완료하려면 현재 비밀번호를 입력해 주세요.</p>
             </div>
 
             <div className="space-y-1.5">
@@ -237,7 +237,7 @@ export default function AccountDeletePage() {
             </Button>
           </div>
 
-          <p className="text-xs text-slate-400 text-center">
+          <p className="text-xs text-slate-500 text-center">
             탈퇴 후에는 복구가 불가능합니다. 신중히 결정해 주세요.
           </p>
         </div>
