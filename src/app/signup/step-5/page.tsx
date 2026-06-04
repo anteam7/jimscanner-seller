@@ -174,7 +174,7 @@ function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-800">국세청 공식 API 연동</p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 mt-1">
               국세청 사업자등록정보 조회 서비스를 통해 실시간으로 영업 상태를 확인합니다. 입력하신 정보는 확인 목적 외 사용되지 않습니다.
             </p>
           </div>
@@ -188,7 +188,7 @@ function VerifyPrompt({ onVerify }: { onVerify: () => void }) {
           </div>
           <div>
             <p className="text-sm font-medium text-slate-800">자동 확인 (약 5초 소요)</p>
-            <p className="text-xs text-slate-400 mt-1">
+            <p className="text-xs text-slate-600 mt-1">
               확인 완료 시 인증 레벨이 L1으로 상승하며 Lite 플랜 이용이 가능해집니다.
             </p>
           </div>
@@ -235,7 +235,7 @@ function VerifySuccess({ alreadyVerified, onNext }: { alreadyVerified: boolean; 
         </div>
         <div>
           <p className="text-lg font-bold text-emerald-700">진위 확인 완료</p>
-          <p className="text-sm text-slate-400 mt-1">
+          <p className="text-sm text-slate-600 mt-1">
             {alreadyVerified
               ? '이미 인증된 사업자입니다.'
               : '계속사업자로 확인되었습니다. 인증 레벨이 L1로 상승했습니다.'}
@@ -243,7 +243,7 @@ function VerifySuccess({ alreadyVerified, onNext }: { alreadyVerified: boolean; 
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200">
           <span className="text-xs font-medium text-emerald-600">✓ 인증 레벨 L1</span>
-          <span className="text-xs text-slate-400">Lite 플랜 이용 가능</span>
+          <span className="text-xs text-slate-500">Lite 플랜 이용 가능</span>
         </div>
       </div>
 
@@ -275,11 +275,11 @@ function VerifyFailed({ reason, message }: { reason: FailReason; message: string
           <p className="text-base font-bold text-rose-700">
             {reason ? labels[reason] : '확인 실패'}
           </p>
-          <p className="text-sm text-slate-400 mt-2 leading-relaxed">{message}</p>
+          <p className="text-sm text-slate-600 mt-2 leading-relaxed">{message}</p>
         </div>
       </div>
 
-      <div className="rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-400 space-y-2">
+      <div className="rounded-xl border border-slate-300 bg-white p-4 text-sm text-slate-600 space-y-2">
         <p className="font-medium text-slate-500">다음 사항을 확인해 주세요</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
           <li>사업자등록번호가 정확히 입력되었는지 확인해 주세요.</li>
@@ -309,7 +309,7 @@ function VerifyError({ message, onRetry }: { message: string; onRetry: () => voi
         </div>
         <div>
           <p className="text-base font-bold text-amber-700">일시적 오류</p>
-          <p className="text-sm text-slate-400 mt-1">{message}</p>
+          <p className="text-sm text-slate-600 mt-1">{message}</p>
         </div>
       </div>
 
