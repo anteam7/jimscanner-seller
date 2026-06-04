@@ -85,7 +85,7 @@ export default function SignupStep3Page() {
           </div>
 
           <h1 className="text-2xl font-bold mb-2 text-center">이메일을 확인해 주세요</h1>
-          <p className="text-slate-400 text-sm text-center mb-2">
+          <p className="text-slate-600 text-sm text-center mb-2">
             아래 이메일 주소로 인증 링크를 발송했습니다.
           </p>
           {email && (
@@ -97,7 +97,7 @@ export default function SignupStep3Page() {
           {/* 안내 박스 */}
           <div className="rounded-lg border border-slate-300 bg-white px-4 py-4 mb-6 space-y-2">
             <p className="text-sm font-medium text-slate-800">인증 방법</p>
-            <ol className="text-sm text-slate-400 space-y-1 list-decimal list-inside">
+            <ol className="text-sm text-slate-600 space-y-1 list-decimal list-inside">
               <li>받은 편지함(또는 스팸함)에서 짐스캐너 이메일을 찾으세요.</li>
               <li><span className="text-slate-900 font-medium">&apos;이메일 인증하기&apos;</span> 버튼을 클릭하세요.</li>
               <li>인증 완료 후 아래 &apos;인증 완료, 다음 단계로&apos; 버튼을 누르세요.</li>
