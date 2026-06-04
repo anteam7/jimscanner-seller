@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, cloneElement, isValidElement, type ReactElement } from 'react'
 import { useRouter } from 'next/navigation'
 
 type ForwarderRef = { name: string | null; slug: string | null }
@@ -520,13 +520,19 @@ function Field({
   className?: string
   children: React.ReactNode
 }) {
+  // 필수 표시(★)는 시각 신호만이라 스크린리더가 필수 여부를 announce 못함.
+  // required 일 때 자식 컨트롤에 aria-required 를 주입 (시각·동작 무변경, WCAG 3.3.2/4.1.2).
+  const control =
+    required && isValidElement(children)
+      ? cloneElement(children as ReactElement<{ 'aria-required'?: boolean }>, { 'aria-required': true })
+      : children
   return (
     <label className={`block ${className ?? ''}`}>
       <span className="block text-[11px] font-semibold text-slate-700 mb-1">
         {label}
         {required && <span className="text-rose-500 ml-0.5">★</span>}
       </span>
-      {children}
+      {control}
     </label>
   )
 }
