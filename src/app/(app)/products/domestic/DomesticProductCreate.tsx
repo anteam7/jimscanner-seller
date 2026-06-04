@@ -96,8 +96,9 @@ export function DomesticProductCreate() {
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="sm:col-span-2">
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">상품명 *</label>
+          <label htmlFor="dpc-display-name" className="block text-[11px] font-semibold text-slate-700 mb-1">상품명 *</label>
           <input
+            id="dpc-display-name"
             type="text"
             value={form.display_name}
             onChange={(e) => setForm({ ...form, display_name: e.target.value })}
@@ -107,8 +108,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">셀러 SKU (선택)</label>
+          <label htmlFor="dpc-seller-sku" className="block text-[11px] font-semibold text-slate-700 mb-1">셀러 SKU (선택)</label>
           <input
+            id="dpc-seller-sku"
             type="text"
             value={form.seller_sku}
             onChange={(e) => setForm({ ...form, seller_sku: e.target.value })}
@@ -117,8 +119,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">마켓</label>
+          <label htmlFor="dpc-marketplace" className="block text-[11px] font-semibold text-slate-700 mb-1">마켓</label>
           <select
+            id="dpc-marketplace"
             value={form.marketplace}
             onChange={(e) => setForm({ ...form, marketplace: e.target.value })}
             className="w-full px-3 py-2 text-sm border border-slate-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500"
@@ -127,8 +130,9 @@ export function DomesticProductCreate() {
           </select>
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">마켓 상품 ID/URL</label>
+          <label htmlFor="dpc-market-product-id" className="block text-[11px] font-semibold text-slate-700 mb-1">마켓 상품 ID/URL</label>
           <input
+            id="dpc-market-product-id"
             type="text"
             value={form.market_product_id}
             onChange={(e) => setForm({ ...form, market_product_id: e.target.value })}
@@ -137,8 +141,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">옵션 (색상/사이즈)</label>
+          <label htmlFor="dpc-market-option" className="block text-[11px] font-semibold text-slate-700 mb-1">옵션 (색상/사이즈)</label>
           <input
+            id="dpc-market-option"
             type="text"
             value={form.market_option}
             onChange={(e) => setForm({ ...form, market_option: e.target.value })}
@@ -147,8 +152,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">판매가 (KRW)</label>
+          <label htmlFor="dpc-sale-price" className="block text-[11px] font-semibold text-slate-700 mb-1">판매가 (KRW)</label>
           <input
+            id="dpc-sale-price"
             type="number"
             min={0}
             value={form.sale_price_krw}
@@ -158,8 +164,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div>
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">카테고리</label>
+          <label htmlFor="dpc-category" className="block text-[11px] font-semibold text-slate-700 mb-1">카테고리</label>
           <input
+            id="dpc-category"
             type="text"
             value={form.category}
             onChange={(e) => setForm({ ...form, category: e.target.value })}
@@ -168,8 +175,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">이미지 URL</label>
+          <label htmlFor="dpc-image-url" className="block text-[11px] font-semibold text-slate-700 mb-1">이미지 URL</label>
           <input
+            id="dpc-image-url"
             type="url"
             value={form.image_url}
             onChange={(e) => setForm({ ...form, image_url: e.target.value })}
@@ -178,8 +186,9 @@ export function DomesticProductCreate() {
           />
         </div>
         <div className="sm:col-span-2">
-          <label className="block text-[11px] font-semibold text-slate-700 mb-1">메모</label>
+          <label htmlFor="dpc-notes" className="block text-[11px] font-semibold text-slate-700 mb-1">메모</label>
           <textarea
+            id="dpc-notes"
             value={form.notes}
             onChange={(e) => setForm({ ...form, notes: e.target.value })}
             rows={2}
