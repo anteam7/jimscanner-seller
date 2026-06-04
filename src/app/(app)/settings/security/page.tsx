@@ -140,7 +140,7 @@ export default function SecuritySettingsPage() {
         </Link>
         <div>
           <h1 className="text-2xl font-bold text-slate-900 tracking-tight">보안 설정</h1>
-          <p className="text-xs text-slate-400 mt-0.5">2단계 인증(TOTP)으로 계정을 보호하세요.</p>
+          <p className="text-xs text-slate-600 mt-0.5">2단계 인증(TOTP)으로 계정을 보호하세요.</p>
         </div>
       </div>
 
@@ -175,7 +175,7 @@ export default function SecuritySettingsPage() {
             </div>
             <div>
               <h2 className="text-base font-semibold text-slate-900">2단계 인증 비활성화 상태</h2>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 2단계 인증을 활성화하면 비밀번호 외에 OTP 앱의 6자리 코드로 추가 인증이 필요합니다.
                 Google Authenticator, Authy, Microsoft Authenticator 등을 사용할 수 있습니다.
               </p>
@@ -202,7 +202,7 @@ export default function SecuritySettingsPage() {
         <div className="rounded-xl border border-indigo-200 bg-white p-6 space-y-6">
           <div>
             <h2 className="text-base font-semibold text-slate-900 mb-1">OTP 앱으로 QR 코드 스캔</h2>
-            <p className="text-sm text-slate-400">
+            <p className="text-sm text-slate-600">
               Google Authenticator 또는 Authy에서 QR 코드를 스캔하세요.
               스캔 후 앱에 표시되는 6자리 코드를 입력하면 활성화됩니다.
             </p>
@@ -226,7 +226,7 @@ export default function SecuritySettingsPage() {
           {/* Manual secret */}
           {secret && (
             <div className="rounded-lg border border-slate-200 bg-slate-50/60 p-4">
-              <p className="text-xs text-slate-400 mb-2">QR 스캔이 안 된다면 수동으로 코드를 입력하세요</p>
+              <p className="text-xs text-slate-500 mb-2">QR 스캔이 안 된다면 수동으로 코드를 입력하세요</p>
               <div className="flex items-center gap-2">
                 <code className={`flex-1 text-xs font-mono text-slate-500 ${!showSecret ? 'blur-sm select-none' : ''} transition-all`}>
                   {secret}
@@ -320,7 +320,7 @@ export default function SecuritySettingsPage() {
                   보호 중
                 </span>
               </div>
-              <p className="text-sm text-slate-400 mt-1">
+              <p className="text-sm text-slate-600 mt-1">
                 로그인 시 비밀번호와 OTP 앱의 6자리 코드를 모두 입력해야 합니다.
                 OTP 앱 분실 시 계정 복구가 어려울 수 있으므로 앱을 안전하게 보관하세요.
               </p>
@@ -353,7 +353,7 @@ export default function SecuritySettingsPage() {
               <h3 id="disable-modal-title" className="text-lg font-semibold text-slate-900 mb-1">
                 2단계 인증 비활성화 확인
               </h3>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-slate-600">
                 비활성화하려면 현재 OTP 앱에서 생성된 6자리 코드를 입력하세요.
               </p>
             </div>
@@ -411,18 +411,18 @@ export default function SecuritySettingsPage() {
 
       {/* Info box */}
       <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 space-y-2">
-        <h3 className="text-xs font-semibold text-slate-400 uppercase tracking-wider">참고 사항</h3>
-        <ul className="space-y-1.5 text-xs text-slate-400">
+        <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider">참고 사항</h3>
+        <ul className="space-y-1.5 text-xs text-slate-500">
           <li className="flex items-start gap-2">
-            <span className="text-slate-400 mt-0.5">•</span>
+            <span className="text-slate-500 mt-0.5">•</span>
             Google Authenticator, Authy, Microsoft Authenticator 앱을 지원합니다.
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-slate-400 mt-0.5">•</span>
+            <span className="text-slate-500 mt-0.5">•</span>
             OTP 앱을 분실하면 계정 복구가 어려울 수 있습니다. 앱을 여러 기기에 백업하세요.
           </li>
           <li className="flex items-start gap-2">
-            <span className="text-slate-400 mt-0.5">•</span>
+            <span className="text-slate-500 mt-0.5">•</span>
             2단계 인증 활성화 시 로그인마다 추가 코드 입력이 필요합니다.
           </li>
         </ul>
