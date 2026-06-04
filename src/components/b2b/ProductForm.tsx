@@ -290,7 +290,7 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
           </button>
         </div>
         {marketLinks.length === 0 ? (
-          <p className="text-xs text-slate-400 py-4 text-center">매핑할 마켓이 없습니다.</p>
+          <p className="text-xs text-slate-500 py-4 text-center">매핑할 마켓이 없습니다.</p>
         ) : (
           <div className="space-y-2">
             {marketLinks.map((m, i) => (
@@ -329,7 +329,7 @@ export default function ProductForm({ mode, initial = {}, forwarders }: Props) {
           </button>
         </div>
         {supplierLinks.length === 0 ? (
-          <p className="text-xs text-slate-400 py-4 text-center">추가된 매입처가 없습니다.</p>
+          <p className="text-xs text-slate-500 py-4 text-center">추가된 매입처가 없습니다.</p>
         ) : (
           <div className="space-y-2">
             {supplierLinks.map((s, i) => (
