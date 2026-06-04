@@ -340,7 +340,7 @@ export default function PaymentCardsManager({
       {rows.length === 0 ? (
         <div className="rounded-lg bg-white shadow-sm border border-slate-200 p-8 text-center">
           <p className="text-sm text-slate-600">등록된 카드가 없습니다.</p>
-          <p className="text-xs text-slate-400 mt-1">매입에 사용하는 카드를 등록하면 카드별 매입 합계를 추적할 수 있습니다.</p>
+          <p className="text-xs text-slate-500 mt-1">매입에 사용하는 카드를 등록하면 카드별 매입 합계를 추적할 수 있습니다.</p>
         </div>
       ) : (
         <ul className="space-y-2">
