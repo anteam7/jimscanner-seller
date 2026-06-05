@@ -55,16 +55,42 @@ function ModalContent({
 }) {
   const style = TYPE_STYLES[ann.type]
   const closeRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
-  // Auto-focus close button on mount so keyboard users immediately have a target
+  // 열림 시 닫기 버튼으로 포커스 이동 + 직전 포커스(=자세히 보기 트리거) 캡처 → 닫힘 시 복귀
+  // (조건부 마운트 컴포넌트라 빈 deps = 열림/닫힘. onClose 와 분리해 모달 안 요소 오재캡처 방지)
   useEffect(() => {
+    const previouslyFocused = document.activeElement as HTMLElement | null
     closeRef.current?.focus()
+    return () => previouslyFocused?.focus?.()
   }, [])
 
-  // Escape key closes the modal (WCAG 2.1.2)
+  // Escape 닫기 + Tab/Shift+Tab 포커스 트랩 (WCAG 2.1.2·2.4.3)
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else if (active === last || !panel.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', handler)
     return () => document.removeEventListener('keydown', handler)
@@ -76,6 +102,7 @@ function ModalContent({
       onClick={onClose}
     >
       <div
+        ref={panelRef}
         className="relative w-full max-w-lg rounded-xl bg-white border border-slate-300 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
