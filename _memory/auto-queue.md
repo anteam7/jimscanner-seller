@@ -583,6 +583,16 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-06-01 commit e3b21e5 (78회차)
   - 구현: `SectionHeading` 컴포넌트(아이콘+제목+구분선) 추가 + 5개 라벨 섹션(⚡오늘 할 일 / 📈이번 달 실적 / 🚚배송 현황 / 💳주문·정산 / ⚙️시스템). 기존 카드 순서 유지하며 그룹 래퍼(`space-y-4`)로 묶음. 빈 헤더 방지: 오늘할일=`marginLossAlerts||totalActions`, 주문정산=`recentOrders||cardSpends||refundSummary`, 시스템=`recentAgentRuns` 있을 때만 렌더. 카드/데이터/조건부 로직 동일. localStorage 접기는 v0 범위 외(미구현). 상태 zone(배너·health·쿼터·인증·체크리스트)은 상단 컨텍스트로 헤더 없이 유지.
 
+### Audit 발견 2026-06-06 (daily self-audit · 185회차)
+
+- [ ] **#auto-M bug: auth/signup 컴포넌트 fire-and-forget Supabase auth promise `.catch()` 누락 (unhandled rejection)** _(audit 발견 2026-06-06)_
+  - estimated: 20m
+  - prereq: 없음
+  - decision_required: false
+  - finding: `useEffect` mount 시 `supabase.auth.getSession()/getUser()/mfa.listFactors()` 를 `.then()` 만으로 처리하고 `.catch()` 가 없는 컴포넌트 7곳 — 네트워크 실패 시 unhandled promise rejection(콘솔 "Uncaught (in promise)") + 일부는 로딩/체크 플래그가 영구 stuck. 위치: (1) `src/components/b2b/SignupHeader.tsx:10` getSession (2) `src/app/auth/reset-password/page.tsx:75` getSession (실패 시 `checking` true 고정) (3) `src/app/auth/mfa-challenge/page.tsx:42` listFactors (실패 시 `initError` 미세팅·stuck) (4) `src/app/signup/step-2/EmailVerifyNotice.tsx:21` getUser (5) `src/app/signup/step-3/page.tsx:23` getUser (6) `src/app/signup/step-4/page.tsx:135` getUser (실패 시 `authLoading` true 고정) (7) `src/app/signup/step-5/page.tsx:30` getUser. 동일 bug-class 인 #auto-J(NotificationBell)·billing/cancel·SKUQuickPick·LinePaymentCardSelector·NewOrderForm 은 이미 `.catch()` 방어됨 — 비대칭.
+  - severity: low
+  - fix 방향: 각 chain 끝에 `.catch()` 추가 (순수 additive 하드닝). 단순 정보성(SignupHeader·EmailVerifyNotice·step-3)은 `.catch(() => {})`, 로딩 게이트가 있는 곳(reset-password `setChecking(false)` / step-4 `setAuthLoading(false)` / mfa-challenge `setInitError(true)`)은 catch 에서 해당 플래그도 해제해 stuck 방지. #auto-J 와 동일 패턴. cancelled 가드 있는 컴포넌트는 그 가드 유지.
+
 ---
 
 ## P1.5 — idle 라운드 자율 일감 풀 (P1 비었을 때 1건씩 · decision_required: false)
