@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 export type ForwarderTemplateColumn = {
   column_index: number
@@ -81,6 +81,8 @@ export default function ForwarderExportModal({
   )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const selectRef = useRef<HTMLSelectElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
 
   // 템플릿 바뀌면 user input 초기화 (constant_value 가 있으면 default 채움).
   // React 19 "render 중 set state" 패턴 — useEffect 대신 prev-prop diff 비교로 cascading render 회피.
@@ -112,6 +114,16 @@ export default function ForwarderExportModal({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  // 모달 열릴 때 첫 컨트롤(양식 select, 없으면 닫기 버튼)로 포커스 이동, 닫힐 때 직전 포커스(트리거)로 복귀
+  // (WCAG 2.4.3 포커스 순서). 제어형 모달이라 트리거가 부모에 있어 열림 시점의 document.activeElement 를
+  // 캡처해 cleanup 에서 복귀 — open prop 으로만 제어돼 자체 트리거 ref 가 없기 때문 (BulkExportModal 패턴 동일).
+  useEffect(() => {
+    if (!open) return
+    const prevFocused = document.activeElement as HTMLElement | null
+    ;(selectRef.current ?? closeRef.current)?.focus()
+    return () => { prevFocused?.focus?.() }
+  }, [open])
 
   if (!open) return null
 
@@ -180,6 +192,7 @@ export default function ForwarderExportModal({
             </p>
           </div>
           <button
+            ref={closeRef}
             type="button"
             onClick={onClose}
             className="text-slate-400 hover:text-slate-600 -mr-2 p-2"
@@ -231,6 +244,7 @@ export default function ForwarderExportModal({
               </p>
             ) : (
               <select
+                ref={selectRef}
                 id="tpl"
                 value={templateId}
                 onChange={(e) => setTemplateId(e.target.value)}
