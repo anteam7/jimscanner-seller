@@ -34,7 +34,7 @@ CLAUDE.md §2 기준 오리지널 repo 운영 중:
 | `admin-settlement-variance` | 배대지 정산 대조(/settlement) | 예측 대비 실청구 ±15% 이상 셀러·배대지 관제 | `b2b_orders.estimated/actual_cost_krw` | **issued(main#9, 2026-06-03)** |
 | `admin-storage-risk` | 보관기간 deadline(/eta) | 배대지 보관비 임박·초과 위험 셀러 목록 관제 | `b2b_orders.forwarder_submitted_at` | **issued(main#10, 2026-06-04)** |
 | `admin-margin-loss` | 마진 손실 경고(대시보드 H3) | 마진 손실 SKU·셀러 집계 관제 | `b2b_products`,`b2b_order_items` | **issued(main#11, 2026-06-05)** |
-| `admin-billing-quota` | 구독·플랜·쿼터·카드(/billing,/settings/cards) | 셀러 구독/플랜/쿼터 사용률·결제 상태 관제 (b2b-accounts 와 분리된 재무 뷰) | `b2b_subscriptions`,`b2b_subscription_plans` | 미등록 |
+| `admin-billing-quota` | 구독·플랜·쿼터·카드(/billing,/settings/cards) | 셀러 구독/플랜/쿼터 사용률·결제 상태 관제 (b2b-accounts 와 분리된 재무 뷰) | `b2b_subscriptions`,`b2b_subscription_plans` | **issued(main#12, 2026-06-06)** |
 | `admin-compliance-fail` | 청약철회 고지(/settings/compliance) | 고지 발송 실패·미완료 셀러 관제 + 재발송 | `b2b_withdrawal_notices` | 미등록 |
 | `admin-onboarding-progress` | 온보딩·확장토큰·배대지주소 | 셀러 셋업 진행률(토큰/주소/첫주문/매칭) 관제 — 막힌 셀러 식별 | `b2b_seller_tokens`,`b2b_forwarder_addresses` 등 | 미등록 |
 | `admin-market-stats` | 시장 집계(/analytics RPC) | 시장 가격 분포·이상 셀러(저가 경쟁) 관제 | `b2b_marketwide_supplier_stats` | 미등록 |
