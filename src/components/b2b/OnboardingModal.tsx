@@ -14,6 +14,7 @@ const DISMISS_KEY = 'jimscanner_b2b_onboarding_v1_dismissed'
 export default function OnboardingModal({ ceoName, displayName, isNewSeller }: Props) {
   const [open, setOpen] = useState(false)
   const firstLinkRef = useRef<HTMLAnchorElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     if (!isNewSeller) return
@@ -34,7 +35,30 @@ export default function OnboardingModal({ ceoName, displayName, isNewSeller }: P
     const previouslyFocused = document.activeElement as HTMLElement | null
     firstLinkRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') dismiss()
+      if (e.key === 'Escape') {
+        dismiss()
+        return
+      }
+      // 포커스 트랩 — Tab/Shift+Tab 이 백드롭 뒤 배경으로 빠지지 않게 패널 안에서 순환 (WCAG 2.4.3·2.1.2)
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else if (active === last || !panel.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     document.addEventListener('keydown', onKey)
     return () => {
@@ -66,7 +90,7 @@ export default function OnboardingModal({ ceoName, displayName, isNewSeller }: P
       aria-modal="true"
       aria-labelledby="onboarding-title"
     >
-      <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
+      <div ref={panelRef} className="bg-white rounded-2xl shadow-2xl w-full max-w-md max-h-[92vh] flex flex-col overflow-hidden">
         {/* 헤더 — 그라데이션 */}
         <div className="relative bg-gradient-to-br from-indigo-500 via-indigo-600 to-sky-600 px-6 pt-7 pb-6 text-white">
           <button
