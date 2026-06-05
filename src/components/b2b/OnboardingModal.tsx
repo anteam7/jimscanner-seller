@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 
 type Props = {
@@ -13,6 +13,7 @@ const DISMISS_KEY = 'jimscanner_b2b_onboarding_v1_dismissed'
 
 export default function OnboardingModal({ ceoName, displayName, isNewSeller }: Props) {
   const [open, setOpen] = useState(false)
+  const firstLinkRef = useRef<HTMLAnchorElement>(null)
 
   useEffect(() => {
     if (!isNewSeller) return
@@ -28,11 +29,18 @@ export default function OnboardingModal({ ceoName, displayName, isNewSeller }: P
 
   useEffect(() => {
     if (!open) return
+    // 열림 시 모달 안 첫 인터랙티브 컨트롤로 포커스 이동, 닫힘 시 직전 포커스 복귀
+    // (자동 마운트 모달이라 트리거 버튼이 없음 → 열림 시점의 activeElement 캡처)
+    const previouslyFocused = document.activeElement as HTMLElement | null
+    firstLinkRef.current?.focus()
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') dismiss()
     }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus?.()
+    }
   }, [open])
 
   function dismiss() {
@@ -90,6 +98,7 @@ export default function OnboardingModal({ ceoName, displayName, isNewSeller }: P
           </p>
 
           <Link
+            ref={firstLinkRef}
             href="/settings/extension"
             onClick={dismiss}
             className="flex items-start gap-3 p-3 rounded-lg border border-slate-200 hover:border-indigo-300 hover:bg-indigo-50/40 transition-colors group"
