@@ -585,7 +585,7 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
 
 ### Audit 발견 2026-06-06 (daily self-audit · 185회차)
 
-- [ ] **#auto-M bug: auth/signup 컴포넌트 fire-and-forget Supabase auth promise `.catch()` 누락 (unhandled rejection)** _(audit 발견 2026-06-06)_
+- [x] **#auto-M bug: auth/signup 컴포넌트 fire-and-forget Supabase auth promise `.catch()` 누락 (unhandled rejection)** _(audit 발견 2026-06-06)_ — 완료 2026-06-06 commit a9c0bb9 (186회차). 7곳 `.catch()` 추가: 정보성(SignupHeader·EmailVerifyNotice·step-3)=no-op catch / 게이트(reset-password setChecking(false)·step-4·5 setAuthLoading(false)·mfa-challenge setInitError(true))=catch 에서 플래그 해제로 stuck 방지. 순수 additive 하드닝, build✓·lint0. inbox polling: decision-needed #7=사용자 대시보드 토글 대기(변동 0) / agent-idea 19건 전부 0댓글(미답신, 7일+ 무답 아직 없음, open 유지) / handoff-from-main 0건 — 큐 변동 0.
   - estimated: 20m
   - prereq: 없음
   - decision_required: false
