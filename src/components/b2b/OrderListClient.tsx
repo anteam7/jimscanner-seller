@@ -177,7 +177,7 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
     <>
       {/* 선택 액션 바 */}
       {selected.size > 0 && (
-        <div className="sticky top-0 z-30 rounded-xl border border-indigo-200 bg-indigo-50 shadow-sm px-4 py-3 flex items-center justify-between gap-3 mb-4">
+        <div className="sticky top-0 z-30 rounded-xl border border-indigo-200 bg-indigo-50 shadow-sm px-4 py-3 flex flex-wrap items-center justify-between gap-3 mb-4">
           <div className="flex items-center gap-3 text-sm">
             <span className="font-semibold text-indigo-900">{selected.size}건 선택됨</span>
             {groupCount > 0 && groupCount < selected.size && (
