@@ -140,6 +140,9 @@ export default function SignupStep4Page() {
       } else {
         setAuthLoading(false)
       }
+    }).catch(() => {
+      // 네트워크 실패 시 authLoading 영구 stuck 방지
+      setAuthLoading(false)
     })
   }, [router])
 

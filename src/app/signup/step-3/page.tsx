@@ -22,7 +22,7 @@ export default function SignupStep3Page() {
     const supabase = createClient()
     supabase.auth.getUser().then(({ data }) => {
       if (data.user?.email) setEmail(data.user.email)
-    })
+    }).catch(() => {})
   }, [])
 
   useEffect(() => {

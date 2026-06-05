@@ -23,6 +23,8 @@ export function EmailVerifyNotice() {
       const u = data.user
       setEmail(u?.email ?? null)
       setConfirmed(!!u?.email_confirmed_at)
+    }).catch(() => {
+      // 네트워크 실패 시 정보성 배너는 숨긴 채(confirmed=null) 유지 — 흐름 비차단.
     })
     return () => {
       cancelled = true

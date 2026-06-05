@@ -47,6 +47,9 @@ export default function SignupStep5Page() {
         return
       }
       setAuthLoading(false)
+    }).catch(() => {
+      // 네트워크 실패 시 authLoading 영구 stuck 방지
+      setAuthLoading(false)
     })
   }, [router])
 

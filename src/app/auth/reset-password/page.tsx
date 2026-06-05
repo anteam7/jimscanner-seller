@@ -75,6 +75,10 @@ export default function ResetPasswordPage() {
     supabase.auth.getSession().then(({ data }) => {
       setHasSession(!!data.session)
       setChecking(false)
+    }).catch(() => {
+      // 네트워크 실패 시 checking 영구 stuck 방지 — 세션 없음으로 처리
+      setHasSession(false)
+      setChecking(false)
     })
   }, [])
 

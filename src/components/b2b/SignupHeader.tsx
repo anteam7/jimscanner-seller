@@ -11,6 +11,7 @@ export function SignupHeader() {
     createClient()
       .auth.getSession()
       .then(({ data }) => setIsLoggedIn(!!data.session))
+      .catch(() => {})
   }, [])
 
   return (

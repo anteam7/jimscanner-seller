@@ -51,6 +51,9 @@ function MfaChallengeContent() {
         return
       }
       setFactorId(verified.id)
+    }).catch(() => {
+      // 네트워크 실패 시 stuck 방지 — 초기화 에러 화면으로
+      setInitError(true)
     })
   // safeNext is derived from URL params which don't change during mount
   // eslint-disable-next-line react-hooks/exhaustive-deps
