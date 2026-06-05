@@ -304,6 +304,7 @@ function SearchModal({
   const [loading, setLoading] = useState(false)
   const debounceRef = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
   const doSearch = useCallback(async (query: string) => {
     setLoading(true)
@@ -317,13 +318,34 @@ function SearchModal({
   }, [])
 
   useEffect(() => {
+    // 열림 시점의 포커스를 캡처 → 닫힐 때 트리거로 복귀 (WCAG 2.4.3)
+    const previouslyFocused = document.activeElement as HTMLElement | null
     inputRef.current?.focus()
     // 검색 모달 mount 시 1회 빈 query 로 prefill — debounced input 외부에서 일어나야 함
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void doSearch('')
-    function onKey(e: KeyboardEvent) { if (e.key === 'Escape') onClose() }
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') { onClose(); return }
+      // 포커스 트랩 — Tab/Shift+Tab 이 백드롭 뒤 배경으로 빠지지 않게 패널 안에서 순환 (WCAG 2.4.3·2.1.2)
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) { e.preventDefault(); last.focus() }
+      } else if (active === last || !panel.contains(active)) { e.preventDefault(); first.focus() }
+    }
     document.addEventListener('keydown', onKey)
-    return () => document.removeEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('keydown', onKey)
+      previouslyFocused?.focus?.()
+    }
   }, [doSearch, onClose])
 
   function onChange(v: string) {
@@ -334,7 +356,7 @@ function SearchModal({
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-20 px-4 bg-slate-900/40" onClick={onClose}>
-      <div role="dialog" aria-modal="true" aria-labelledby="order-match-search-title"
+      <div ref={panelRef} role="dialog" aria-modal="true" aria-labelledby="order-match-search-title"
         className="w-full max-w-xl bg-white rounded-xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col" onClick={(e) => e.stopPropagation()}>
         <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
           <h3 id="order-match-search-title" className="text-sm font-bold text-slate-900">짐스캐너 주문 검색</h3>
