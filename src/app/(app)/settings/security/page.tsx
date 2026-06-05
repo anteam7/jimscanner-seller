@@ -139,6 +139,17 @@ export default function SecuritySettingsPage() {
     return () => window.removeEventListener('keydown', onKey)
   }, [showDisableModal, loading])
 
+  // 앱 전역 모달 패턴(BulkExportModal·ForwarderExportModal·OnboardingModal)과 동일한 포커스 관리:
+  // 트리거가 별도 버튼이라 열림 시점 document.activeElement(=트리거)를 캡처해 복귀시킨다.
+  // 열림 시 첫 인터랙티브 컨트롤(OTP 입력 #disable-code)로 포커스 이동, 닫힘 시 트리거로 복귀 (WCAG 2.4.3 포커스 순서).
+  // loading 이 deps 인 Escape effect 와 분리 — loading 변동(confirmDisable 진행 중) 시 cleanup 이 모달 밖으로 포커스를 빼지 않도록 showDisableModal 만 의존.
+  useEffect(() => {
+    if (!showDisableModal) return
+    const trigger = document.activeElement as HTMLElement | null
+    document.getElementById('disable-code')?.focus()
+    return () => trigger?.focus()
+  }, [showDisableModal])
+
   return (
     <div className="p-8 max-w-3xl space-y-6">
       {/* Header */}
