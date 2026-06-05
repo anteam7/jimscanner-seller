@@ -234,6 +234,14 @@ function SearchModal({
     }
   }, [])
 
+  // 모달 열림 시 트리거(검색·변경 버튼) 캡처 → 닫힘 시 포커스 복귀 (WCAG 2.4.3 포커스 순서).
+  // 조건부 mount/unmount 라 빈 deps = 열림/닫힘 시점. onClose(부모가 매 렌더 새로 만드는 inline)
+  // 가 든 아래 effect 와 분리해야 re-render 마다 트리거를 잘못 재캡처하지 않음.
+  useEffect(() => {
+    const trigger = document.activeElement as HTMLElement | null
+    return () => trigger?.focus?.()
+  }, [])
+
   useEffect(() => {
     inputRef.current?.focus()
     // 모달 mount 시 1회 빈 query 로 초기 검색 결과 prefill — debounced input 외부에서 일어나야 함
