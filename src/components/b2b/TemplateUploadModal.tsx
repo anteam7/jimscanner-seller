@@ -20,6 +20,7 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
   const [dataStartRow, setDataStartRow] = useState('2')
   const [dataSheetName, setDataSheetName] = useState('')
   const fileInput = useRef<HTMLInputElement>(null)
+  const triggerRef = useRef<HTMLButtonElement>(null)
 
   // 앱 전역 모달 패턴(BulkExportModal·ForwarderExportModal·OrderMatchingClient 등)과 동일하게
   // Escape 로 닫기 지원 — 업로드 진행 중에는 백드롭·닫기 버튼과 동일하게 닫힘 방지 (WCAG 2.1.2 키보드 트랩 회피)
@@ -31,6 +32,17 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, submitting])
+
+  // 모달 열릴 때 첫 입력(파일)으로 포커스 이동, 닫힐 때 트리거 버튼으로 복귀 (WCAG 2.4.3 포커스 순서)
+  // OrderMatchingClient 검색 모달의 inputRef.current?.focus() 패턴과 동일. 닫힘 정리에서 트리거로 복귀해
+  // 키보드·스크린리더 사용자가 백드롭 뒤에 갇히지 않도록 함. (제출 성공 후 navigate 시엔 trigger 가 언마운트돼 no-op)
+  useEffect(() => {
+    if (!open) return
+    fileInput.current?.focus()
+    // 트리거 버튼은 {open && ...} 밖에 항상 마운트돼 ref 가 안정적 — cleanup 시점 변경 경고 회피 위해 캡처
+    const trigger = triggerRef.current
+    return () => { trigger?.focus() }
+  }, [open])
 
   function reset() {
     setName('')
@@ -79,6 +91,7 @@ export default function TemplateUploadModal({ forwarders, compact }: Props) {
   return (
     <>
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen(true)}
         className={
