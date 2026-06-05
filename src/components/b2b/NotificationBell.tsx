@@ -41,6 +41,7 @@ export default function NotificationBell() {
   const [unread, setUnread] = useState(0)
   const [loading, setLoading] = useState(false)
   const wrapRef = useRef<HTMLDivElement | null>(null)
+  const triggerRef = useRef<HTMLButtonElement | null>(null)
 
   const refresh = useCallback(async () => {
     try {
@@ -74,7 +75,11 @@ export default function NotificationBell() {
       }
     }
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+        // 키보드·SR 사용자가 드롭다운 안에서 ESC 닫을 때 포커스를 트리거(벨)로 복귀 (WCAG 2.4.3)
+        triggerRef.current?.focus()
+      }
     }
     document.addEventListener('mousedown', onClick)
     document.addEventListener('keydown', onKey)
@@ -115,6 +120,7 @@ export default function NotificationBell() {
   return (
     <div ref={wrapRef} className="relative">
       <button
+        ref={triggerRef}
         type="button"
         onClick={() => setOpen((v) => !v)}
         aria-label={unread > 0 ? `알림 (안 읽음 ${unread}건)` : '알림'}
