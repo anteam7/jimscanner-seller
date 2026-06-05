@@ -32,6 +32,7 @@ export function CustomsGuidePanel() {
           <button
             key={g.category}
             type="button"
+            aria-pressed={selected === g.category}
             onClick={() => setSelected(selected === g.category ? null : g.category)}
             className={`px-2 py-0.5 text-[11px] font-medium rounded border transition-colors ${
               selected === g.category
