@@ -113,14 +113,14 @@ export function OrderMatchingClient({ items }: { items: Item[] }) {
             {high90.length > 0 && (
               <button type="button" disabled={bulkBusy} aria-busy={bulkBusy}
                 onClick={() => bulkApply(high90, '90점 이상 추천')}
-                className="px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-white border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50">
+                className="inline-flex items-center justify-center min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-white border border-indigo-300 rounded hover:bg-indigo-50 disabled:opacity-50">
                 90+ 점 일괄 적용 ({high90.length})
               </button>
             )}
             {mid70.length > 0 && (
               <button type="button" disabled={bulkBusy} aria-busy={bulkBusy}
                 onClick={() => bulkApply(mid70, '70~89점 추천')}
-                className="px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-white border border-amber-300 rounded hover:bg-amber-50 disabled:opacity-50">
+                className="inline-flex items-center justify-center min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-amber-700 bg-white border border-amber-300 rounded hover:bg-amber-50 disabled:opacity-50">
                 70~89점 일괄 적용 ({mid70.length}) <span className="text-[9px]">(검증 권장)</span>
               </button>
             )}
@@ -234,11 +234,11 @@ function ReceiptRow({ item }: { item: Item }) {
           {item.matched_order_label ? (
             <>
               <button type="button" onClick={() => setModalOpen(true)} disabled={busy} aria-busy={busy}
-                className="px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
+                className="inline-flex items-center justify-center min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
                 변경
               </button>
               <button type="button" onClick={() => link(null)} disabled={busy} aria-busy={busy}
-                className="px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded hover:bg-rose-100 disabled:opacity-50">
+                className="inline-flex items-center justify-center min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-rose-700 bg-rose-50 border border-rose-200 rounded hover:bg-rose-100 disabled:opacity-50">
                 해제
               </button>
             </>
@@ -246,12 +246,12 @@ function ReceiptRow({ item }: { item: Item }) {
             <>
               {item.suggestion && (
                 <button type="button" onClick={() => link(item.suggestion!.orderId)} disabled={busy} aria-busy={busy}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-300 rounded hover:bg-indigo-100 disabled:opacity-50">
+                  className="inline-flex items-center justify-center gap-1 min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-300 rounded hover:bg-indigo-100 disabled:opacity-50">
                   🔗 추천 적용
                 </button>
               )}
               <button type="button" onClick={() => setModalOpen(true)} disabled={busy} aria-busy={busy}
-                className="inline-flex items-center gap-1 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
+                className="inline-flex items-center justify-center gap-1 min-h-[40px] sm:min-h-0 px-2.5 py-1 text-[11px] font-semibold text-slate-700 bg-white border border-slate-300 rounded hover:bg-slate-50 disabled:opacity-50">
                 🔍 검색
               </button>
             </>
