@@ -137,7 +137,7 @@ export function OrderMatchingClient({ items }: { items: Item[] }) {
         </div>
       )}
 
-      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 flex gap-1">
+      <div className="px-4 py-2 border-b border-slate-200 bg-slate-50 flex gap-1" role="tablist" aria-label="영수증 매칭 상태 필터">
         <TabBtn active={tab === 'unmatched'} onClick={() => setTab('unmatched')} label={`대기 (${items.filter((i) => !i.matched_order_label).length})`} />
         <TabBtn active={tab === 'matched'} onClick={() => setTab('matched')} label={`매칭됨 (${items.filter((i) => !!i.matched_order_label).length})`} />
         <TabBtn active={tab === 'all'} onClick={() => setTab('all')} label={`전체 (${items.length})`} />
@@ -161,6 +161,8 @@ function TabBtn({ active, onClick, label }: { active: boolean; onClick: () => vo
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
       className={`px-3 py-1.5 text-xs font-semibold rounded-md transition-colors ${
         active ? 'bg-indigo-600 text-white' : 'text-slate-600 hover:bg-white'
