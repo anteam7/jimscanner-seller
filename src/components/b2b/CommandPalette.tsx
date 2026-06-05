@@ -82,6 +82,7 @@ export default function CommandPalette({
   const [selected, setSelected] = useState(0)
   const inputRef = useRef<HTMLInputElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
 
   const trimmed = query.trim()
 
@@ -102,6 +103,34 @@ export default function CommandPalette({
     return () => {
       document.body.style.overflow = prev
     }
+  }, [open])
+
+  // 포커스 트랩 — Tab/Shift+Tab 이 백드롭 뒤 배경으로 빠지지 않게 다이얼로그 안에서 순환 (WCAG 2.4.3·2.1.2)
+  useEffect(() => {
+    if (!open) return
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+      const container = containerRef.current
+      if (!container) return
+      const focusables = container.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (active === first || !container.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else if (active === last || !container.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+    document.addEventListener('keydown', onKey)
+    return () => document.removeEventListener('keydown', onKey)
   }, [open])
 
   // 디바운스된 주문/상품 검색 — 쿼리가 2자 이상일 때만 서버 호출.
@@ -188,6 +217,7 @@ export default function CommandPalette({
 
   return (
     <div
+      ref={containerRef}
       className="fixed inset-0 z-50 flex items-start justify-center px-4 pt-[12vh] sm:pt-[15vh]"
       role="dialog"
       aria-modal="true"
