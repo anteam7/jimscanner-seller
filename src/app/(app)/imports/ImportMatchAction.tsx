@@ -215,6 +215,7 @@ function SearchModal({
   const [loading, setLoading] = useState(false)
   const debounceRef = useRef<number | null>(null)
   const inputRef = useRef<HTMLInputElement | null>(null)
+  const panelRef = useRef<HTMLDivElement | null>(null)
 
   const doSearch = useCallback(async (query: string) => {
     setLoading(true)
@@ -248,7 +249,21 @@ function SearchModal({
     // eslint-disable-next-line react-hooks/set-state-in-effect
     void doSearch('')
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') { onClose(); return }
+      // 포커스 트랩 — Tab/Shift+Tab 이 백드롭 뒤 배경으로 빠지지 않게 패널 안에서 순환 (WCAG 2.4.3·2.1.2)
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement as HTMLElement | null
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) { e.preventDefault(); last.focus() }
+      } else if (active === last || !panel.contains(active)) { e.preventDefault(); first.focus() }
     }
     document.addEventListener('keydown', onKey)
     return () => document.removeEventListener('keydown', onKey)
@@ -268,6 +283,7 @@ function SearchModal({
       onClick={onClose}
     >
       <div
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="import-search-title"
