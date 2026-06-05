@@ -83,6 +83,7 @@ export default function ForwarderExportModal({
   const [error, setError] = useState<string | null>(null)
   const selectRef = useRef<HTMLSelectElement>(null)
   const closeRef = useRef<HTMLButtonElement>(null)
+  const panelRef = useRef<HTMLDivElement>(null)
 
   // 템플릿 바뀌면 user input 초기화 (constant_value 가 있으면 default 채움).
   // React 19 "render 중 set state" 패턴 — useEffect 대신 prev-prop diff 비교로 cascading render 회피.
@@ -105,11 +106,35 @@ export default function ForwarderExportModal({
     [tpl],
   )
 
-  // ESC 닫기
+  // Escape 닫기 + Tab 포커스 트랩 — 열린 모달 안에서 Tab/Shift+Tab 이 백드롭 뒤 배경 콘텐츠로
+  // 빠져나가지 않고 모달 안에서만 순환 (WCAG 2.4.3 포커스 순서 · 2.1.2 포커스가 모달 밖으로 새는 것 방지).
+  // 이미 보유한 초기 포커스 이동(아래 effect)·복귀와 짝을 이룸 (BulkExportModal 패턴 동일).
   useEffect(() => {
     if (!open) return
     function onKey(e: KeyboardEvent) {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+        return
+      }
+      if (e.key !== 'Tab') return
+      const panel = panelRef.current
+      if (!panel) return
+      const focusables = panel.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      )
+      if (focusables.length === 0) return
+      const first = focusables[0]
+      const last = focusables[focusables.length - 1]
+      const active = document.activeElement
+      if (e.shiftKey) {
+        if (active === first || !panel.contains(active)) {
+          e.preventDefault()
+          last.focus()
+        }
+      } else if (active === last || !panel.contains(active)) {
+        e.preventDefault()
+        first.focus()
+      }
     }
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
@@ -180,7 +205,7 @@ export default function ForwarderExportModal({
       aria-modal="true"
       aria-labelledby="export-modal-title"
     >
-      <div className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
+      <div ref={panelRef} className="bg-white rounded-xl shadow-2xl w-full max-w-lg max-h-[90vh] flex flex-col">
         {/* 헤더 */}
         <div className="px-6 py-4 border-b border-slate-200 flex items-center justify-between">
           <div>
