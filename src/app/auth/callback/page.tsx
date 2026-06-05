@@ -88,7 +88,7 @@ function AuthCallbackContent() {
             <h1 className="text-2xl font-bold">
               {isExpired ? '인증 링크가 만료되었습니다' : '인증에 실패했습니다'}
             </h1>
-            <p className="text-slate-400 text-sm">
+            <p className="text-slate-600 text-sm">
               {isExpired
                 ? '이메일 인증 링크의 유효 기간이 지났습니다. 아래에서 새 인증 이메일을 요청하세요.'
                 : '인증 처리 중 문제가 발생했습니다. 다시 시도하거나 고객센터에 문의해 주세요.'}
@@ -99,7 +99,7 @@ function AuthCallbackContent() {
           <div className="rounded-xl border border-slate-200 bg-slate-100 p-5 space-y-4">
             <p className="text-sm font-medium text-slate-800">인증 이메일 재발송</p>
             <div>
-              <label htmlFor="resend-email" className="block text-xs font-medium text-slate-400 mb-1.5">
+              <label htmlFor="resend-email" className="block text-xs font-semibold text-slate-700 mb-1.5">
                 가입 이메일 주소
               </label>
               <Input
