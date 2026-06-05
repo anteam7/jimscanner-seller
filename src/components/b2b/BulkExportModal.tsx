@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { ForwarderTemplateLite } from './ForwarderExportModal'
 
 export type SelectedOrderInfo = {
@@ -74,6 +74,8 @@ export default function BulkExportModal({
   )
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const selectRef = useRef<HTMLSelectElement>(null)
+  const closeRef = useRef<HTMLButtonElement>(null)
 
   // templateId / templates 변경 시 userInputs 재계산 (React 19 "render 중 set state" 패턴)
   const [prevKey, setPrevKey] = useState<{ id: string; templates: ForwarderTemplateLite[] }>({
@@ -103,6 +105,16 @@ export default function BulkExportModal({
     window.addEventListener('keydown', onKey)
     return () => window.removeEventListener('keydown', onKey)
   }, [open, onClose])
+
+  // 모달 열릴 때 첫 컨트롤(양식 select, 없으면 닫기 버튼)로 포커스 이동, 닫힐 때 직전 포커스(트리거)로 복귀
+  // (WCAG 2.4.3 포커스 순서). 제어형 모달이라 트리거가 부모에 있어 열림 시점의 document.activeElement 를
+  // 캡처해 cleanup 에서 복귀 — TemplateUploadModal(자체 트리거 ref) 과 달리 open prop 으로만 제어되기 때문.
+  useEffect(() => {
+    if (!open) return
+    const prevFocused = document.activeElement as HTMLElement | null
+    ;(selectRef.current ?? closeRef.current)?.focus()
+    return () => { prevFocused?.focus?.() }
+  }, [open])
 
   if (!open) return null
 
@@ -177,6 +189,7 @@ export default function BulkExportModal({
             </p>
           </div>
           <button
+            ref={closeRef}
             type="button"
             onClick={() => !submitting && onClose()}
             disabled={submitting}
@@ -258,6 +271,7 @@ export default function BulkExportModal({
               </p>
             ) : (
               <select
+                ref={selectRef}
                 id="bulk_tpl"
                 value={templateId}
                 onChange={(e) => setTemplateId(e.target.value)}
