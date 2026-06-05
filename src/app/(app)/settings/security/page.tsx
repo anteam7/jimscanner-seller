@@ -125,6 +125,20 @@ export default function SecuritySettingsPage() {
     setView('no_mfa')
   }
 
+  // 앱 전역 모달 패턴(TemplateUploadModal·BulkExportModal·ForwarderExportModal 등)과 동일하게
+  // Escape 로 닫기 지원 — 비활성화 진행 중에는 취소 버튼(disabled={loading})과 동일하게 닫힘 방지 (WCAG 2.1.2 키보드 트랩 회피)
+  useEffect(() => {
+    if (!showDisableModal) return
+    function onKey(e: KeyboardEvent) {
+      if (e.key === 'Escape' && !loading) {
+        setShowDisableModal(false)
+        setError(null)
+      }
+    }
+    window.addEventListener('keydown', onKey)
+    return () => window.removeEventListener('keydown', onKey)
+  }, [showDisableModal, loading])
+
   return (
     <div className="p-8 max-w-3xl space-y-6">
       {/* Header */}
