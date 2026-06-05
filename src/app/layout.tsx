@@ -37,7 +37,10 @@ export default function RootLayout({
         <link rel="stylesheet" href={PRETENDARD_CSS_URL} />
       </head>
       <body className="antialiased min-h-screen flex flex-col">
-        <main className="flex-1">{children}</main>
+        {/* 랜드마크는 각 셸(AuthShell·SellerShell)·페이지가 자체 <main> 으로 제공 —
+            루트에서 <main> 을 두면 인증 페이지의 <main> 과 중첩되고((app) 영역에선
+            사이드바 <nav>·<header> 까지 main 에 포함돼 랜드마크가 과도하게 넓어짐 */}
+        <div className="flex-1 flex flex-col">{children}</div>
       </body>
     </html>
   )

@@ -457,10 +457,10 @@ export default function SellerShell({
         {/* 플랫폼 공지 배너 */}
         <AnnouncementBanner />
 
-        {/* 페이지 콘텐츠 */}
-        <div className="flex-1 overflow-y-auto bg-slate-50">
+        {/* 페이지 콘텐츠 — main 랜드마크(사이드바 nav·헤더 제외, 실제 본문만) */}
+        <main className="flex-1 overflow-y-auto bg-slate-50">
           {children}
-        </div>
+        </main>
       </div>
 
       {/* 전역 빠른 검색 팔레트 — key 로 열릴 때마다 입력/결과 초기화 */}
