@@ -139,6 +139,12 @@ export default async function SettlementPage({
   const totalVariance = totalActualRecon - totalEstRecon
   const totalVariancePct = totalEstRecon > 0 ? (totalVariance / totalEstRecon) * 100 : null
 
+  // 발산형 막대 스케일 — 대조 가능 배대지 중 |차이| 최대값 기준
+  const maxAbsVariance = aggs.reduce((m, a) => {
+    if (a.reconcilable === 0 || a.estSumRecon <= 0) return m
+    return Math.max(m, Math.abs(a.actualSumRecon - a.estSumRecon))
+  }, 0)
+
   const hasData = orders.length > 0
 
   return (
@@ -275,29 +281,32 @@ export default async function SettlementPage({
                         {a.reconcilable === 0 || variancePct == null ? (
                           <span className="text-slate-400">—</span>
                         ) : (
-                          <span
-                            className={`inline-flex items-center gap-1 font-semibold ${
-                              flagged
-                                ? variance > 0
-                                  ? 'text-rose-700'
-                                  : 'text-amber-700'
-                                : variance > 0
-                                  ? 'text-slate-700'
-                                  : 'text-emerald-700'
-                            }`}
-                          >
-                            {formatSignedKRW(variance)}
-                            <span className="text-[10px] font-medium opacity-80">
-                              ({variancePct > 0 ? '+' : ''}{variancePct.toFixed(1)}%)
-                            </span>
-                            {flagged && (
-                              <span
-                                className="ml-0.5 inline-flex items-center rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200"
-                                title={`예측 대비 ${VARIANCE_FLAG_PCT}% 초과 차이`}
-                              >
-                                주의
+                          <span className="inline-flex flex-col items-end gap-1">
+                            <span
+                              className={`inline-flex items-center gap-1 font-semibold ${
+                                flagged
+                                  ? variance > 0
+                                    ? 'text-rose-700'
+                                    : 'text-amber-700'
+                                  : variance > 0
+                                    ? 'text-slate-700'
+                                    : 'text-emerald-700'
+                              }`}
+                            >
+                              {formatSignedKRW(variance)}
+                              <span className="text-[10px] font-medium opacity-80">
+                                ({variancePct > 0 ? '+' : ''}{variancePct.toFixed(1)}%)
                               </span>
-                            )}
+                              {flagged && (
+                                <span
+                                  className="ml-0.5 inline-flex items-center rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200"
+                                  title={`예측 대비 ${VARIANCE_FLAG_PCT}% 초과 차이`}
+                                >
+                                  주의
+                                </span>
+                              )}
+                            </span>
+                            <DivergingBar value={variance} max={maxAbsVariance} />
                           </span>
                         )}
                       </td>
@@ -356,11 +365,31 @@ export default async function SettlementPage({
           <li><strong>예측 (대조분)</strong>: 예측·실청구가 <em>모두</em> 입력된 주문의 예상 매입 KRW 합계.</li>
           <li><strong>실 청구 (대조분)</strong>: 같은 주문들의 실 결제 KRW 합계.</li>
           <li><strong>차이</strong> = 실 청구 − 예측. 양수(+)는 예측보다 더 청구됨, 음수(−)는 절감.</li>
+          <li>차이 옆 막대는 0 기준 좌(<span className="text-emerald-700 font-medium">절감</span>)·우(<span className="text-rose-700 font-medium">초과</span>) 발산형으로, 폭은 배대지 중 차이 최대값 대비 비율입니다 (값은 숫자가 기준).</li>
           <li>예측 대비 ±{VARIANCE_FLAG_PCT}% 초과 차이는 <span className="inline-flex items-center rounded bg-amber-50 px-1 py-0.5 text-[9px] font-medium text-amber-700 border border-amber-200 align-middle">주의</span> 플래그.</li>
           <li>취소 주문은 제외. 금액은 주문 상세에서 직접 입력한 값 기준.</li>
         </ul>
       </div>
     </div>
+  )
+}
+
+// 0 기준 발산형 막대 — 좌(절감, emerald)·우(초과, rose). 폭 = |차이| / 최대 |차이|.
+// 순수 시각 보조 (값은 숫자가 기준이므로 aria-hidden).
+function DivergingBar({ value, max }: { value: number; max: number }) {
+  if (max <= 0) return null
+  const half = Math.min(50, (Math.abs(value) / max) * 50)
+  const isOver = value > 0
+  return (
+    <span aria-hidden className="relative block h-1.5 w-24 overflow-hidden rounded-full bg-slate-100">
+      <span className="absolute inset-y-0 left-1/2 w-px -translate-x-1/2 bg-slate-300" />
+      {value !== 0 && (
+        <span
+          className={`absolute inset-y-0 ${isOver ? 'left-1/2 bg-rose-400' : 'right-1/2 bg-emerald-400'}`}
+          style={{ width: `${half}%` }}
+        />
+      )}
+    </span>
   )
 }
 
