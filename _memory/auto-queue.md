@@ -583,6 +583,89 @@ P0 는 사용자 결정 대기 (issue 답신 받기 전까지 skip).
   - 완료: 2026-06-01 commit e3b21e5 (78회차)
   - 구현: `SectionHeading` 컴포넌트(아이콘+제목+구분선) 추가 + 5개 라벨 섹션(⚡오늘 할 일 / 📈이번 달 실적 / 🚚배송 현황 / 💳주문·정산 / ⚙️시스템). 기존 카드 순서 유지하며 그룹 래퍼(`space-y-4`)로 묶음. 빈 헤더 방지: 오늘할일=`marginLossAlerts||totalActions`, 주문정산=`recentOrders||cardSpends||refundSummary`, 시스템=`recentAgentRuns` 있을 때만 렌더. 카드/데이터/조건부 로직 동일. localStorage 접기는 v0 범위 외(미구현). 상태 zone(배너·health·쿼터·인증·체크리스트)은 상단 컨텍스트로 헤더 없이 유지.
 
+### Brainstorm approved (2026-06-06, 190회차)
+
+2026-06-06 사용자가 brainstorm idea 20건(#29~#48)에 일괄 답신 — **approve 12건 / skip 8건**.
+skip(close): #48 천단위마스킹 · #45 카드결제D-day · #44 메모태그인라인 · #42 매칭확인모달 · #41 부가세분기집계 · #40 분할배송 · #39 피킹리스트 · #32 정체플래그.
+approve 12건 중 **#30(일괄 상태변경)은 이미 구현됨**(OrderListClient `BulkStatusChange`) → 큐 미추가·issue close. 나머지 11건 아래 P1 추가.
+
+- [x] **#idea-43 정산 대조 차이 발산형 막대 시각화** _(brainstorm approved 2026-06-06)_ — 완료 2026-06-06 commit 예정 (190회차).
+  - estimated: 30m
+  - prereq: 없음
+  - decision_required: false (디자인/CSS-only — AUTO-RUN)
+  - source: github issue#43
+  - 구현: `settlement/page.tsx` 차이 셀에 0 기준 발산형 막대(`DivergingBar`) 추가 — 좌=절감(emerald-400)·우=초과(rose-400), 폭=배대지 중 |차이| 최대값(`maxAbsVariance`) 대비 비율(half 0~50%), 중앙 0 divider. 막대는 `aria-hidden`(숫자가 접근성 기준), 셀을 `flex-col items-end`로 숫자 위·막대 아래 배치. 계산 기준 안내에 막대 설명 li 추가. 순수 additive(숫자·플래그·동작 무변경). build✓·lint0.
+
+- [ ] **#idea-34 주문 상태 라벨·색 토큰 단일화 (order-status.ts SSOT)** _(brainstorm approved 2026-06-06)_
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false (리팩토링 — 단, 화면별 색이 미세 통일되므로 AUTO-RUN BUT REPORT)
+  - source: github issue#34
+  - sketch: `src/lib/b2b/order-status.ts` 단일 정의 `{ value, label, badgeCls, stepOrder, tone }`. orders/page.tsx STATUS_META·[id]·eta·dashboard 중복 제거 후 import. **주의**: 화면별 미세 색차가 캐논 1벌로 수렴 → 시각 diff 발생 가능, 한 회차에 신중히. design-system.md 에 상태 색 토큰 명문화.
+
+- [ ] **#idea-29 빈 상태(empty state) 공용 컴포넌트 통일** _(brainstorm approved 2026-06-06)_
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false (새 공용 컴포넌트 — AUTO-RUN BUT REPORT)
+  - source: github issue#29
+  - sketch: `<EmptyState icon title description action>` 1개 + 인라인 SVG 세트(주문/상품/영수증/검색없음). text-center py-12 + primary CTA. /clients·/orders·/products·/imports 등 적용(점진 가능). design-system.md Empty State Stage 2b 확정.
+
+- [ ] **#idea-47 주문 상세 상태 파이프라인 진행 스테퍼** _(brainstorm approved 2026-06-06)_
+  - estimated: 1h
+  - prereq: 없음 (#idea-34 SSOT 선행 시 색·순서 일관)
+  - decision_required: false (디자인 — AUTO-RUN)
+  - source: github issue#47
+  - sketch: `orders/[id]/page.tsx` 상단 가로 stepper. 완료=emerald 체크, 현재=indigo-600 굵게, 미래=slate-300 점선. 환불 분기 별도 라인. 모바일 압축(현재±1). design-system 토큰.
+
+- [ ] **#idea-37 사이드바 nav 행동 필요 카운트 배지** _(brainstorm approved 2026-06-06)_
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false (기능+디자인 — AUTO-RUN BUT REPORT)
+  - source: github issue#37
+  - sketch: SellerShell nav 항목 옆 카운트 배지 — /imports=미매칭 영수증, /refunds=refund_requested, 주문=정체(7일+ pending). 서버 1회 집계 후 SellerShell prop. 다크톤 배지(`bg-rose-500/20 text-rose-200` 긴급 / `bg-indigo-500/20 text-indigo-200` 일반).
+
+- [ ] **#idea-35 사이드바 nav 섹션 그룹화** _(brainstorm approved 2026-06-06)_
+  - estimated: 45m
+  - prereq: 없음
+  - decision_required: false (배치 재구성 — AUTO-RUN BUT REPORT, 사이드바 구조 변경이라 보고)
+  - source: github issue#35
+  - sketch: NAV_ITEMS 13개 평면 → 운영/분석·자료/계정 3~4 그룹. 그룹 라벨(`text-xs font-semibold text-slate-400 uppercase tracking-wider`). 항목 자체·링크 동일, 그룹 헤더만 추가.
+
+- [ ] **#idea-36 모바일 데이터 테이블 → 스택 카드 (전역)** _(brainstorm approved 2026-06-06)_
+  - estimated: rolling (페이지별 1건)
+  - prereq: 없음
+  - decision_required: false (디자인/CSS — AUTO-RUN)
+  - source: github issue#36
+  - sketch: #idea-23(/orders)이 패턴 확립. analytics·clients·eta·imports·refunds·settlement·products 등 `overflow-x-auto` 테이블에 `md:hidden` 카드뷰 듀얼 렌더 점진 적용. 한 회차 1페이지.
+
+- [ ] **#idea-33 모바일 하단 탭 바** _(brainstorm approved 2026-06-06)_
+  - estimated: 1h
+  - prereq: 없음
+  - decision_required: false (UX 추가 — AUTO-RUN BUT REPORT, 모바일 내비 구조 추가)
+  - source: github issue#33
+  - sketch: `md:hidden` 하단 고정 탭(대시보드/주문/매입/알림 4 + 더보기=햄버거). `bg-white border-t border-slate-200 shadow`, active=`text-indigo-600`. 알림 미읽음 dot. 드로어는 전체 메뉴용 유지.
+
+- [ ] **#idea-31 마켓 운송장 업로드용 CSV 역방향 export** _(brainstorm approved 2026-06-06)_
+  - estimated: 1.5h
+  - prereq: 없음
+  - decision_required: false (새 API route — AUTO-RUN BUT REPORT)
+  - source: github issue#31
+  - sketch: `/api/orders/export-tracking?marketplace=&from=&to=` — 운송장 보유 주문만, 마켓별 송장등록 양식. `lib/b2b/marketplace-tracking-format.ts` 마켓별 컬럼 매핑(쿠팡·스마트스토어 등). /orders 에서 export 버튼.
+
+- [ ] **#idea-38 월간 운영 리포트 (1단계: 화면 렌더)** _(brainstorm approved 2026-06-06)_
+  - estimated: 1.5h
+  - prereq: 없음 (PDF/PNG 내보내기는 후속 분리)
+  - decision_required: false (새 페이지 — AUTO-RUN BUT REPORT)
+  - source: github issue#38
+  - sketch: `/reports` 월 선택 → 요약 카드(주문/매출/마진/환불/정산차액/상위SKU) 한 화면. dashboard-data·weekly-digest·analytics·refunds·settlement 쿼리 재사용. 인쇄 친화 헤더(브랜드+기간+사업자명). 1단계는 화면만(AUTO 범위), PDF/PNG export 는 후속.
+
+- [ ] **#idea-46 마켓 구매자용 배송상태 공유 링크 (PII 비노출 토큰)** _(brainstorm approved 2026-06-06)_
+  - estimated: 2h
+  - prereq: 없음
+  - decision_required: false — **단 보안 민감(무인증 공개 라우트 + admin client). 구현 회차에 PII 비노출·토큰 난수·RLS 경계 신중 검증 필수**
+  - source: github issue#46
+  - sketch: DB `b2b_orders.share_token text unique`(nullable) 1컬럼. `app/t/[token]/page.tsx` 무인증 공개 — `createAdminClient` 로 token 단건, **상태 라벨+ETA+갱신일만** 노출(이름·주소·연락처·매입가·메모 절대 X). 셀러가 비활성/재발급. (1컬럼이라 STOP&ASK 아님이나, 공개 surface 라 구현 시 보안 우선.)
+
 ### Audit 발견 2026-06-06 (daily self-audit · 185회차)
 
 - [x] **#auto-M bug: auth/signup 컴포넌트 fire-and-forget Supabase auth promise `.catch()` 누락 (unhandled rejection)** _(audit 발견 2026-06-06)_ — 완료 2026-06-06 commit a9c0bb9 (186회차). 7곳 `.catch()` 추가: 정보성(SignupHeader·EmailVerifyNotice·step-3)=no-op catch / 게이트(reset-password setChecking(false)·step-4·5 setAuthLoading(false)·mfa-challenge setInitError(true))=catch 에서 플래그 해제로 stuck 방지. 순수 additive 하드닝, build✓·lint0. inbox polling: decision-needed #7=사용자 대시보드 토글 대기(변동 0) / agent-idea 19건 전부 0댓글(미답신, 7일+ 무답 아직 없음, open 유지) / handoff-from-main 0건 — 큐 변동 0.
@@ -648,6 +731,7 @@ P1 (brainstorm 승인분) 이 비고 inbox 도 조용할 때, `chore(queue): P1 
   - 122회차 (2026-06-03) commit c17e600: `/refunds` (환불 관리 목록) `loading.tsx` 신설 — page.tsx 가 force-dynamic 으로 account 조회 → b2b_refunds 50+1건(b2b_orders 조인) 페이지네이션 fetch → 상태별 카운트 fetch 를 직렬로 돌려 첫 페인트 지연. page 레이아웃(`max-w-6xl mx-auto p-4 md:p-8 space-y-6` + 헤더[rose→amber gradient 제목 + 총 건수 줄] + 상태 필터 칩 7개[전체/요청/승인/처리중/정산완료/거절/취소] + 테이블 카드[헤더행 + 8행(요청일/상태배지/주문/사유/환불액/상세) + 페이지네이션 줄])을 동일 토큰 skeleton 으로 미리 노출. orders/imports/notifications loading 과 동일 `Bar` animate-pulse + `aria-busy`/sr-only `role=status` 패턴. 순수 additive. build(✓ 3.4s)·lint(0) 통과. 다음 회차 후보: `/templates`·`/support`·`/billing`·`/eta` 등 잔여 force-dynamic list 라우트 loading.tsx.
 - [ ] **#idle-3 a11y 일관성 스윕** _(rolling)_ — 신규/누락 컴포넌트 한 회차 1군. placeholder-only input 의 `aria-label`, 아이콘 버튼 라벨, focus ring, 대비(WCAG AA), 키보드 내비. (⌘K 팔레트·상태 타임라인·주문 복제 폼·BulkMatchBar 등 최근 추가분 우선)
   - 189회차 (2026-06-06) commit acde2b4: **`CustomsGuidePanel` 통관 가이드 카테고리 토글 칩 그룹에 `aria-pressed` 부여** — 188회차(#idle-4 OrderMatchingClient 인라인 버튼 터치 타겟)에 이어 #idle-3/#idle-4 순환 중 #idle-3 차례. inbox polling: AGENT_GITHUB_TOKEN 정상(.env.local 로드) — agent-decision-needed #7(비밀번호 정책 대시보드 토글 대기, 마지막 댓글=agent 자신 30회차 안내, 2026-05-30 이후 신규 사용자 답신 없음, decision=unknown, open 유지) / agent-idea 20건(#29~#48) 전부 0댓글(미답신, open 유지, 최고령 #29 가 2026-06-01 = 5일째라 7일+ 무답 자동격하 대상 아직 없음) / agent-handoff-from-main 0건 — **큐 변동 0**. 슬라이스 근거: 187회차가 "세그먼트/탭 ARIA 상태는 앱 전역 전건 보유로 일단락" 선언하며 점검한 toggle 컨트롤 목록(orders/page 상태필터 role=tab, PricingPageClient·AutoMatchThreshold·WeeklyDigestCard·FavoriteStar `aria-pressed`)에서 **`CustomsGuidePanel`(주문 등록 NewOrderForm·주문 상세 /orders/[id] 에서 쓰이는 카테고리별 통관 가이드 패널)의 카테고리 선택 칩 그룹만 누락** — 각 칩이 선택 시 `bg-amber-600 text-white` 로 **시각으로만** active 표시하고 SR·키보드 사용자에게 선택 상태를 announce 못 하던 갭(WCAG 4.1.2 Name·Role·Value). 클릭 시 같은 칩 재클릭으로 해제(0개 선택 가능)되는 toggle 의미라 `aria-pressed={selected===g.category}` 부여(자매 AutoMatchThreshold·FavoriteStar 의 aria-pressed 패턴과 동일, tab/radio 보다 toggle 이 정확). 순수 additive (시각·동작·레이아웃 무변경). build(✓)·lint(0) 통과. 다음 회차 후보: #idle-4 모바일 터치 타겟(≥40px, additive only — CustomsGuidePanel 카테고리 칩 자체는 필터 칩류라 데스크탑 회귀 주의로 계속 보류, 잔여 인라인 버튼 위주) 또는 #idle-3 잔여 a11y(focus ring 가시성·대비 WCAG AA)로 순환.
+  - 190회차 (2026-06-06): **P1 라운드 (idle 아님) — inbox 대량 처리 + brainstorm 승인분 1건 구현**. inbox polling: agent-decision-needed #7(비밀번호 정책 대시보드 토글 대기, decision=unknown, open 유지) / **agent-idea 20건(#29~#48)에 사용자 일괄 답신 — approve 12 / skip 8** / handoff-from-main 0. 처리: skip 8건(#48·45·44·42·41·40·39·32) **issue close** / approve 12건 중 **#30(일괄 상태변경)은 이미 구현됨(OrderListClient BulkStatusChange) → 큐 미추가·close** / 나머지 11건(#29·31·33·34·35·36·37·38·43·46·47) **P1 큐 신규 섹션 추가 + 각 issue 에 "✅ 큐 추가" 댓글·open 유지**. **P1 작업 1건 = #idea-43(정산 대조 차이 발산형 막대)** commit 예정 — settlement/page.tsx 차이 셀에 `DivergingBar`(0 기준 좌 절감 emerald·우 초과 rose, 폭=|차이|/maxAbsVariance, aria-hidden) 추가. build✓·lint0. 다음 회차: P1 첫 pending = #idea-34(order-status SSOT) 또는 후속 idea.
   - 187회차 (2026-06-06) commit e1f94d3: **`OrderMatchingClient` 영수증 매칭 탭 그룹(`TabBtn` 대기/매칭됨/전체) `role=tablist`+`role=tab`+`aria-selected` 부여** — 186회차(#idle-4 OrderListClient 일괄선택 바 flex-wrap)에 이어 #idle-3 잔여 a11y 점검. inbox polling: AGENT_GITHUB_TOKEN 정상(.env.local 로드 경유, cron-prompt 의 raw process.env snippet 은 NO_TOKEN 이라 check-decision-reply.mjs/dotenv 로 폴링) — agent-decision-needed #7(비밀번호 정책 대시보드 토글 대기, 마지막 댓글=agent 자신 30회차 안내, 2026-05-30 이후 신규 사용자 답신 없음, decision=unknown, open 유지) / agent-idea 20건(#29~#48) 전부 0댓글(미답신, open 유지, 최고령 #29 가 2026-06-01 = 5일째라 아직 7일+ 무답 자동격하 대상 없음) / agent-handoff-from-main 0건 — **큐 변동 0**. 슬라이스 근거: 앱 전역 세그먼트/탭 컨트롤 전수 점검(active 가 시각 bg-indigo-600 text-white 로만 표시되는 toggle) 결과 orders/page.tsx 상태필터(`role=tablist`+`role=tab`+`aria-selected`)·PricingPageClient·AutoMatchThreshold·WeeklyDigestCard(전부 `aria-pressed`)는 ARIA 상태 보유했으나, **OrderMatchingClient 의 매칭 상태 필터 탭(대기/매칭됨/전체)만 `<button>` 에 role/상태 없이 active 를 시각으로만 표시**해 SR·키보드 사용자가 어느 탭이 선택됐는지 announce 못 받던 갭(WCAG 4.1.2 Name·Role·Value). orders/page.tsx 의 자매 상태필터 패턴 그대로 적용: 컨테이너(L140 `flex gap-1`)에 `role="tablist" aria-label="영수증 매칭 상태 필터"` + `TabBtn` 에 `role="tab" aria-selected={active}`. 자매 패턴과 동일하게 tabpanel 연결·방향키는 미부여(코드베이스 기존 컨벤션 일치, 현 상태보다 strictly better). 순수 additive (시각·동작·레이아웃 무변경). build(✓)·lint(0) 통과. 다음 회차 후보: #idle-4 모바일 터치 타겟(≥40px, additive only — 대시보드 미니카드 그리드·매칭 인라인 액션 버튼 행) 또는 #idle-3 잔여 a11y(focus ring 가시성·대비 WCAG AA)로 순환. (세그먼트/탭 ARIA 상태는 앱 전역 전건 보유로 일단락.)
   - 185회차 (2026-06-06) commit 98121bb: **`NotificationBell` 드롭다운 ESC 닫힘 시 트리거(벨) 포커스 복귀 추가** — 184회차(AnnouncementBanner ModalContent 포커스 트랩)가 다음 후보로 지목한 "GitHub 토큰 복구 후 issue 재폴링 우선, 그 후 #idle-3 잔여 a11y" 처리. **inbox polling 복구**: 184회차에 401(Bad credentials) 이던 AGENT_GITHUB_TOKEN 이 이번 회차 정상 동작 — agent-decision-needed #7(비밀번호 정책 대시보드 토글 대기, 마지막 댓글=agent 자신 30회차 안내, 2026-05-30 이후 신규 사용자 답신 없음, decision=unknown, open 유지) / agent-idea 19건(#25~#43) 전부 0댓글(미답신, open 유지, 최고령 #25 가 2026-06-01 = 5일째라 아직 7일+ 무답 자동격하 대상 없음) / agent-handoff-from-main 0건 — **큐 변동 0** 확인. 슬라이스 근거: 179회차가 모달 포커스 트랩 잔여 후보로 명시한 `NotificationBell`(184 가 AnnouncementBanner 만 처리하고 미점검) 점검 결과, 이 컴포넌트는 button-triggered `role="dialog"` **non-modal 팝오버**(aria-modal 미부여=정상)라 트리거 ARIA(`aria-haspopup=dialog`·`aria-expanded`·`aria-controls`·focus-visible 링)·ESC 닫기·바깥클릭 닫기·dropdown `role=dialog`+`aria-label` 은 보유했으나, **ESC 로 닫을 때 포커스를 트리거로 복귀시키지 않아** 키보드·SR 사용자가 드롭다운 안에서 Tab 진입 후 ESC 누르면 포커스가 `<body>` 로 유실되던 갭(WCAG 2.4.3 포커스 순서). non-modal 팝오버라 모달식 포커스 트랩(Tab 순환)은 비대상(배경 콘텐츠 접근 허용이 정상)이고, 핵심 누락은 ESC-복귀 1건. `triggerRef`(HTMLButtonElement) 추가 + 벨 버튼에 부여 + 기존 `[open]` ESC effect 의 Escape 분기에 `triggerRef.current?.focus()` 병합(바깥클릭 닫기는 마우스 경로라 미변경 — 복귀 강제 안 함). 포커스가 이미 벨에 있을 땐(드롭다운 미진입 ESC) harmless 재포커스 no-op. 순수 additive (시각·동작·레이아웃·마우스 사용 무변경, 닫혀 있을 땐 리스너 미등록). build(✓)·lint(0) 통과. 다음 회차 후보: #idle-4 모바일 터치 타겟(≥40px, additive only — 대시보드 미니카드 그리드·매칭 인라인 액션 버튼·필터 칩 행, 아직 미착수) 또는 #idle-3 잔여 a11y(focus ring 가시성·대비 WCAG AA)로 순환.
   - 184회차 (2026-06-06) commit 6ec58c6: **`AnnouncementBanner` 공지 상세 모달(`ModalContent`) 포커스 트랩 + 닫힘 복귀 추가** — 183회차(SellerShell 장식 아이콘)에 이어 #idle-3 잔여 a11y 점검. inbox polling: **GitHub 토큰 401(Bad credentials) — 이번 회차 issue 폴링 불가** (AGENT_GITHUB_TOKEN 만료/무효 의심, env 문제라 agent 가 못 고침. 직전 183회차 기준 #7 토글 대기·agent-idea 19건 미답신·handoff 0 = 큐 변동 없을 것으로 추정, 다음 회차 토큰 복구 후 재폴링 필요). 슬라이스 근거: 175~180회차 모달 포커스 트랩 서브스윕이 "일단락"하며 커버한 목록(b2b 5종 BulkExport·ForwarderExport·TemplateUpload·Onboarding·CommandPalette + 페이지 4종 settings/security·ImportMatchAction·MultiMatchPanel·OrderMatchingClient)에 **`AnnouncementBanner.ModalContent`(공지 "자세히 보기" 시 뜨는 `fixed inset-0` 다이얼로그)만 누락** 확인. 이 모달은 `role=dialog`+`aria-modal`+`aria-labelledby`+Escape+닫기버튼 auto-focus 는 보유했으나 **Tab/Shift+Tab 이 백드롭 뒤 배경으로 빠지고(WCAG 2.4.3·2.1.2), 닫힘 시 트리거(`자세히 보기`)로 포커스 복귀가 없어**(WCAG 2.4.3) 닫은 뒤 키보드·SR 포커스가 body 로 유실되던 갭. OnboardingModal(178) 패턴 그대로 적용: 패널 `<div>`에 `panelRef` 부여 + **빈 deps `[]` 의 별도 effect**(조건부 마운트 컴포넌트라 열림/닫힘 = mount/unmount)로 직전 activeElement 캡처→cleanup 복귀(174회차가 경고한 onClose-deps 오재캡처 회피 위해 keydown effect 와 분리, 닫기버튼 auto-focus 도 이 effect 로 통합) + 기존 Escape effect(`[onClose]`)에 Tab 분기 병합(패널 안 focusable querySelectorAll 매 Tab 재평가, 첫/마지막 경계 wrap, 패널 밖이면 회수). 현재 모달 내 focusable 은 닫기버튼 1개라 Tab 이 자기 자신 순환(포커스가 다이얼로그 밖으로 안 샘) — 핵심 효과는 닫힘 복귀. 순수 additive (시각·동작·레이아웃 무변경, 닫혀 있을 땐 ModalContent 미마운트라 리스너 0). build(✓)·lint(0) 통과. 다음 회차 후보: GitHub 토큰 복구 후 issue 재폴링 우선, 그 후 #idle-4 모바일 터치 타겟(≥40px, additive only — 대시보드 미니카드 그리드·매칭 인라인 액션 버튼·필터 칩 행) 또는 #idle-3 잔여 a11y(focus ring 가시성·대비 WCAG AA)로 순환.
