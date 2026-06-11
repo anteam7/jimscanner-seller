@@ -112,9 +112,6 @@ export async function PATCH(
     }
     updates.status = newStatus
     updates.status_history = [...existingHistory, newEntry]
-    if (newStatus === 'approved' || newStatus === 'processing' || newStatus === 'settled') {
-      // approve 진입 시 approved_at 첫 세팅, settled 진입 시 settled_at 첫 세팅
-    }
     if (newStatus === 'approved') updates.approved_at = nowIso
     if (newStatus === 'settled') updates.settled_at = nowIso
     statusChanged = true

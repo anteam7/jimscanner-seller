@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 
 type CardOption = {
@@ -109,9 +110,9 @@ export function LinePaymentCardSelector({ orderId, itemId, initialCardId, initia
           ) : cards.length === 0 ? (
             <div className="text-[11px] text-slate-500 space-y-1">
               <p>등록된 카드가 없습니다.</p>
-              <a href="/settings/cards" className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
+              <Link href="/settings/cards" className="text-indigo-600 hover:text-indigo-800 underline underline-offset-2">
                 카드 등록 →
-              </a>
+              </Link>
             </div>
           ) : (
             <ul className="space-y-1">

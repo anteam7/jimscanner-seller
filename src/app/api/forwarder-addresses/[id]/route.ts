@@ -89,11 +89,12 @@ export async function PATCH(
   // is_default 토글 (단독 호출)
   if (Object.keys(body).length === 1 && 'is_default' in body) {
     if (body.is_default === true) {
-      await admin
+      const { error: clearErr } = await admin
         .from('b2b_forwarder_addresses')
         .update({ is_default: false })
         .eq('account_id', account.id)
         .eq('is_default', true)
+      if (clearErr) return NextResponse.json({ error: '실패' }, { status: 500 })
       const { error } = await admin
         .from('b2b_forwarder_addresses')
         .update({ is_default: true })
@@ -162,11 +163,12 @@ export async function PATCH(
   // is_default 도 함께 받았다면 처리
   const wantDefault = body.is_default === true
   if (wantDefault) {
-    await admin
+    const { error: clearErr } = await admin
       .from('b2b_forwarder_addresses')
       .update({ is_default: false })
       .eq('account_id', account.id)
       .eq('is_default', true)
+    if (clearErr) return NextResponse.json({ error: '수정 실패', detail: clearErr.message }, { status: 500 })
     patch.is_default = true
   } else if (body.is_default === false) {
     patch.is_default = false

@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useRef, useState } from 'react'
+import Link from 'next/link'
 
 export type ForwarderTemplateColumn = {
   column_index: number
@@ -247,9 +248,9 @@ export default function ForwarderExportModal({
                     </p>
                     <p className="text-amber-800 mt-0.5">
                       {missing.join(' · ')} — 양식에 빈 값으로 채워집니다. 배대지에서 거부될 수 있으니
-                      <a href={`/orders/${orderId}`} className="ml-1 underline underline-offset-2 font-medium hover:text-amber-900">
+                      <Link href={`/orders/${orderId}`} className="ml-1 underline underline-offset-2 font-medium hover:text-amber-900">
                         주문 상세에서 입력
-                      </a>
+                      </Link>
                       을 권장합니다.
                     </p>
                   </div>

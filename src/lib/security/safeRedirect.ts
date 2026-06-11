@@ -19,6 +19,11 @@ export interface SafeRedirectOptions {
    * 비우면 같은 origin (relative path) 만 허용.
    */
   allowedHosts?: string[]
+  /**
+   * relative path 를 절대 URL 로 변환할 기준 origin (NextResponse.redirect 는 절대 URL 필수).
+   * 미지정 시 NEXT_PUBLIC_B2B_URL.
+   */
+  origin?: string
 }
 
 /**
@@ -26,8 +31,11 @@ export interface SafeRedirectOptions {
  */
 export function safeRedirect(target: string, opts: SafeRedirectOptions = {}): NextResponse {
   // relative path: 같은 origin → 안전
-  if (target.startsWith('/') && !target.startsWith('//')) {
-    return NextResponse.redirect(target)
+  // `//host` (protocol-relative) 와 `/\host` (브라우저가 \ 를 / 로 취급) 는 외부 이탈이므로 제외
+  if (target.startsWith('/') && !target.startsWith('//') && !target.startsWith('/\\')) {
+    const base =
+      opts.origin ?? process.env.NEXT_PUBLIC_B2B_URL ?? 'https://seller.jimscanner.co.kr'
+    return NextResponse.redirect(new URL(target, base))
   }
 
   let parsed: URL

@@ -56,6 +56,7 @@ export async function getMarginLossAlerts(
     const r = rates[s.default_currency]
     if (!r) continue
     const krw = Math.round((price * r.rate) / (r.unit || 1))
+    if (!Number.isFinite(krw) || krw <= 0) continue
     skuKrw.set(s.id, { name: s.display_name, sku: s.seller_sku, krwCost: krw })
   }
   if (skuKrw.size === 0) return []
