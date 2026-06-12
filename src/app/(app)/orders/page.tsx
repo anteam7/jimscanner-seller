@@ -50,20 +50,23 @@ const MARKETPLACE_LABEL: Record<string, string> = Object.fromEntries(
   MARKETPLACES.map((m) => [m.value, m.label]),
 )
 
-const STATUS_FILTERS: { value: string; label: string }[] = [
+// 사용자에게 노출되는 필터 그룹 (3단계) + 드릴다운용 개별 상태
+const STATUS_FILTER_GROUPS: { value: string; label: string; statuses?: string[] }[] = [
   { value: 'all', label: '전체' },
-  { value: 'pending', label: '마켓 접수' },
-  { value: 'confirmed', label: '매입 발주' },
-  { value: 'paid', label: '매입 완료' },
-  { value: 'forwarder_submitted', label: '배대지 입고' },
-  { value: 'in_transit', label: '운송 중' },
-  { value: 'completed', label: '구매 확정' },
-  { value: 'cancelled', label: '취소' },
-  { value: 'refund_requested', label: '환불 신청' },
-  { value: 'refunded', label: '환불 완료' },
-  { value: 'customs_denied', label: '통관 거부' },
-  { value: 'disputed', label: '분쟁 중' },
+  { value: 'action_needed', label: '처리 필요', statuses: ['pending', 'confirmed'] },
+  { value: 'in_progress', label: '진행 중', statuses: ['paid', 'forwarder_submitted', 'in_transit', 'arrived_korea', 'delivered'] },
+  { value: 'done', label: '완료', statuses: ['completed'] },
+  { value: 'issue', label: '문제', statuses: ['refund_requested', 'refunded', 'cancelled', 'customs_denied', 'disputed'] },
 ]
+
+// 개별 상태값 → 필터 그룹 조회 (URL 파라미터 호환)
+const INDIVIDUAL_STATUS_LABELS: Record<string, string> = {
+  pending: '마켓 접수', confirmed: '매입 발주', paid: '매입 완료',
+  forwarder_submitted: '배대지 입고', in_transit: '운송 중', arrived_korea: '한국 통관',
+  delivered: '구매자 수령', completed: '구매 확정', cancelled: '취소',
+  refund_requested: '환불 신청', refunded: '환불 완료',
+  customs_denied: '통관 거부', disputed: '분쟁 중',
+}
 
 function EmptyState() {
   return (
@@ -138,18 +141,27 @@ export default async function OrdersListPage({
     .order('created_at', { ascending: false })
     .range(offset, offset + PAGE_SIZE - 1)
 
-  if (statusFilter !== 'all' && STATUS_META[statusFilter]) {
-    qb = qb.eq('status', statusFilter)
+  if (statusFilter !== 'all') {
+    const group = STATUS_FILTER_GROUPS.find((g) => g.value === statusFilter)
+    if (group?.statuses) {
+      qb = qb.in('status', group.statuses)
+    } else if (INDIVIDUAL_STATUS_LABELS[statusFilter]) {
+      // 드릴다운 등 개별 상태값 URL 파라미터 호환
+      qb = qb.eq('status', statusFilter)
+    }
+    // 알 수 없는 값은 무시 — 전체 조회로 폴백 (유저 조작된 URL 대응)
   }
   if (marketFilter && MARKETPLACE_LABEL[marketFilter]) {
     qb = qb.eq('marketplace', marketFilter)
   }
-  if (forwarderFilter) {
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+  if (forwarderFilter && UUID_RE.test(forwarderFilter)) {
     qb = qb.eq('forwarder_id', forwarderFilter)
   }
   if (query.trim()) {
-    const q = query.trim().replace(/[%,]/g, '')
-    qb = qb.or(`order_number.ilike.%${q}%,market_order_number.ilike.%${q}%`)
+    // 화이트리스트: 주문번호·상호에 허용되는 문자만 통과 (ILIKE 와일드카드·이스케이프 완전 차단)
+    const q = query.trim().replace(/[^가-힣ㄱ-ㅎㅏ-ㅣa-zA-Z0-9\s\-]/g, '').trim()
+    if (q) qb = qb.or(`order_number.ilike.%${q}%,market_order_number.ilike.%${q}%`)
   }
 
   const { data: rows, count: totalCount } = (await qb) as { data: OrderRow[] | null; count: number | null }
@@ -308,7 +320,7 @@ export default async function OrdersListPage({
       <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-4 space-y-3">
         {/* 상태 필터 */}
         <div className="flex items-center gap-1 flex-wrap" role="tablist" aria-label="상태 필터">
-          {STATUS_FILTERS.map((f) => {
+          {STATUS_FILTER_GROUPS.map((f) => {
             const isActive = statusFilter === f.value
             const href = buildHref({ status: f.value === 'all' ? null : f.value })
             return (

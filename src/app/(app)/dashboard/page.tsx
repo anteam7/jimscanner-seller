@@ -932,108 +932,74 @@ export default async function SellerDashboardPage() {
         isNewSeller={isNewSeller}
       />
 
-      {/* 인사말 — B: 시각적 무게감 강화 */}
-      <div className="flex items-end justify-between flex-wrap gap-4">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
-            안녕하세요{account.ceo_name ? `, ${account.ceo_name}님` : ''} 👋
-          </h1>
-          <p className="text-sm text-slate-600 mt-1">{displayName} 대시보드입니다.</p>
-        </div>
-        <span className="inline-flex items-center gap-1.5 text-xs text-slate-500 bg-white border border-slate-200 rounded-lg px-3 py-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
-          {new Date().toLocaleDateString('ko-KR', { year: 'numeric', month: 'long', day: 'numeric', weekday: 'short' })}
-        </span>
+      {/* 인사말 */}
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          {account.ceo_name ? `${account.ceo_name}님` : '안녕하세요'}
+        </h1>
+        <p className="text-sm text-slate-500 mt-0.5">
+          {new Date().toLocaleDateString('ko-KR', { month: 'long', day: 'numeric', weekday: 'short' })}
+          {displayName !== account.email && ` · ${displayName}`}
+        </p>
       </div>
 
       {/* 상태 배너 */}
       <StatusBanner account={account} />
 
-      {/* PH0-3: 본인 health score 미니카드 */}
-      {healthSnapshot && healthSnapshot.health_score != null && (
-        <HealthScoreCard
-          score={healthSnapshot.health_score}
-          flags={healthSnapshot.issue_flags}
-          snapshotDate={healthSnapshot.snapshot_date}
-        />
-      )}
-
       {/* 쿼터 경고 배너 */}
       <QuotaBanner />
 
-      {/* 인증 진행 현황 */}
-      <VerificationProgress level={account.verification_level} />
-
-      {/* Progressive checklist — 미완료 단계 있으면 항상 표시 */}
-      {showChecklist && <OnboardingGuide progress={progress} />}
-
-      {/* === ⚡ 오늘 할 일 — 행동 필요 항목 (H3 마진 손실 + 행동 큐) === */}
+      {/* === ⚡ 지금 해야 할 일 — 최우선 노출 === */}
       {hasTodoSection && (
-        <div className="space-y-4">
-          <SectionHeading icon="⚡" title="오늘 할 일" />
+        <div className="space-y-3">
+          <SectionHeading icon="⚡" title="지금 해야 할 일" />
 
           {/* H3 — 마진 손실 알림 */}
           {marginLossAlerts.length > 0 && <MarginLossBanner alerts={marginLossAlerts} />}
 
-          {/* 오늘 행동 큐 — 3건 미만이면 슬림 인라인 배너로 노이즈 감축 */}
-          {totalActions > 0 && totalActions < 3 && (
-            <div className="rounded-lg bg-amber-50/60 border border-amber-200 px-4 py-2.5 flex flex-wrap items-center gap-x-4 gap-y-1 text-xs">
-              <span className="font-semibold text-amber-900">⚡ 행동 필요</span>
+          {/* 행동 큐 — 항상 카드형 */}
+          {totalActions > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
               {actionQueue.unmatchedReceipts > 0 && (
-                <Link href="/imports" className="text-amber-800 hover:text-amber-900 underline">매칭 대기 영수증 {actionQueue.unmatchedReceipts}건</Link>
+                <Link href="/imports" className="group block rounded-xl bg-white border border-amber-200 px-5 py-4 hover:shadow-md hover:border-amber-300 transition-all">
+                  <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold mb-1">매칭 대기 영수증</p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">{actionQueue.unmatchedReceipts}건</p>
+                  <p className="mt-1.5 text-xs text-amber-700 group-hover:text-amber-900 font-medium">영수증 매칭하기 →</p>
+                </Link>
               )}
               {actionQueue.refundRequests > 0 && (
-                <Link href="/orders?status=refund_requested" className="text-rose-700 hover:text-rose-800 underline">환불 신청 {actionQueue.refundRequests}건</Link>
+                <Link href="/orders?status=refund_requested" className="group block rounded-xl bg-white border border-rose-200 px-5 py-4 hover:shadow-md hover:border-rose-300 transition-all">
+                  <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold mb-1">환불 신청</p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">{actionQueue.refundRequests}건</p>
+                  <p className="mt-1.5 text-xs text-rose-700 group-hover:text-rose-900 font-medium">확인하기 →</p>
+                </Link>
               )}
               {actionQueue.oldPending > 0 && (
-                <Link href="/orders?status=pending" className="text-amber-800 hover:text-amber-900 underline">매입 미진행(1일+) {actionQueue.oldPending}건</Link>
+                <Link href="/orders?status=pending" className="group block rounded-xl bg-white border border-slate-200 px-5 py-4 hover:shadow-md hover:border-slate-300 transition-all">
+                  <p className="text-[11px] uppercase tracking-wider text-slate-600 font-semibold mb-1">매입 미진행 (1일+)</p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
+                  <p className="mt-1.5 text-xs text-slate-600 group-hover:text-slate-900 font-medium">주문 확인하기 →</p>
+                </Link>
               )}
               {actionQueue.oldUnmatched > 0 && (
-                <Link href="/imports" className="text-rose-700 hover:text-rose-800 underline">⏰ 무매칭 7일+ {actionQueue.oldUnmatched}건</Link>
+                <Link href="/imports" className="group block rounded-xl bg-white border border-rose-200 px-5 py-4 hover:shadow-md hover:border-rose-300 transition-all">
+                  <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold mb-1">미매칭 7일+</p>
+                  <p className="text-2xl font-bold text-slate-900 tabular-nums">{actionQueue.oldUnmatched}건</p>
+                  <p className="mt-1.5 text-xs text-rose-700 group-hover:text-rose-900 font-medium">영수증 처리 →</p>
+                </Link>
               )}
             </div>
-          )}
-          {totalActions >= 3 && (
-            <section className="rounded-xl bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm p-5">
-              <h3 className="text-sm font-bold text-amber-900 mb-3 flex items-center gap-1.5">
-                <span>⚡</span> 오늘 행동 큐 ({totalActions}건)
-              </h3>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                {actionQueue.unmatchedReceipts > 0 && (
-                  <Link href="/imports" className="block rounded-lg bg-white border border-amber-200 px-4 py-3 hover:shadow-md transition-shadow">
-                    <p className="text-[11px] uppercase tracking-wider text-amber-700 font-semibold">매칭 대기 영수증</p>
-                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.unmatchedReceipts}건</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">/imports 에서 매칭 →</p>
-                  </Link>
-                )}
-                {actionQueue.refundRequests > 0 && (
-                  <Link href="/orders?status=refund_requested" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
-                    <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">환불 신청 주문</p>
-                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.refundRequests}건</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">처리 필요 →</p>
-                  </Link>
-                )}
-                {actionQueue.oldPending > 0 && (
-                  <Link href="/orders?status=pending" className="block rounded-lg bg-white border border-slate-200 px-4 py-3 hover:shadow-md transition-shadow">
-                    <p className="text-[11px] uppercase tracking-wider text-slate-700 font-semibold">매입 미진행 (1일+)</p>
-                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldPending}건</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">매입 발주 권장 →</p>
-                  </Link>
-                )}
-                {actionQueue.oldUnmatched > 0 && (
-                  <Link href="/imports" className="block rounded-lg bg-white border border-rose-200 px-4 py-3 hover:shadow-md transition-shadow">
-                    <p className="text-[11px] uppercase tracking-wider text-rose-700 font-semibold">⏰ 무매칭 7일+</p>
-                    <p className="mt-1 text-xl font-bold text-slate-900 tabular-nums">{actionQueue.oldUnmatched}건</p>
-                    <p className="mt-0.5 text-[11px] text-slate-500">방치된 영수증 처리 →</p>
-                  </Link>
-                )}
-              </div>
-            </section>
           )}
         </div>
       )}
 
-      {/* 빠른 작업 — D: 보조 색 + 새로운 entry */}
+      {/* Progressive checklist — 미완료 단계 있으면 표시 */}
+      {showChecklist && <OnboardingGuide progress={progress} />}
+
+      {/* 인증 진행 현황 — 완전 인증 전까지만 표시 */}
+      {account.verification_level < 3 && <VerificationProgress level={account.verification_level} />}
+
+      {/* 빠른 작업 */}
       <section>
         <h2 className="text-sm font-semibold text-slate-900 mb-3">빠른 작업</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1049,13 +1015,13 @@ export default async function SellerDashboardPage() {
             }
           />
           <QuickActionCard
-            title="요금제 보기"
-            description="플랜별 주문 한도와 가격을 확인합니다"
-            href="/pricing"
+            title="영수증 매칭"
+            description="해외 매입 영수증을 주문과 연결합니다"
+            href="/imports"
             available={true}
             icon={
               <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" strokeWidth={1.8} stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 0 0 2.25-2.25V6.75A2.25 2.25 0 0 0 19.5 4.5h-15a2.25 2.25 0 0 0-2.25 2.25v10.5A2.25 2.25 0 0 0 4.5 19.5Z" />
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15M9 12l3 3m0 0 3-3m-3 3V2.25" />
               </svg>
             }
           />

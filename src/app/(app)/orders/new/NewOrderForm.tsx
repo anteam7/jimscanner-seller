@@ -208,6 +208,7 @@ export default function NewOrderForm({
   }
 
   // UI 상태
+  const [step, setStep] = useState(1)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -357,6 +358,9 @@ export default function NewOrderForm({
     postalValid &&
     !submitting
 
+  const step1Valid = orderNumber.trim().length > 0
+  const step2Valid = customsValid && postalValid
+
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault()
     if (!canSubmit) return
@@ -455,9 +459,38 @@ export default function NewOrderForm({
         </div>
       )}
 
+      {/* 스텝 인디케이터 */}
+      <div className="flex items-center gap-0 mb-2">
+        {([
+          { n: 1, label: '마켓 주문' },
+          { n: 2, label: '구매자 정보' },
+          { n: 3, label: '매입·배대지' },
+        ] as const).map(({ n, label }, i) => (
+          <div key={n} className="flex items-center flex-1 last:flex-none">
+            <div className="flex flex-col items-center gap-1 flex-shrink-0">
+              <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors ${
+                step === n
+                  ? 'bg-indigo-600 text-white'
+                  : step > n
+                    ? 'bg-emerald-500 text-white'
+                    : 'bg-slate-100 text-slate-400'
+              }`}>
+                {step > n ? '✓' : n}
+              </div>
+              <span className={`text-[11px] font-medium whitespace-nowrap transition-colors ${
+                step === n ? 'text-indigo-700' : step > n ? 'text-emerald-700' : 'text-slate-400'
+              }`}>{label}</span>
+            </div>
+            {i < 2 && (
+              <div className={`flex-1 h-0.5 mx-2 mb-4 transition-colors ${step > n ? 'bg-emerald-400' : 'bg-slate-200'}`} />
+            )}
+          </div>
+        ))}
+      </div>
+
       <form onSubmit={onSubmit} className="space-y-6">
-        {/* 1. 마켓 정보 */}
-        <Section
+        {/* Step 1: 마켓 정보 */}
+        {step === 1 && <Section
           accent="indigo"
           title="① 마켓 주문 정보"
           description="국내 오픈마켓에서 받은 주문의 출처를 기록합니다."
@@ -511,10 +544,10 @@ export default function NewOrderForm({
               />
             </Field>
           </div>
-        </Section>
+        </Section>}
 
-        {/* 2. 마켓 구매자 (수신자) */}
-        <Section
+        {/* Step 2: 마켓 구매자 (수신자) */}
+        {step === 2 && <Section
           accent="emerald"
           title="② 마켓 구매자 (배송 수신자)"
           description="33 배대지 양식 수신자 칸에 자동으로 채워집니다. ★ 표시는 양식 변환에 필요한 항목."
@@ -587,10 +620,10 @@ export default function NewOrderForm({
               <p className="text-[11px] text-rose-600 mt-1">P 로 시작하는 영문 1자 + 숫자 12자리여야 합니다 (예: P123456789012).</p>
             )}
           </Field>
-        </Section>
+        </Section>}
 
-        {/* 3. 해외 매입 (N 라인) */}
-        <Section
+        {/* Step 3: 해외 매입 (N 라인) + 배대지 */}
+        {step === 3 && <Section
           accent="sky"
           title="③ 해외 매입 정보"
           description="한 마켓 주문에 N개 상품을 매입한 경우 라인을 추가합니다."
@@ -805,10 +838,10 @@ export default function NewOrderForm({
               </div>
             </div>
           )}
-        </Section>
+        </Section>}
 
-        {/* 4. 배대지 + 메모 */}
-        <Section
+        {/* Step 3: 배대지 + 메모 */}
+        {step === 3 && <Section
           accent="amber"
           title="④ 배대지 & 메모"
           description="해외 매입을 어느 배대지로 받을지 + 운영 메모"
@@ -865,32 +898,53 @@ export default function NewOrderForm({
               className={`${inputCls} resize-y`}
             />
           </Field>
-        </Section>
+        </Section>}
 
-        {/* 액션 */}
-        <div className="flex items-center justify-end gap-2">
-          <Link
-            href="/orders"
-            className="px-4 py-2 text-sm font-medium rounded-md text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
-          >
-            취소
-          </Link>
-          <button
-            type="submit"
-            disabled={!canSubmit}
-            className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
-          >
-            {submitting ? (
-              <>
-                <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round" />
-                </svg>
-                등록 중…
-              </>
-            ) : (
-              '주문 등록'
-            )}
-          </button>
+        {/* 스텝 네비게이션 */}
+        <div className="flex items-center justify-between">
+          {step === 1 ? (
+            <Link
+              href="/orders"
+              className="px-4 py-2 text-sm font-medium rounded-md text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+            >
+              취소
+            </Link>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setStep((s) => s - 1)}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-medium rounded-md text-slate-700 border border-slate-200 bg-white hover:bg-slate-50 transition-colors"
+            >
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5 8.25 12l7.5-7.5" /></svg>
+              이전
+            </button>
+          )}
+          {step < 3 ? (
+            <button
+              type="button"
+              onClick={() => setStep((s) => s + 1)}
+              disabled={step === 1 ? !step1Valid : !step2Valid}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors"
+            >
+              다음
+              <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="m8.25 4.5 7.5 7.5-7.5 7.5" /></svg>
+            </button>
+          ) : (
+            <button
+              type="submit"
+              disabled={!canSubmit}
+              className="inline-flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-md text-white bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-700 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-indigo-400 focus-visible:ring-offset-2"
+            >
+              {submitting ? (
+                <>
+                  <svg className="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9" stroke="currentColor" strokeWidth="2.5" strokeDasharray="60" strokeDashoffset="20" strokeLinecap="round" />
+                  </svg>
+                  등록 중…
+                </>
+              ) : '주문 등록'}
+            </button>
+          )}
         </div>
       </form>
     </div>

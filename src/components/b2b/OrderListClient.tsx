@@ -105,6 +105,7 @@ function sumSale(items: { sale_price_krw: number | string | null }[]): number | 
 export default function OrderListClient({ orders, templates, marketplaceLabel, statusMeta }: Props) {
   const [selected, setSelected] = useState<Set<string>>(new Set())
   const [bulkOpen, setBulkOpen] = useState(false)
+  const [quickExportOrder, setQuickExportOrder] = useState<SelectedOrderInfo | null>(null)
   const [highlightId, setHighlightId] = useState<string | null>(null)
   const rowRefs = useRef<Map<string, HTMLElement>>(new Map())
   const cardRefs = useRef<Map<string, HTMLElement>>(new Map())
@@ -239,6 +240,7 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">영수증 매칭</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap text-right">판매가</th>
                 <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">주문일</th>
+                <th scope="col" className="px-4 py-3 font-semibold text-slate-600 text-xs uppercase tracking-wider whitespace-nowrap">양식</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
@@ -332,6 +334,20 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                     <td className="px-4 py-3 whitespace-nowrap text-slate-500 text-xs">
                       {formatDate(o.order_date)}
                     </td>
+                    <td className="px-4 py-3 whitespace-nowrap">
+                      <button
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); setQuickExportOrder({ id: o.id, market_order_number: o.market_order_number, order_number: o.order_number, buyer_name: o.buyer_name, buyer_phone: o.buyer_phone, buyer_postal_code: o.buyer_postal_code, buyer_address: o.buyer_address, buyer_customs_code: o.buyer_customs_code }) }}
+                        disabled={templates.length === 0}
+                        title={templates.length === 0 ? '등록된 양식 없음' : '배대지 양식 변환'}
+                        className="inline-flex items-center gap-1 px-2.5 py-1.5 text-xs font-semibold rounded-md text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                      >
+                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                        </svg>
+                        양식
+                      </button>
+                    </td>
                   </tr>
                 )
               })}
@@ -410,6 +426,20 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
                   <span className="text-slate-400">{formatDate(o.order_date)}</span>
                 </div>
               </Link>
+              {/* 모바일 양식 버튼 — Link 밖에 배치하여 클릭 충돌 방지 */}
+              <div className="px-4 pb-3 pt-0">
+                <button
+                  type="button"
+                  onClick={() => setQuickExportOrder({ id: o.id, market_order_number: o.market_order_number, order_number: o.order_number, buyer_name: o.buyer_name, buyer_phone: o.buyer_phone, buyer_postal_code: o.buyer_postal_code, buyer_address: o.buyer_address, buyer_customs_code: o.buyer_customs_code })}
+                  disabled={templates.length === 0}
+                  className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 text-xs font-semibold rounded-lg text-indigo-700 border border-indigo-200 bg-white hover:bg-indigo-50 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor" aria-hidden="true">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 0 0 5.25 21h13.5A2.25 2.25 0 0 0 21 18.75V16.5M16.5 12 12 16.5m0 0L7.5 12m4.5 4.5V3" />
+                  </svg>
+                  배대지 양식 받기
+                </button>
+              </div>
             </div>
           )
         })}
@@ -434,6 +464,20 @@ export default function OrderListClient({ orders, templates, marketplaceLabel, s
         }))}
         onSuccess={() => setSelected(new Set())}
       />
+
+      {/* 단건 빠른 양식 내보내기 모달 */}
+      {quickExportOrder && (
+        <BulkExportModal
+          open={true}
+          onClose={() => setQuickExportOrder(null)}
+          templates={templates}
+          orderIds={[quickExportOrder.id]}
+          orderCount={1}
+          groupCount={1}
+          selectedOrders={[quickExportOrder]}
+          onSuccess={() => setQuickExportOrder(null)}
+        />
+      )}
     </>
   )
 }
